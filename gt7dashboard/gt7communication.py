@@ -436,6 +436,22 @@ class GT7Communication(Thread):
     def set_lap_callback(self, new_lap_callback):
         self.lap_callback_function = new_lap_callback
 
+    # Example of how to update the telemetry processing
+    def process_telemetry(self, data):
+        # Extract tyre temperatures if available in the data packet
+        if hasattr(self, "current_lap") and self.current_lap:
+            # Update with actual indices from the GT7 telemetry structure
+            tyre_temp_fl = data.get('tyre_temp_fl', 0)
+            tyre_temp_fr = data.get('tyre_temp_fr', 0)
+            tyre_temp_rl = data.get('tyre_temp_rl', 0)
+            tyre_temp_rr = data.get('tyre_temp_rr', 0)
+            
+            # Store in lap data
+            self.current_lap.tyre_temp_fl.append(tyre_temp_fl)
+            self.current_lap.tyre_temp_fr.append(tyre_temp_fr)
+            self.current_lap.tyre_temp_rl.append(tyre_temp_rl)
+            self.current_lap.tyre_temp_rr.append(tyre_temp_rr)
+
 
 # data stream decoding
 def salsa20_dec(dat):

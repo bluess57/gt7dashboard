@@ -33,10 +33,15 @@ from gt7dashboard.gt7helper import (
 )
 from gt7dashboard.gt7lap import Lap
 
+# Import the lap analyzer
+from gt7dashboard.gt7lapanalysis import LapAnalyzer
+
 # set logging level to debug
 logger = logging.getLogger('main.py')
 logger.setLevel(logging.DEBUG)
 
+# Create analyzer instance
+lap_analyzer = LapAnalyzer()
 
 def update_connection_info():
     div_connection_info.text = ""
@@ -522,3 +527,65 @@ curdoc().title = "GT7 Dashboard"
 # This will only trigger once per lap, but we check every second if anything happened
 curdoc().add_periodic_callback(update_lap_change, 1000)
 curdoc().add_periodic_callback(update_fuel_map, 5000)
+
+# Add the analyze button and display to the layout
+analyze_button = Button(label="Analyze Selected Lap", button_type="primary")
+
+# Button handler for analysis
+def analyze_button_handler(event):
+    global g_laps_stored
+    global g_reference_lap_selected
+    global race_time_table
+    
+    # Get the selected lap from the table
+    selected_indices = race_time_table.lap_times_source.selected.indices
+    
+    if not selected_indices or not g_reference_lap_selected:
+        logger.warning("Need both a reference lap and a selected lap to analyze")
+        lap_analysis_display.analysis_div.text = "<h3>Lap Analysis</h3><p>Please select a reference lap and a lap to compare</p>"
+        return
+    
+    # Get the first selected lap
+    selected_lap_idx = selected_indices[0]
+    if selected_lap_idx >= len(g_laps_stored):
+        logger.warning(f"Invalid selected lap index: {selected_lap_idx}")
+        return
+        
+    selected_lap = g_laps_stored[selected_lap_idx]
+    
+    # Analyze the laps
+    logger.info(f"Analyzing lap {selected_lap.number} against reference lap {g_reference_lap_selected.number}")
+    
+    analysis_results = lap_analyzer.analyze_laps(g_reference_lap_selected, selected_lap)
+    
+    # Update the analysis display
+    lap_analysis_display.update_analysis(g_reference_lap_selected, selected_lap, analysis_results)
+    
+    # Store analysis results with the lap
+    selected_lap.analysis_results = analysis_results
+    
+    logger.info(f"Analysis complete. Found {len(analysis_results.get('key_improvements', []))} key improvements")
+
+# Connect handler to button
+analyze_button.on_click(analyze_button_handler)
+
+# Add the components to the layout (find an appropriate row in your existing layout)
+l1 = layout(
+    children=[
+        [get_help_div(gt7help.HEADER), div_connection_info, div_gt7_dashboard, div_header_line, reset_button, save_button, select_title, select, get_help_div(gt7help.LAP_CONTROLS)],
+        [get_help_div(gt7help.TIME_DIFF), race_diagram.f_time_diff, layout(children=[manual_log_button, checkbox_group, reference_lap_select]), get_help_div(gt7help.MANUAL_CONTROLS)],
+        [get_help_div(gt7help.SPEED_DIAGRAM), race_diagram.f_speed, s_race_line, get_help_div(gt7help.RACE_LINE_MINI)],
+        [get_help_div(gt7help.SPEED_VARIANCE), race_diagram.f_speed_variance, div_deviance_laps_on_display, get_help_div(gt7help.SPEED_VARIANCE)],
+        [get_help_div(gt7help.THROTTLE_DIAGRAM), race_diagram.f_throttle, div_speed_peak_valley_diagram, get_help_div(gt7help.SPEED_PEAKS_AND_VALLEYS)],
+        [get_help_div(gt7help.YAW_RATE_DIAGRAM), race_diagram.f_yaw_rate],
+        [get_help_div(gt7help.BRAKING_DIAGRAM), race_diagram.f_braking],
+        [get_help_div(gt7help.COASTING_DIAGRAM), race_diagram.f_coasting],
+        [get_help_div(gt7help.GEAR_DIAGRAM), race_diagram.f_gear],
+        [get_help_div(gt7help.RPM_DIAGRAM), race_diagram.f_rpm],
+        [get_help_div(gt7help.BOOST_DIAGRAM), race_diagram.f_boost],
+        [get_help_div(gt7help.TIRE_DIAGRAM), race_diagram.f_tires],
+        [get_help_div(gt7help.TIME_TABLE), race_time_table.t_lap_times, get_help_div(gt7help.FUEL_MAP), div_fuel_map, get_help_div(gt7help.TUNING_INFO), div_tuning_info],
+        [analyze_button, lap_analysis_display.figure],
+        [lap_analysis_display.analysis_div],
+    ]
+)

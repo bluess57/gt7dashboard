@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Dict
 
 import bokeh
 from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, Label, Scatter, Column, Line, TableColumn, DataTable, Range1d
+from bokeh.models import ColumnDataSource, Label, Div, HoverTool, Scatter, Column, Line, TableColumn, DataTable, Range1d
 from bokeh.plotting import figure
 
 from gt7dashboard import gt7helper
@@ -841,3 +841,134 @@ def get_speed_peak_and_valley_diagram_row(peak_speed_data_x, peak_speed_data_y, 
             valley_speed_data_y[i],
         )
     return row
+
+class LapAnalysisDisplay:
+    """Visualizes lap analysis results"""
+    
+    def __init__(self, width=800, height=200):
+        self.width = width
+        self.height = height
+        
+        # Create source data for visualization
+        self.source = ColumnDataSource(data={
+            "x": [], "y": [],                    # Position data
+            "segment_type": [],                  # Segment types
+            "time_diff": [],                     # Time differences
+            "suggestion": [],                    # Improvement suggestions
+            "color": [],                         # Color coding
+            "segment_idx": []                    # Segment indices
+        })
+        
+        # Create figure for time gain/loss visualization
+        self.figure = figure(
+            title="Lap Time Analysis",
+            x_axis_label="Track Position",
+            y_axis_label="Time Difference (s)",
+            width=width,
+            height=height,
+            tools="pan,box_zoom,reset,save"
+        )
+        
+        # Add hover tool with segment information
+        hover = HoverTool(
+            tooltips=[
+                ("Segment", "@segment_idx"),
+                ("Type", "@segment_type"),
+                ("Time Diff", "@time_diff{0.000}s"),
+                ("Suggestion", "@suggestion")
+            ]
+        )
+        self.figure.add_tools(hover)
+        
+        # Add time difference bars
+        self.bars = self.figure.vbar(
+            x="x", 
+            top="y", 
+            width=0.8, 
+            source=self.source,
+            color="color", 
+            line_color="black"
+        )
+        
+        # Zero line for reference
+        self.figure.line(
+            x=[0, 100], 
+            y=[0, 0], 
+            line_color="black", 
+            line_dash="dashed"
+        )
+        
+        # Text for key insights
+        self.analysis_div = Div(
+            text="<h3>Lap Analysis</h3><p>Select laps to analyze</p>",
+            width=width,
+            height=150
+        )
+    
+    def update_analysis(self, reference_lap: Lap, comparison_lap: Lap, analysis_results: Dict):
+        """Update the visualization with new analysis results"""
+        
+        # Skip if no analysis
+        if not analysis_results or "segments" not in analysis_results:
+            self.analysis_div.text = "<h3>Lap Analysis</h3><p>No analysis data available</p>"
+            return
+            
+        segments = analysis_results["segments"]
+        
+        # Update data source
+        x_values = []
+        y_values = []
+        segment_types = []
+        time_diffs = []
+        suggestions = []
+        colors = []
+        segment_indices = []
+        
+        for segment in segments:
+            x_values.append(segment.get("segment_idx", 0))
+            time_diff = segment.get("time_diff", 0)
+            y_values.append(time_diff)
+            segment_types.append(segment.get("segment_type", "unknown"))
+            time_diffs.append(time_diff)
+            suggestions.append(segment.get("suggestion", ""))
+            
+            # Color coding: red for time loss, green for time gain
+            if time_diff > 0.01:
+                colors.append("red")
+            elif time_diff < -0.01:
+                colors.append("green")
+            else:
+                colors.append("gray")
+                
+            segment_indices.append(segment.get("segment_idx", 0))
+        
+        self.source.data = {
+            "x": x_values,
+            "y": y_values,
+            "segment_type": segment_types,
+            "time_diff": time_diffs,
+            "suggestion": suggestions,
+            "color": colors,
+            "segment_idx": segment_indices
+        }
+        
+        # Update title to show overall time difference
+        total_diff = analysis_results.get("total_time_diff", 0)
+        diff_text = f"{abs(total_diff):.3f}s {'slower' if total_diff > 0 else 'faster'}"
+        self.figure.title.text = f"Lap Analysis: {diff_text} than reference"
+        
+        # Update improvement suggestions text
+        improvements = analysis_results.get("key_improvements", [])
+        
+        html_content = f"""<h3>Lap Analysis: {diff_text} than reference</h3>"""
+        
+        if improvements:
+            html_content += "<h4>Key Improvement Areas:</h4><ul>"
+            for i, imp in enumerate(improvements[:5]):  # Show top 5 improvements
+                html_content += f"""<li><strong>Segment {imp['segment']}:</strong> {imp['suggestion']} 
+                                   (potential gain: {imp['potential_gain']:.3f}s)</li>"""
+            html_content += "</ul>"
+        else:
+            html_content += "<p>No significant areas for improvement identified.</p>"
+            
+        self.analysis_div.text = html_content

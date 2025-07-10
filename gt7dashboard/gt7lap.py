@@ -55,6 +55,13 @@ class Lap:
         self.lap_start_timestamp = datetime.now()
         self.lap_end_timestamp = -1
 
+        # AI analysis results and tire temperatures
+        self.analysis_results = {}  # Store AI analysis results
+        self.tyre_temp_fl = []  # Front left tire temperature
+        self.tyre_temp_fr = []  # Front right tire temperature  
+        self.tyre_temp_rl = []  # Rear left tire temperature
+        self.tyre_temp_rr = []  # Rear right tire temperature
+
     def __str__(self):
         return "\n %s, %2d, %1.f, %4d, %4d, %4d" % (
             self.title,
@@ -127,6 +134,12 @@ class Lap:
             "raceline_x_coasting": raceline_x_coasting,
             "raceline_z_coasting": raceline_z_coasting,
 
+            # Add tyre temperature data
+            "tyre_temp_fl": self.tyre_temp_fl if hasattr(self, "tyre_temp_fl") else [],
+            "tyre_temp_fr": self.tyre_temp_fr if hasattr(self, "tyre_temp_fr") else [],
+            "tyre_temp_rl": self.tyre_temp_rl if hasattr(self, "tyre_temp_rl") else [],
+            "tyre_temp_rr": self.tyre_temp_rr if hasattr(self, "tyre_temp_rr") else [],
+            
             "distance": gt7helper.get_x_axis_depending_on_mode(self, distance_mode),
         }
 
