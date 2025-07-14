@@ -1,4 +1,4 @@
-from bokeh.models import Div
+from bokeh.models import Div, HoverTool
 
 from gt7dashboard import gt7helper
 
@@ -76,3 +76,53 @@ def get_help_text_resource(help_text_resource):
     return f"""
     <div title="{help_text_resource}">?⃝</div>
     """
+
+
+def add_help_tooltip(ui_element, help_text):
+    """Add help tooltip to a UI element"""
+    ui_element.title = help_text
+    return ui_element
+
+
+def add_enhanced_tooltip(ui_element, help_text):
+    """Add enhanced tooltip with custom styling"""
+    # Add custom CSS class
+    if not hasattr(ui_element, 'css_classes') or ui_element.css_classes is None:
+        ui_element.css_classes = []
+    
+    ui_element.css_classes.append('tooltip-element')
+    
+    # Create a unique ID for this tooltip
+    import uuid
+    tooltip_id = f"tooltip-{uuid.uuid4().hex[:8]}"
+    
+    # Create tooltip HTML
+    tooltip_html = f"""
+    <div id="{tooltip_id}" class="gt7-tooltip">{help_text}</div>
+    """
+    
+    # Add the tooltip div to the document
+    tooltip_div = Div(text=tooltip_html, css_classes=['tooltip-container'], visible=False)
+    
+    # Add JavaScript for showing/hiding tooltip
+    ui_element.js_on_event('mouseover', f"""
+        document.getElementById('{tooltip_id}').style.display = 'block';
+    """)
+    ui_element.js_on_event('mouseout', f"""
+        document.getElementById('{tooltip_id}').style.display = 'none';
+    """)
+    
+    return ui_element, tooltip_div
+
+def add_plot_tooltip(plot, help_text):
+    """Add a tooltip to a plot using HoverTool"""
+    hover = HoverTool(
+        tooltips=f"""
+        <div style="background-color: #f8f8f8; padding: 10px; border-radius: 5px;">
+            <span style="font-size: 12pt;">{help_text}</span>
+        </div>
+        """,
+        point_policy='follow_mouse'
+    )
+    plot.add_tools(hover)
+    return plot

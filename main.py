@@ -549,12 +549,16 @@ checkbox_group.on_change("active", always_record_checkbox_handler)
 
 race_time_table.t_lap_times.width=900
 
+add_help_tooltip(race_diagram.f_speed, gt7help.SPEED_DIAGRAM)
+add_help_tooltip(s_race_line, gt7help.RACE_LINE_MINI)
+add_help_tooltip(race_diagram.f_speed_variance, gt7help.SPEED_VARIANCE)
+
 l1 = layout(
     children=[
-        [get_help_div(gt7help.HEADER), div_connection_info, div_gt7_dashboard, div_header_line, reset_button, save_button, select_title, select, get_help_div(gt7help.LAP_CONTROLS)],
-        [get_help_div(gt7help.TIME_DIFF), race_diagram.f_time_diff, layout(children=[manual_log_button, checkbox_group, reference_lap_select]), get_help_div(gt7help.MANUAL_CONTROLS)],
-        [get_help_div(gt7help.SPEED_DIAGRAM), race_diagram.f_speed, s_race_line, get_help_div(gt7help.RACE_LINE_MINI)],
-        [get_help_div(gt7help.SPEED_VARIANCE), race_diagram.f_speed_variance, div_deviance_laps_on_display, get_help_div(gt7help.SPEED_VARIANCE)],
+        [div_connection_info, div_gt7_dashboard, div_header_line, reset_button, save_button, select_title, select],
+        [race_diagram.f_time_diff, layout(children=[manual_log_button, checkbox_group, reference_lap_select])],
+        [race_diagram.f_speed, s_race_line],
+        [race_diagram.f_speed_variance, div_deviance_laps_on_display, get_help_div(gt7help.SPEED_VARIANCE)],
         [get_help_div(gt7help.THROTTLE_DIAGRAM), race_diagram.f_throttle, div_speed_peak_valley_diagram, get_help_div(gt7help.SPEED_PEAKS_AND_VALLEYS)],
         [get_help_div(gt7help.YAW_RATE_DIAGRAM), race_diagram.f_yaw_rate],
         [get_help_div(gt7help.BRAKING_DIAGRAM), race_diagram.f_braking],
