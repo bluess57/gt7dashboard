@@ -240,13 +240,66 @@ def update_time_table(laps: List[Lap]):
 
 
 def reset_button_handler(event):
+    global g_laps_stored
     global g_telemetry_update_needed
-    logger.info("reset button clicked")
+    global g_reference_lap_selected
+    global g_session_stored
+    
+    logger.info("Reset button clicked - clearing all data and graphs")
+    
+    # Clear race diagram data
     race_diagram.delete_all_additional_laps()
-
+    
+    # Clear data sources for main graphs
+    race_diagram.source_last_lap.data = {"distance": [], "speed": [], "throttle": [], "brake": [], "time": []}
+    race_diagram.source_reference_lap.data = {"distance": [], "speed": [], "throttle": [], "brake": [], "time": []}
+    race_diagram.source_median_lap.data = {"distance": [], "speed": [], "throttle": [], "brake": [], "time": []}
+    race_diagram.source_time_diff.data = {"distance": [], "time_diff": []}
+    
+    # Clear race line visualization
+    last_lap_race_line.data_source.data = {"raceline_x": [], "raceline_z": []}
+    reference_lap_race_line.data_source.data = {"raceline_x": [], "raceline_z": []}
+    
+    # Reset race time table
+    race_time_table.lap_times_source.data = {"index": [], "car": [], "time": [], "number": [], "title": []}
+    race_time_table.lap_times_source.selected.indices = []
+    
+    # Clear all race lines on the second tab
+    for i, lines_data in enumerate(race_lines_data):
+        for line in lines_data:
+            line.data_source.data = {"raceline_x_throttle": [], "raceline_z_throttle": [], 
+                                    "raceline_x_braking": [], "raceline_z_braking": [],
+                                    "raceline_x_coasting": [], "raceline_z_coasting": []}
+        
+        if i < len(race_lines):
+            race_lines[i].title.text = "Race Line"
+            # Clear any annotations
+            for renderer in list(race_lines[i].renderers):
+                if hasattr(renderer, 'glyph') and hasattr(renderer.glyph, '_scatter'):
+                    race_lines[i].renderers.remove(renderer)
+    
+    # Clear information displays
+    div_header_line.text = "<p><b>Last Lap: None</b></p><p><b>Reference Lap: None</b></p>"
+    div_speed_peak_valley_diagram.text = ""
+    div_deviance_laps_on_display.text = ""
+    div_fuel_map.text = ""
+    
+    # Reset reference lap selection
+    g_reference_lap_selected = None
+    reference_lap_select.value = "-1"  # Best Lap option
+    
+    # Reset stored data
+    g_laps_stored = []
+    g_session_stored = None
+    
+    # Clear GT7 communication data
     app.gt7comm.load_laps([], replace_other_laps=True)
     app.gt7comm.reset()
+    
+    # Force full UI update
     g_telemetry_update_needed = True
+    
+    logger.info("Reset complete - all graphs and data cleared")
 
 
 def always_record_checkbox_handler(event, old, new):
