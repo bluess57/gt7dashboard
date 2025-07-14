@@ -675,6 +675,31 @@ ps5_ip_input = TextInput(
     title="PlayStation 5 IP Address:", 
     width=250
 )
+connect_button = Button(label="Connect", button_type="primary", width=100)
+connection_status = Div(width=400, height=30)
+
+def connect_button_handler(event):
+    """Handler for connecting to PS5 with specified IP"""
+    new_ip = ps5_ip_input.value.strip()
+    
+    if not new_ip:
+        new_ip = "255.255.255.255"
+        ps5_ip_input.value = new_ip
+        logger.warning("Empty IP provided, defaulting to broadcast address")
+    
+    logger.info(f"Connecting to PlayStation at IP: {new_ip}")
+    
+    # Update connection with new IP
+    app.gt7comm.disconnect()
+    app.gt7comm.playstation_ip = new_ip
+    app.gt7comm.restart()
+    
+    # Update connection status
+    update_connection_info()
+    update_connection_status()
+
+# Connect handler to button
+connect_button.on_click(connect_button_handler)
 
 # Update the configuration tab layout (l4)
 l4 = layout(
@@ -710,30 +735,3 @@ update_connection_status()
 
 # Add to periodic callbacks
 curdoc().add_periodic_callback(update_connection_status, 5000)
-
-
-connect_button = Button(label="Connect", button_type="primary", width=100)
-connection_status = Div(width=400, height=30)
-
-def connect_button_handler(event):
-    """Handler for connecting to PS5 with specified IP"""
-    new_ip = ps5_ip_input.value.strip()
-    
-    if not new_ip:
-        new_ip = "255.255.255.255"
-        ps5_ip_input.value = new_ip
-        logger.warning("Empty IP provided, defaulting to broadcast address")
-    
-    logger.info(f"Connecting to PlayStation at IP: {new_ip}")
-    
-    # Update connection with new IP
-    app.gt7comm.disconnect()
-    app.gt7comm.playstation_ip = new_ip
-    app.gt7comm.restart()
-    
-    # Update connection status
-    update_connection_info()
-    update_connection_status()
-
-# Connect handler to button
-connect_button.on_click(connect_button_handler)
