@@ -24,7 +24,11 @@ from bokeh.plotting import figure
 from gt7dashboard import gt7communication, gt7diagrams, gt7help, gt7helper, gt7lap
 from gt7dashboard.gt7diagrams import get_speed_peak_and_valley_diagram
 
-from gt7dashboard.gt7help import get_help_div
+from gt7dashboard.gt7help import (
+    get_help_div, 
+    add_help_tooltip
+)
+
 from gt7dashboard.gt7helper import (
     load_laps_from_pickle,
     save_laps_to_pickle,
