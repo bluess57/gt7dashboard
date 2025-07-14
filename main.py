@@ -603,7 +603,7 @@ lap_path_input = TextInput(
     width=400,
     placeholder="Path to lap data directory or file"
 )
-load_path_button = Button(label="Load Laps From Path", button_type="success", width=150)
+load_path_button = Button(label="Load Laps From Path", button_type="success", width=100)
 
 def load_path_button_handler(event):
     """Handler for loading laps from specified path"""
