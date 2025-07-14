@@ -591,7 +591,8 @@ l1 = layout(
         [race_diagram.f_rpm],
         [race_diagram.f_boost],
         [race_diagram.f_tires],
-        [race_time_table.t_lap_times, race_time_table_help, div_fuel_map, div_tuning_info],
+        [race_time_table.t_lap_times, race_time_table_help],
+        [div_tuning_info],
     ]
 )
 
@@ -603,7 +604,7 @@ l2, race_lines, race_lines_data = get_race_lines_layout(number_of_race_lines=1)
 l3 = layout(
     [
         [reset_button, save_button],
-        [div_speed_peak_valley_diagram, div_fuel_map], # TODO Race table does not render twice, one rendering will be empty
+        [div_speed_peak_valley_diagram]
      ],
     sizing_mode="stretch_width",
 )
@@ -765,12 +766,37 @@ l4 = layout(
     sizing_mode="stretch_width",
 )
 
+
+# Create an enhanced fuel information div with more detailed explanation
+fuel_info_div = Div(text="""
+<h3>Fuel Consumption</h3>
+<p>This panel shows detailed fuel consumption data for your laps.</p>
+<ul>
+    <li><b>Fuel Used:</b> Total fuel consumed during the lap</li>
+    <li><b>Fuel per Lap:</b> Average consumption rate</li>
+    <li><b>Fuel per Minute:</b> Consumption rate over time</li>
+    <li><b>Estimated Range:</b> Estimated laps/minutes remaining with current fuel level</li>
+</ul>
+""", width=600)
+
+# Create a layout for the fuel tab
+l5 = layout(
+    [
+        [div_gt7_dashboard],
+        [fuel_info_div],
+        [div_fuel_map],  # Move the existing fuel map here
+    ],
+    sizing_mode="stretch_width",
+)
+
+
 #  Setup the tabs
 tab1 = TabPanel(child=l1, title="Get Faster")
 tab2 = TabPanel(child=l2, title="Race Lines")
 tab3 = TabPanel(child=l3, title="Race")
-tab4 = TabPanel(child=l4, title="Configuration") # Add the new tab
-tabs = Tabs(tabs=[tab1, tab2, tab3, tab4])
+tab4 = TabPanel(child=l4, title="Configuration")
+tab5 = TabPanel(child=l5, title="Fuel")
+tabs = Tabs(tabs=[tab1, tab2, tab3, tab4, tab5])
 
 curdoc().add_root(tabs)
 curdoc().title = "GT7 Dashboard"
