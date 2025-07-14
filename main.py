@@ -669,12 +669,29 @@ lap_path_help = Div(text="""
 <p>Click "Load Laps From Path" to load the data.</p>
 """, width=600)
 
-# Create configuration components
+# Add a validation status message
+ip_validation_message = Div(text="", width=250, height=30)
+
 ps5_ip_input = TextInput(
-    value=app.gt7comm.playstation_ip, 
-    title="PlayStation 5 IP Address:", 
-    width=250
+    value=app.gt7comm.playstation_ip,
+    title="PlayStation 5 IP Address:",
+    width=250,
+    placeholder="192.168.1.x or 255.255.255.255"
 )
+
+def validate_ip(attr, old, new):
+    """Validate IP address format and provide feedback"""
+    import re
+    ip_pattern = r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$'
+    
+    if new == "":
+        ip_validation_message.text = "<span style='color:orange'>Enter an IP address</span>"
+    elif re.match(ip_pattern, new):
+        ip_validation_message.text = "<span style='color:green'>✓ Valid IP format</span>"
+    else:
+        ip_validation_message.text = "<span style='color:red'>Invalid IP format</span>"
+
+ps5_ip_input.on_change("value", validate_ip)
 connect_button = Button(label="Connect", button_type="primary", width=100)
 connection_status = Div(width=400, height=30)
 
@@ -707,6 +724,7 @@ l4 = layout(
         [config_help],
         [network_help],
         [ps5_ip_input],  # IP input on its own line
+        [ip_validation_message],  # Add validation message
         [connect_button],  # Connect button below the IP input
         [connection_status],
         [Div(text="<hr>", width=600)],  # Add separator
