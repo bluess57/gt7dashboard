@@ -26,7 +26,8 @@ from gt7dashboard.gt7diagrams import get_speed_peak_and_valley_diagram
 
 from gt7dashboard.gt7help import (
     get_help_div, 
-    add_help_tooltip
+    add_help_tooltip,
+    add_plot_tooltip
 )
 
 from gt7dashboard.gt7helper import (
@@ -559,7 +560,7 @@ add_help_tooltip(race_diagram.f_speed_variance, gt7help.SPEED_VARIANCE)
 
 l1 = layout(
     children=[
-        [div_connection_info, div_gt7_dashboard, div_header_line, reset_button, save_button, select_title, select],
+        [div_connection_info, div_header_line, reset_button, save_button, select_title, select],
         [race_diagram.f_time_diff, layout(children=[manual_log_button, checkbox_group, reference_lap_select])],
         [race_diagram.f_speed, s_race_line],
         [race_diagram.f_speed_variance, div_deviance_laps_on_display, get_help_div(gt7help.SPEED_VARIANCE)],
@@ -729,6 +730,7 @@ connect_button.on_click(connect_button_handler)
 # Update the configuration tab layout (l4)
 l4 = layout(
     [
+        [div_gt7_dashboard],
         [config_help],
         [network_help],
         [column(ps5_ip_input, sizing_mode="fixed")],  # IP input on its own line
