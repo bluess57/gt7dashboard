@@ -37,7 +37,24 @@ from gt7dashboard.gt7lap import Lap
 logger = logging.getLogger('main.py')
 logger.setLevel(logging.DEBUG)
 
-
+def update_connection_status():
+    """Update the connection status display on config tab"""
+    if app.gt7comm.is_connected():
+        connection_status.text = f"""
+        <div style="color: green; font-weight: bold;">
+            ✓ Connected to PlayStation at {app.gt7comm.playstation_ip}
+        </div>
+        """
+    else:
+        connection_status.text = f"""
+        <div style="color: red; font-weight: bold;">
+            ✗ Not connected to PlayStation at {app.gt7comm.playstation_ip}
+        </div>
+        <div>
+            Make sure your PS5 is on the same network and Gran Turismo 7 is running.
+        </div>
+        """
+        
 def update_connection_info():
     div_connection_info.text = ""
     if app.gt7comm.is_connected():
@@ -563,76 +580,6 @@ l3 = layout(
     sizing_mode="stretch_width",
 )
 
-#  Setup the tabs
-tab1 = TabPanel(child=l1, title="Get Faster")
-tab2 = TabPanel(child=l2, title="Race Lines")
-tab3 = TabPanel(child=l3, title="Race")
-tab4 = TabPanel(child=l4, title="Configuration") # Add the new tab
-tabs = Tabs(tabs=[tab1, tab2, tab3, tab4])
-
-curdoc().add_root(tabs)
-curdoc().title = "GT7 Dashboard"
-
-# This will only trigger once per lap, but we check every second if anything happened
-curdoc().add_periodic_callback(update_lap_change, 1000)
-curdoc().add_periodic_callback(update_fuel_map, 5000)
-
-# Initialize connection status
-update_connection_status()
-
-# Add to periodic callbacks
-curdoc().add_periodic_callback(update_connection_status, 5000)
-
-# Create configuration components
-ps5_ip_input = TextInput(
-    value=app.gt7comm.playstation_ip, 
-    title="PlayStation 5 IP Address:", 
-    width=250
-)
-connect_button = Button(label="Connect", button_type="primary", width=100)
-connection_status = Div(width=400, height=30)
-
-def connect_button_handler(event):
-    """Handler for connecting to PS5 with specified IP"""
-    new_ip = ps5_ip_input.value.strip()
-    
-    if not new_ip:
-        new_ip = "255.255.255.255"
-        ps5_ip_input.value = new_ip
-        logger.warning("Empty IP provided, defaulting to broadcast address")
-    
-    logger.info(f"Connecting to PlayStation at IP: {new_ip}")
-    
-    # Update connection with new IP
-    app.gt7comm.disconnect()
-    app.gt7comm.playstation_ip = new_ip
-    app.gt7comm.restart()
-    
-    # Update connection status
-    update_connection_info()
-    update_connection_status()
-
-# Connect handler to button
-connect_button.on_click(connect_button_handler)
-
-def update_connection_status():
-    """Update the connection status display on config tab"""
-    if app.gt7comm.is_connected():
-        connection_status.text = f"""
-        <div style="color: green; font-weight: bold;">
-            ✓ Connected to PlayStation at {app.gt7comm.playstation_ip}
-        </div>
-        """
-    else:
-        connection_status.text = f"""
-        <div style="color: red; font-weight: bold;">
-            ✗ Not connected to PlayStation at {app.gt7comm.playstation_ip}
-        </div>
-        <div>
-            Make sure your PS5 is on the same network and Gran Turismo 7 is running.
-        </div>
-        """
-
 # Add after the existing layout definitions (l1, l2, l3)
 config_help = Div(text="""
 <h3>Configuration</h3>
@@ -736,3 +683,55 @@ l4 = layout(
     ],
     sizing_mode="stretch_width",
 )
+
+#  Setup the tabs
+tab1 = TabPanel(child=l1, title="Get Faster")
+tab2 = TabPanel(child=l2, title="Race Lines")
+tab3 = TabPanel(child=l3, title="Race")
+tab4 = TabPanel(child=l4, title="Configuration") # Add the new tab
+tabs = Tabs(tabs=[tab1, tab2, tab3, tab4])
+
+curdoc().add_root(tabs)
+curdoc().title = "GT7 Dashboard"
+
+# This will only trigger once per lap, but we check every second if anything happened
+curdoc().add_periodic_callback(update_lap_change, 1000)
+curdoc().add_periodic_callback(update_fuel_map, 5000)
+
+# Initialize connection status
+update_connection_status()
+
+# Add to periodic callbacks
+curdoc().add_periodic_callback(update_connection_status, 5000)
+
+# Create configuration components
+ps5_ip_input = TextInput(
+    value=app.gt7comm.playstation_ip, 
+    title="PlayStation 5 IP Address:", 
+    width=250
+)
+connect_button = Button(label="Connect", button_type="primary", width=100)
+connection_status = Div(width=400, height=30)
+
+def connect_button_handler(event):
+    """Handler for connecting to PS5 with specified IP"""
+    new_ip = ps5_ip_input.value.strip()
+    
+    if not new_ip:
+        new_ip = "255.255.255.255"
+        ps5_ip_input.value = new_ip
+        logger.warning("Empty IP provided, defaulting to broadcast address")
+    
+    logger.info(f"Connecting to PlayStation at IP: {new_ip}")
+    
+    # Update connection with new IP
+    app.gt7comm.disconnect()
+    app.gt7comm.playstation_ip = new_ip
+    app.gt7comm.restart()
+    
+    # Update connection status
+    update_connection_info()
+    update_connection_status()
+
+# Connect handler to button
+connect_button.on_click(connect_button_handler)
