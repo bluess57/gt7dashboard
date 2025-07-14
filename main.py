@@ -730,7 +730,7 @@ l4 = layout(
         [Div(text="<hr>", width=600)],  # Add separator
         [lap_path_help],
         [lap_path_input],  # Similarly made lap path input on its own line
-        [load_path_button],  # Button below the input
+        [column(load_path_button, sizing_mode="fixed")],  # Button below the input
         [lap_path_status],
     ],
     sizing_mode="stretch_width",
