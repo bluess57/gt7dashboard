@@ -559,22 +559,35 @@ race_time_table.t_lap_times.width=900
 add_help_tooltip(race_diagram.f_speed, gt7help.SPEED_DIAGRAM)
 add_help_tooltip(s_race_line, gt7help.RACE_LINE_MINI)
 add_help_tooltip(race_diagram.f_speed_variance, gt7help.SPEED_VARIANCE)
+add_help_tooltip(race_diagram.f_time_diff, gt7help.TIME_DIFF)
+add_help_tooltip(race_diagram.f_throttle, gt7help.THROTTLE_DIAGRAM)
+add_help_tooltip(race_diagram.f_yaw_rate, gt7help.YAW_RATE_DIAGRAM)
+add_help_tooltip(race_diagram.f_braking, gt7help.BRAKING_DIAGRAM)
+add_help_tooltip(race_diagram.f_coasting, gt7help.COASTING_DIAGRAM)
+add_help_tooltip(race_diagram.f_gear, gt7help.GEAR_DIAGRAM)
+add_help_tooltip(race_diagram.f_rpm, gt7help.RPM_DIAGRAM)
+add_help_tooltip(race_diagram.f_boost, gt7help.BOOST_DIAGRAM)
+add_help_tooltip(race_diagram.f_tires, gt7help.TIRE_DIAGRAM)
+add_help_tooltip(race_time_table.t_lap_times, gt7help.TIME_TABLE)
+add_help_tooltip(div_fuel_map, gt7help.FUEL_MAP)
+add_help_tooltip(div_tuning_info, gt7help.TUNING_INFO)
+add_help_tooltip(div_speed_peak_valley_diagram, gt7help.SPEED_PEAKS_AND_VALLEYS)
 
 l1 = layout(
     children=[
         [div_connection_info, div_header_line, reset_button, save_button, select_title, select],
         [race_diagram.f_time_diff, layout(children=[manual_log_button, checkbox_group, reference_lap_select])],
         [race_diagram.f_speed, s_race_line],
-        [race_diagram.f_speed_variance, div_deviance_laps_on_display, get_help_div(gt7help.SPEED_VARIANCE)],
-        [get_help_div(gt7help.THROTTLE_DIAGRAM), race_diagram.f_throttle, div_speed_peak_valley_diagram, get_help_div(gt7help.SPEED_PEAKS_AND_VALLEYS)],
-        [get_help_div(gt7help.YAW_RATE_DIAGRAM), race_diagram.f_yaw_rate],
-        [get_help_div(gt7help.BRAKING_DIAGRAM), race_diagram.f_braking],
-        [get_help_div(gt7help.COASTING_DIAGRAM), race_diagram.f_coasting],
-        [get_help_div(gt7help.GEAR_DIAGRAM), race_diagram.f_gear],
-        [get_help_div(gt7help.RPM_DIAGRAM), race_diagram.f_rpm],
-        [get_help_div(gt7help.BOOST_DIAGRAM), race_diagram.f_boost],
-        [get_help_div(gt7help.TIRE_DIAGRAM), race_diagram.f_tires],
-        [get_help_div(gt7help.TIME_TABLE), race_time_table.t_lap_times, get_help_div(gt7help.FUEL_MAP), div_fuel_map, get_help_div(gt7help.TUNING_INFO), div_tuning_info],
+        [race_diagram.f_speed_variance, div_deviance_laps_on_display],
+        [race_diagram.f_throttle, div_speed_peak_valley_diagram],
+        [race_diagram.f_yaw_rate],
+        [race_diagram.f_braking],
+        [race_diagram.f_coasting],
+        [race_diagram.f_gear],
+        [race_diagram.f_rpm],
+        [race_diagram.f_boost],
+        [race_diagram.f_tires],
+        [race_time_table.t_lap_times, div_fuel_map, div_tuning_info],
     ]
 )
 
