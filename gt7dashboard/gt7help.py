@@ -79,7 +79,17 @@ def get_help_text_resource(help_text_resource):
 
 
 def add_help_tooltip(ui_element, help_text):
-    """Add help tooltip to a UI element"""
+    """
+    Add help text as a tooltip to a Bokeh UI element
+    
+    Args:
+        ui_element: The Bokeh UI element to add the tooltip to
+        help_text: The help text to display in the tooltip
+        
+    Returns:
+        The modified UI element with tooltip
+    """
+    # Set the title attribute which Bokeh uses for tooltips
     ui_element.title = help_text
     return ui_element
 
