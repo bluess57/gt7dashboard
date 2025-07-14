@@ -19,7 +19,7 @@ from bokeh.models import (
 )
 from bokeh.palettes import Plasma11 as palette
 from bokeh.plotting import (
-    curdoc
+    curdoc,
     figure
 )
 
