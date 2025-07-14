@@ -15,7 +15,7 @@ from bokeh.models import (
     TableColumn,
     DataTable,
     Button,
-    Div, CheckboxGroup, TabPanel, Tabs,
+    Div, CheckboxGroup, TabPanel, Tabs, TextInput,
 )
 from bokeh.palettes import Plasma11 as palette
 from bokeh.plotting import curdoc
@@ -41,9 +41,9 @@ logger.setLevel(logging.DEBUG)
 def update_connection_info():
     div_connection_info.text = ""
     if app.gt7comm.is_connected():
-        div_connection_info.text += "<p title='Connected'>🟢</p>"
+        div_connection_info.text += f"<p title='Connected to {app.gt7comm.playstation_ip}'>🟢</p>"
     else:
-        div_connection_info.text += "<p title='Disconnected'>🔴</p>"
+        div_connection_info.text += f"<p title='Not connected to {app.gt7comm.playstation_ip}'>🔴</p>"
 
 
 def update_reference_lap_select(laps):
@@ -567,7 +567,8 @@ l3 = layout(
 tab1 = TabPanel(child=l1, title="Get Faster")
 tab2 = TabPanel(child=l2, title="Race Lines")
 tab3 = TabPanel(child=l3, title="Race")
-tabs = Tabs(tabs=[tab1, tab2, tab3])
+tab4 = TabPanel(child=l4, title="Configuration") # Add the new tab
+tabs = Tabs(tabs=[tab1, tab2, tab3, tab4])
 
 curdoc().add_root(tabs)
 curdoc().title = "GT7 Dashboard"
@@ -575,3 +576,163 @@ curdoc().title = "GT7 Dashboard"
 # This will only trigger once per lap, but we check every second if anything happened
 curdoc().add_periodic_callback(update_lap_change, 1000)
 curdoc().add_periodic_callback(update_fuel_map, 5000)
+
+# Initialize connection status
+update_connection_status()
+
+# Add to periodic callbacks
+curdoc().add_periodic_callback(update_connection_status, 5000)
+
+# Create configuration components
+ps5_ip_input = TextInput(
+    value=app.gt7comm.playstation_ip, 
+    title="PlayStation 5 IP Address:", 
+    width=250
+)
+connect_button = Button(label="Connect", button_type="primary", width=100)
+connection_status = Div(width=400, height=30)
+
+def connect_button_handler(event):
+    """Handler for connecting to PS5 with specified IP"""
+    new_ip = ps5_ip_input.value.strip()
+    
+    if not new_ip:
+        new_ip = "255.255.255.255"
+        ps5_ip_input.value = new_ip
+        logger.warning("Empty IP provided, defaulting to broadcast address")
+    
+    logger.info(f"Connecting to PlayStation at IP: {new_ip}")
+    
+    # Update connection with new IP
+    app.gt7comm.disconnect()
+    app.gt7comm.playstation_ip = new_ip
+    app.gt7comm.restart()
+    
+    # Update connection status
+    update_connection_info()
+    update_connection_status()
+
+# Connect handler to button
+connect_button.on_click(connect_button_handler)
+
+def update_connection_status():
+    """Update the connection status display on config tab"""
+    if app.gt7comm.is_connected():
+        connection_status.text = f"""
+        <div style="color: green; font-weight: bold;">
+            ✓ Connected to PlayStation at {app.gt7comm.playstation_ip}
+        </div>
+        """
+    else:
+        connection_status.text = f"""
+        <div style="color: red; font-weight: bold;">
+            ✗ Not connected to PlayStation at {app.gt7comm.playstation_ip}
+        </div>
+        <div>
+            Make sure your PS5 is on the same network and Gran Turismo 7 is running.
+        </div>
+        """
+
+# Add after the existing layout definitions (l1, l2, l3)
+config_help = Div(text="""
+<h3>Configuration</h3>
+<p>Configure connection settings for GT7 Dashboard</p>
+""", width=400)
+
+network_help = Div(text="""
+<h4>PlayStation Network Settings</h4>
+<p>Enter the IP address of your PlayStation 5 to connect. You can find your PS5 IP address in:</p>
+<ol>
+    <li>Settings → System → Network → Connection Status</li>
+    <li>Or check your router's connected devices list</li>
+</ol>
+<p>Leave as 255.255.255.255 to use broadcast mode (works on most home networks)</p>
+""", width=600)
+
+# Add to the configuration components section
+lap_path_input = TextInput(
+    value=os.environ.get("GT7_LOAD_LAPS_PATH", ""),
+    title="Lap Data Path:",
+    width=400,
+    placeholder="Path to lap data directory or file"
+)
+load_path_button = Button(label="Load Laps From Path", button_type="success", width=150)
+
+def load_path_button_handler(event):
+    """Handler for loading laps from specified path"""
+    path = lap_path_input.value.strip()
+    
+    if not path:
+        logger.warning("No lap data path provided")
+        return
+        
+    logger.info(f"Loading laps from path: {path}")
+    
+    try:
+        # Store path in environment variable for future reference
+        os.environ["GT7_LOAD_LAPS_PATH"] = path
+        
+        if os.path.isdir(path):
+            # If directory, list all JSON files
+            available_files = list_lap_files_from_path(path)
+            if available_files:
+                # Update dropdown options
+                select.options = gt7helper.bokeh_tuple_for_list_of_lapfiles(available_files)
+                return
+        
+        # Try to load directly if it's a file
+        if os.path.isfile(path):
+            if path.endswith('.pickle'):
+                laps = load_laps_from_pickle(path)
+                app.gt7comm.load_laps(laps, replace_other_laps=True)
+                logger.info(f"Loaded {len(laps)} laps from pickle file: {path}")
+            elif path.endswith('.json'):
+                laps = load_laps_from_json(path)
+                app.gt7comm.load_laps(laps, replace_other_laps=True)
+                logger.info(f"Loaded {len(laps)} laps from JSON file: {path}")
+            else:
+                logger.warning(f"Unsupported file format: {path}")
+                return
+                
+            # Force update
+            global g_telemetry_update_needed
+            g_telemetry_update_needed = True
+            update_lap_change()
+    except Exception as e:
+        logger.error(f"Error loading laps from path: {e}")
+        lap_path_status.text = f"<div style='color: red;'>Error: {e}</div>"
+        return
+        
+    lap_path_status.text = f"<div style='color: green;'>Successfully loaded data from: {path}</div>"
+
+# Connect handler to button
+load_path_button.on_click(load_path_button_handler)
+
+# Add status display for lap path operations
+lap_path_status = Div(width=600, height=30)
+
+# Add help text
+lap_path_help = Div(text="""
+<h4>Lap Data Path</h4>
+<p>Specify a path to load lap data from:</p>
+<ul>
+    <li>Enter a directory path to list available lap files in that directory</li>
+    <li>Enter a specific .json or .pickle file path to load that file directly</li>
+</ul>
+<p>Click "Load Laps From Path" to load the data.</p>
+""", width=600)
+
+# Update the configuration tab layout (l4)
+l4 = layout(
+    [
+        [config_help],
+        [network_help],
+        [ps5_ip_input, connect_button],
+        [connection_status],
+        [Div(text="<hr>", width=600)],  # Add separator
+        [lap_path_help],
+        [lap_path_input, load_path_button],
+        [lap_path_status],
+    ],
+    sizing_mode="stretch_width",
+)
