@@ -706,11 +706,13 @@ l4 = layout(
     [
         [config_help],
         [network_help],
-        [ps5_ip_input, connect_button],
+        [ps5_ip_input],  # IP input on its own line
+        [connect_button],  # Connect button below the IP input
         [connection_status],
         [Div(text="<hr>", width=600)],  # Add separator
         [lap_path_help],
-        [lap_path_input, load_path_button],
+        [lap_path_input],  # Similarly made lap path input on its own line
+        [load_path_button],  # Button below the input
         [lap_path_status],
     ],
     sizing_mode="stretch_width",
