@@ -3,6 +3,7 @@ import itertools
 import logging
 import os
 import time
+import html
 from typing import List
 
 import bokeh.application
@@ -569,9 +570,12 @@ add_help_tooltip(race_diagram.f_rpm, gt7help.RPM_DIAGRAM)
 add_help_tooltip(race_diagram.f_boost, gt7help.BOOST_DIAGRAM)
 add_help_tooltip(race_diagram.f_tires, gt7help.TIRE_DIAGRAM)
 # add_help_tooltip(race_time_table.t_lap_times, gt7help.TIME_TABLE)
-add_help_tooltip(div_fuel_map, gt7help.FUEL_MAP)
-add_help_tooltip(div_tuning_info, gt7help.TUNING_INFO)
-add_help_tooltip(div_speed_peak_valley_diagram, gt7help.SPEED_PEAKS_AND_VALLEYS)
+# add_help_tooltip(div_fuel_map, gt7help.FUEL_MAP)
+# add_help_tooltip(div_tuning_info, gt7help.TUNING_INFO)
+# add_help_tooltip(div_speed_peak_valley_diagram, gt7help.SPEED_PEAKS_AND_VALLEYS)
+
+# Add a help icon next to your table
+race_time_table_help = Div(text=f'<i class="fa fa-question-circle" title="{html.escape(gt7help.TIME_TABLE)}"></i>', width=20)
 
 l1 = layout(
     children=[
@@ -587,7 +591,7 @@ l1 = layout(
         [race_diagram.f_rpm],
         [race_diagram.f_boost],
         [race_diagram.f_tires],
-        [race_time_table.t_lap_times, div_fuel_map, div_tuning_info],
+        [race_time_table.t_lap_times, race_time_table_help, div_fuel_map, div_tuning_info],
     ]
 )
 
