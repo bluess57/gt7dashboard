@@ -669,6 +669,13 @@ lap_path_help = Div(text="""
 <p>Click "Load Laps From Path" to load the data.</p>
 """, width=600)
 
+# Create configuration components
+ps5_ip_input = TextInput(
+    value=app.gt7comm.playstation_ip, 
+    title="PlayStation 5 IP Address:", 
+    width=250
+)
+
 # Update the configuration tab layout (l4)
 l4 = layout(
     [
@@ -704,12 +711,7 @@ update_connection_status()
 # Add to periodic callbacks
 curdoc().add_periodic_callback(update_connection_status, 5000)
 
-# Create configuration components
-ps5_ip_input = TextInput(
-    value=app.gt7comm.playstation_ip, 
-    title="PlayStation 5 IP Address:", 
-    width=250
-)
+
 connect_button = Button(label="Connect", button_type="primary", width=100)
 connection_status = Div(width=400, height=30)
 
