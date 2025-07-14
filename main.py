@@ -723,9 +723,9 @@ l4 = layout(
     [
         [config_help],
         [network_help],
-        [ps5_ip_input],  # IP input on its own line
+        [column(ps5_ip_input, sizing_mode="fixed")],  # IP input on its own line
         [ip_validation_message],  # Add validation message
-        [connect_button],  # Connect button below the IP input
+        [column(connect_button, sizing_mode="fixed")],  # Wrap button in column with fixed sizing
         [connection_status],
         [Div(text="<hr>", width=600)],  # Add separator
         [lap_path_help],
