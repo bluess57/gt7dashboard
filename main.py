@@ -18,8 +18,10 @@ from bokeh.models import (
     Div, CheckboxGroup, TabPanel, Tabs, TextInput,
 )
 from bokeh.palettes import Plasma11 as palette
-from bokeh.plotting import curdoc
-from bokeh.plotting import figure
+from bokeh.plotting import (
+    curdoc
+    figure
+)
 
 from gt7dashboard import gt7communication, gt7diagrams, gt7help, gt7helper, gt7lap
 from gt7dashboard.gt7diagrams import get_speed_peak_and_valley_diagram
