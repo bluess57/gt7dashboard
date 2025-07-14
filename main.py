@@ -7,7 +7,7 @@ from typing import List
 
 import bokeh.application
 from bokeh.driving import linear
-from bokeh.layouts import layout
+from bokeh.layouts import layout, column
 from bokeh.models import (
     Select,
     Paragraph,
