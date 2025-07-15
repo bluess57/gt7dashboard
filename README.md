@@ -39,8 +39,8 @@ Enable the "Always Record" checkbox to always record replays. Otherwise, will on
 
 You will have to have a running Python installation. Look [here](https://wiki.python.org/moin/BeginnersGuide/Download) for instructions.
 
-* If you are on Windows 
-  * Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/
+* If you are on Windows
+  * Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
 
   * Run the file `run.ps1` with a double click
 * If you are on MacOS run the file `run.command`
@@ -52,15 +52,15 @@ The commands `pip3` or `python3` may be different on your OS. Try `pip` or `pyth
 ## How to run for experienced users
 
 1. (Once) `pip3 install -r requirements.txt` to install Python dependencies
-   1. On Windows: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/
+   1. On Windows: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
 
 2. (Optional, Once) Download the list of car names with `python3 helper/download_cars_csv.py`. Without this file, car names will only show as `CAR-ID-123`.
 3. Running the Dashboard
-    - (Mac/Linux) `bokeh serve .` (when inside the  `gt7dashboard` folder)
-    - (Windows) `python -m bokeh serve .`  (when inside the `gt7dashboard` folder)
+    * (Mac/Linux) `bokeh serve .` (when inside the  `gt7dashboard` folder)
+    * (Windows) `python -m bokeh serve .`  (when inside the `gt7dashboard` folder)
 4. (Optional) Running the Dashboard with a custom IP
-   - (Mac/Linux) `GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS> bokeh serve .` (when inside the  `gt7dashboard` folder)
-   - (Windows) `set GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS>` and `python -m bokeh serve .`  (when inside the `gt7dashboard` folder)
+   * (Mac/Linux) `GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS> bokeh serve .` (when inside the  `gt7dashboard` folder)
+   * (Windows) `set GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS>` and `python -m bokeh serve .`  (when inside the `gt7dashboard` folder)
 
 ## Troubleshooting
 
@@ -68,7 +68,7 @@ If you run into `TimeoutError`s make sure to check your firewall. You may have t
 
 ## Docker
 
-There is a `Dockerfile` and [readily made images](https://github.com/snipem/gt7dashboard/pkgs/container/gt7dashboard) available. 
+There is a `Dockerfile` and [readily made images](https://github.com/snipem/gt7dashboard/pkgs/container/gt7dashboard) available.
 
 ```bash
 # If building from the Dockerfile
@@ -113,7 +113,7 @@ Hint: You should set the `GT7_PLAYSTATION_IP` env var since Docker containers ar
 
 ## Lap Files
 
-If you want to edit your lap files, use a JSON editor. For example ` cat ... | jq -c '.[0:4]' > ...` will shorten the laps to the first 4 laps in the save file.
+If you want to edit your lap files, use a JSON editor. For example `cat ... | jq -c '.[0:4]' > ...` will shorten the laps to the first 4 laps in the save file.
 
 ## Contributing
 
@@ -149,7 +149,6 @@ Everything under the solid bar at 0 is slower than the reference lap. Everything
 
 If you see a bump in this graph to the top or the bottom this means that you were slower or faster at this point respectively.
 
-
 #### Manual Controls
 
 ![screenshot_header](README.assets/screenshot_manualcontrols.png)
@@ -160,8 +159,7 @@ The checkbox 'Record Replays' will allow you to record replays. Be careful since
 
 In the 'Best Lap' dropdown list you can select the reference lap. Usually this will point to the best lap of the session.
 
-
-#### Speed 
+#### Speed
 
 ![screenshot_header](README.assets/screenshot_speed.png)
 
@@ -190,13 +188,12 @@ A list of speed peaks and valleys for the selected laps. We assume peaks are str
 Displays the speed deviation of the fastest laps within a 5.0% time difference threshold of the fastest lap.
 Replay laps are ignored. The speed deviation is calculated as the standard deviation between these fastest laps.
 
-With a perfect driver in an ideal world, this line would be flat. In a real world situation, you will get an almost flat line, 
+With a perfect driver in an ideal world, this line would be flat. In a real world situation, you will get an almost flat line,
 with bumps at the corners and long straights. This is where even your best laps deviate.
 
 You may get some insights for improvement on your consistency if you look at the points of the track where this line is bumpy.
 
 The list on the right hand side shows your best laps that are token into consideration for the speed variance.
-
 
 I got inspired for this diagram by the [Your Data Driven Podcast](https://www.yourdatadriven.com/).
 On two different episodes of this podcast both [Peter Krause](https://www.yourdatadriven.com/ep12-go-faster-now-with-motorsports-data-analytics-guru-peter-krause/) and [Ross Bentley](https://www.yourdatadriven.com/ep3-tips-for-racing-faster-with-ross-bentley/) mentioned this visualization.
@@ -265,7 +262,6 @@ The same goes for Full Break, Coast and Tire Spin. Use this to easily compare yo
 You can click on one of these laps to add them to the diagrams above. These laps will be deleted if you reset the view or reload the page.
 
 Car will hold the car name. You will have to have the `db/cars.csv` file downloaded for this to work.
-
 
 #### Fuel Map
 
