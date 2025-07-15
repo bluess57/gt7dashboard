@@ -4,6 +4,7 @@ from .tabs.racelines_tab import RaceLinesTab
 from .tabs.race_tab import RaceTab
 from .tabs.config_tab import ConfigTab
 from .tabs.fuel_tab import FuelTab
+from .tabs.time_table_tab import RaceTimeTableTab
 from . import gt7diagrams
 
 class TabManager:
@@ -44,15 +45,18 @@ class TabManager:
 
         self.config_tab = ConfigTab(app_instance)
         self.fuel_tab = FuelTab(app_instance)
+        self.time_table_tab = RaceTimeTableTab(app_instance)
 
     def create_tabs(self):
         """Create and return the Tabs widget with all tab panels"""
-        return Tabs(tabs=[
+        tabs = [
             self.race_tab.get_tab_panel(),
-            self.race_lines_tab.get_tab_panel(),
             self.fuel_tab.get_tab_panel(),
             self.config_tab.get_tab_panel(),
-        ])
+            self.race_lines_tab.get_tab_panel(),
+            self.time_table_tab.get_tab_panel(),
+        ]
+        return Tabs(tabs=tabs)
 
     def update_all(self):
         """Update all tab displays"""

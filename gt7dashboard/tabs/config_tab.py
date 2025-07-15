@@ -73,7 +73,7 @@ class ConfigTab(GT7Tab):
         
         # Dashboard link
         self.div_gt7_dashboard = Div(width=120, height=30)
-        self.div_gt7_dashboard.text = f"<a href='https://github.com/snipem/gt7dashboard' target='_blank'>GT7 Dashboard</a>"
+        self.div_gt7_dashboard.text = f"Github source: <a href='https://github.com/snipem/gt7dashboard' target='_blank'>GT7 Dashboard</a>"
         
         # Set up event handlers
         self.ps5_ip_input.on_change("value", self.validate_ip)
@@ -84,7 +84,6 @@ class ConfigTab(GT7Tab):
         """Create layout for this tab"""
         return layout(
             [
-                [self.div_gt7_dashboard],
                 [self.config_help],
                 [self.network_help],
                 [column(self.ps5_ip_input, width=250, height=50, sizing_mode="fixed")],
@@ -96,6 +95,7 @@ class ConfigTab(GT7Tab):
                 [self.lap_path_input],
                 [column(self.load_path_button, width=250, height=50, sizing_mode="fixed")],
                 [self.lap_path_status],
+                [self.div_gt7_dashboard],
             ],
             sizing_mode="stretch_width",
         )
@@ -132,13 +132,17 @@ class ConfigTab(GT7Tab):
         self.update_connection_status()
         
     def load_path_button_handler(self, event):
-        """Handler for loading laps from specified path"""
-        from gt7dashboard.gt7helper import list_lap_files_from_path, load_laps_from_pickle, load_laps_from_json
+        """Handle loading laps from specified path"""
+        import os
+        import logging
+        from ..gt7helper import load_laps_from_pickle, load_laps_from_json, list_lap_files_from_path
         
+        logger = logging.getLogger(__name__)
         path = self.lap_path_input.value.strip()
         
         if not path:
             logger.warning("No lap data path provided")
+            self.lap_path_status.text = "<div style='color: orange;'>Please enter a valid path</div>"
             return
             
         logger.info(f"Loading laps from path: {path}")
@@ -151,15 +155,17 @@ class ConfigTab(GT7Tab):
                 # If directory, list all JSON files
                 available_files = list_lap_files_from_path(path)
                 if available_files:
-                    from gt7dashboard.gt7helper import bokeh_tuple_for_list_of_lapfiles
+                    from ..gt7helper import bokeh_tuple_for_list_of_lapfiles
                     # Update dropdown options - we need to access the select component in the main app
                     # This will require passing the select component to this class or having a callback mechanism
                     # For now, emit an event or directly update if accessible
                     self.app.select.options = bokeh_tuple_for_list_of_lapfiles(available_files)
+                    self.lap_path_status.text = f"<div style='color: green;'>Found {len(available_files)} lap files in: {path}</div>"
                     return
             
             # Try to load directly if it's a file
             if os.path.isfile(path):
+                laps = None
                 if path.endswith('.pickle'):
                     laps = load_laps_from_pickle(path)
                     self.app.gt7comm.load_laps(laps, replace_other_laps=True)
@@ -170,10 +176,13 @@ class ConfigTab(GT7Tab):
                     logger.info(f"Loaded {len(laps)} laps from JSON file: {path}")
                 else:
                     logger.warning(f"Unsupported file format: {path}")
+                    self.lap_path_status.text = f"<div style='color: red;'>Unsupported file format: {path}</div>"
                     return
                     
-                # Force update
-                #self.app.update_telemetry()  # Or however you trigger updates in the main app
+                # Update the time table tab with the loaded laps
+                if laps and hasattr(self.app, 'tab_manager') and hasattr(self.app.tab_manager, 'time_table_tab'):
+                    self.app.tab_manager.time_table_tab.show_laps(laps)
+                    logger.info(f"Updated time table tab with {len(laps)} laps")
                 
         except Exception as e:
             logger.error(f"Error loading laps from path: {e}")

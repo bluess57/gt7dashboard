@@ -1,7 +1,6 @@
 from datetime import datetime
 from gt7dashboard import gt7helper
 
-
 class Lap:
     def __init__(self):
         # Nice title for lap
@@ -71,6 +70,13 @@ class Lap:
             self.title,
             len(self.data_speed),
         )
+
+    def format_time(self):
+        # Format the lap time appropriately
+        minutes = int(self.data_time // 60)
+        seconds = int(self.data_time % 60)
+        milliseconds = int((self.data_time % 1) * 1000)
+        return f"{minutes}:{seconds:02d}.{milliseconds:03d}"
 
     def get_speed_peaks_and_valleys(self):
         (

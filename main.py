@@ -21,8 +21,9 @@ class GT7Application:
         load_laps_path = os.environ.get("GT7_LOAD_LAPS_PATH")
         if load_laps_path:
             from gt7dashboard.gt7helper import load_laps_from_pickle
+            laps = load_laps_from_pickle(load_laps_path)
             self.gt7comm.load_laps(
-                load_laps_from_pickle(load_laps_path), replace_other_laps=True
+                laps, replace_other_laps=True
             )
             
         # Start communication
@@ -32,6 +33,12 @@ class GT7Application:
         self.tab_manager = TabManager(self)
         self.tabs = self.tab_manager.create_tabs()
         
+        # Initialize time table tab with laps if any were loaded
+        if load_laps_path and hasattr(self.tab_manager, 'time_table_tab'):
+            laps = self.gt7comm.get_laps()
+            if laps:
+                self.tab_manager.time_table_tab.show_laps(laps)
+                
     def setup_document(self, doc):
         # Create a layout with header and tabs
         from bokeh.layouts import column
@@ -103,4 +110,5 @@ class GT7Application:
 
 # Create and set up the application
 app = GT7Application()
+#curdoc().theme = 'dark_minimal'
 app.setup_document(curdoc())
