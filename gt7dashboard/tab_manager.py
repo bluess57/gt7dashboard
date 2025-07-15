@@ -51,10 +51,10 @@ class TabManager:
         """Create and return the Tabs widget with all tab panels"""
         tabs = [
             self.race_tab.get_tab_panel(),
-            self.fuel_tab.get_tab_panel(),
-            self.config_tab.get_tab_panel(),
             self.race_lines_tab.get_tab_panel(),
             self.time_table_tab.get_tab_panel(),
+            self.fuel_tab.get_tab_panel(),
+            self.config_tab.get_tab_panel(),
         ]
         return Tabs(tabs=tabs)
 

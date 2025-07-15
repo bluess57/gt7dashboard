@@ -1,3 +1,5 @@
+import csv
+import os
 import logging
 import html
 from typing import List, Dict
@@ -345,8 +347,6 @@ class RaceTimeTableTab(GT7Tab):
     
     def export_handler(self, event):
         """Export lap times to CSV"""
-        import csv
-        import os
         from datetime import datetime
         
         if not self.lap_times_source.data["time"]:

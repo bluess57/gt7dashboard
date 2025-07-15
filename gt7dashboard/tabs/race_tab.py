@@ -1,4 +1,7 @@
+import os
 import logging
+import copy
+import time
 import html
 import itertools
 from typing import List
@@ -10,7 +13,6 @@ from bokeh.models import (
 )
 from bokeh.palettes import Plasma11 as palette
 
-from ..gt7help import add_help_tooltip
 from ..gt7helper import bokeh_tuple_for_list_of_laps, bokeh_tuple_for_list_of_lapfiles
 from ..gt7lap import Lap
 
@@ -277,7 +279,6 @@ class RaceTab:
             self.div_deviance_laps_on_display.text += f"<b>Lap {fastest_lap.number}:</b> {fastest_lap.title}<br>"
 
         # Update brakepoints
-        import os
         brake_points_enabled = os.environ.get("GT7_ADD_BRAKEPOINTS") == "true"
 
         if brake_points_enabled and len(last_lap.data_braking) > 0:
@@ -303,8 +304,6 @@ class RaceTab:
             
     def update_lap_change(self, step=None):
         """Update the display when laps change"""
-        import copy
-        import time
         from ..gt7helper import get_last_reference_median_lap
         from ..gt7diagrams import get_speed_peak_and_valley_diagram
         
@@ -363,7 +362,7 @@ class RaceTab:
         
     def initialize(self):
         """Initialize race lines and setup available lap files"""
-        import os
+
         from ..gt7helper import list_lap_files_from_path, bokeh_tuple_for_list_of_lapfiles
         
         # Set up race line components if they haven't been created yet
