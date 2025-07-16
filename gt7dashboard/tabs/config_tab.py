@@ -3,6 +3,7 @@ import logging
 import html
 from bokeh.layouts import layout, column
 from bokeh.models import Div, Button, TextInput, TabPanel
+import subprocess
 from ..gt7help import add_help_tooltip
 from ..tabs.base_tab import GT7Tab
 
@@ -71,6 +72,10 @@ class ConfigTab(GT7Tab):
         self.connect_button = Button(label="Connect", button_type="primary", width=100)
         self.load_path_button = Button(label="Load Laps From Path", button_type="success", width=100)
         
+        # Download Cars CSV button
+        self.download_cars_button = Button(label="Download cars.csv", button_type="success", width=100)
+        self.download_cars_status = Div(text="", width=400, height=30)
+
         # Dashboard link
         self.div_gt7_dashboard = Div(width=120, height=30)
         self.div_gt7_dashboard.text = f"Github source: <a href='https://github.com/snipem/gt7dashboard' target='_blank'>GT7 Dashboard</a>"
@@ -79,7 +84,8 @@ class ConfigTab(GT7Tab):
         self.ps5_ip_input.on_change("value", self.validate_ip)
         self.connect_button.on_click(self.connect_button_handler)
         self.load_path_button.on_click(self.load_path_button_handler)
-        
+        self.download_cars_button.on_click(self.download_cars_csv_handler)  # NEW
+
     def create_layout(self):
         """Create layout for this tab"""
         return layout(
@@ -95,6 +101,8 @@ class ConfigTab(GT7Tab):
                 [self.lap_path_input],
                 [column(self.load_path_button, width=250, height=50, sizing_mode="fixed")],
                 [self.lap_path_status],
+                [column(self.download_cars_button, width=200, height=50, sizing_mode="fixed")],
+                [self.download_cars_status],
                 [self.div_gt7_dashboard],
             ],
             sizing_mode="stretch_width",
@@ -206,6 +214,16 @@ class ConfigTab(GT7Tab):
                 Make sure your PS5 is on the same network and Gran Turismo 7 is running.
             </div>
             """
+    
+    def download_cars_csv_handler(self, event):
+        """Handler to download cars.csv using the helper script"""
+        try:
+            subprocess.check_call(
+                ["python", "helper/download_cars_csv.py"]
+            )
+            self.download_cars_status.text = "<span style='color:green;'>cars.csv downloaded successfully.</span>"
+        except Exception as e:
+            self.download_cars_status.text = f"<span style='color:red;'>Failed to download cars.csv: {e}</span>"
     
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""
