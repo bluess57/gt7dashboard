@@ -133,8 +133,6 @@ class ConfigTab(GT7Tab):
         
     def load_path_button_handler(self, event):
         """Handle loading laps from specified path"""
-        import os
-        import logging
         from ..gt7helper import load_laps_from_pickle, load_laps_from_json, list_lap_files_from_path
         
         logger = logging.getLogger(__name__)
