@@ -50,7 +50,7 @@ class RaceTab:
     def create_components(self):
         """Create all UI components for this tab"""
         # Create all static elements
-        self.div_tuning_info = Div(width=200, height=100)
+        #self.div_tuning_info = Div(width=200, height=100)
         self.div_speed_peak_valley_diagram = Div(width=200, height=125)
         self.div_header_line = Div(width=400, height=30)
         
@@ -111,7 +111,7 @@ class RaceTab:
                 [self.race_diagram.f_boost],
                 [self.race_diagram.f_tires],
                 [self.race_time_table.t_lap_times, self.race_time_table_help],
-                [self.div_tuning_info],
+                #[self.div_tuning_info],
             ]
         )
         
@@ -136,14 +136,14 @@ class RaceTab:
         self.div_header_line.text = f"<p><b>Last Lap: {last_lap.title} ({last_lap.car_name()})<b></p>" \
                    f"<p><b>Reference Lap: {reference_lap.title} ({reference_lap.car_name()})<b></p>"
                    
-    def update_tuning_info(self):
-        """Update tuning information display"""
-        self.div_tuning_info.text = """<h4>Tuning Info</h4>
-        <p>Max Speed: <b>%d</b> kph</p>
-        <p>Min Body Height: <b>%d</b> mm</p>""" % (
-            self.app.gt7comm.session.max_speed,
-            self.app.gt7comm.session.min_body_height,
-        )
+    # def update_tuning_info(self):
+    #     """Update tuning information display"""
+    #     self.div_tuning_info.text = """<h4>Tuning Info</h4>
+    #     <p>Max Speed: <b>%d</b> kph</p>
+    #     <p>Min Body Height: <b>%d</b> mm</p>""" % (
+    #         self.app.gt7comm.session.max_speed,
+    #         self.app.gt7comm.session.min_body_height,
+    #     )
         
     def reset_button_handler(self, event):
         """Reset all data and graphs"""
@@ -313,7 +313,7 @@ class RaceTab:
 
         # Check for session change
         if hasattr(self, 'session_stored') and self.app.gt7comm.session != self.session_stored:
-            self.update_tuning_info()
+            #self.update_tuning_info()
             self.session_stored = copy.copy(self.app.gt7comm.session)
 
         # Removed connection status check:

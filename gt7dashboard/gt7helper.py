@@ -67,7 +67,7 @@ def get_time_delta_dataframe_for_lap(lap: Lap, name: str) -> DataFrame:
     lap_time_ms = [convert_seconds_to_milliseconds(item) for item in lap_time]
 
     series = pd.Series(
-        lap_distance, index=pd.TimedeltaIndex(data=lap_time_ms, unit="ms")
+        lap_distance, index=pd.to_timedelta(lap_time_ms, unit="ms")
     )
 
     upsample = series.resample("10ms").asfreq()
@@ -231,6 +231,25 @@ def seconds_to_lap_time(seconds):
     remaining = seconds % 60
     return prefix + "{:01.0f}:{:06.3f}".format(minutes, remaining)
 
+
+# def find_peaks(data, width=1):
+#     """
+#     Simple peak finding: returns indices of local maxima in data.
+#     :param data: list or 1D array of numbers
+#     :param width: minimum number of points on each side to consider a peak
+#     :return: list of indices of peaks, empty dict (for compatibility)
+#     """
+#     peaks = []
+#     n = len(data)
+#     for i in range(width, n - width):
+#         is_peak = True
+#         for w in range(1, width + 1):
+#             if data[i] <= data[i - w] or data[i] <= data[i + w]:
+#                 is_peak = False
+#                 break
+#         if is_peak:
+#             peaks.append(i)
+#     return peaks, {}  # mimic scipy's return signature
 
 def find_speed_peaks_and_valleys(
         lap: Lap, width: int = 100

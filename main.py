@@ -2,6 +2,7 @@ import logging
 import os
 from bokeh.plotting import curdoc
 from bokeh.models import Div
+from bokeh.layouts import column
 from gt7dashboard import gt7communication
 from gt7dashboard.tab_manager import TabManager
 from gt7dashboard.styles import get_header_styles  # Rename this function in styles.py
@@ -41,7 +42,7 @@ class GT7Application:
                 
     def setup_document(self, doc):
         # Create a layout with header and tabs
-        from bokeh.layouts import column
+        
         
         # Create header (previously footer)
         header = self.create_header()
@@ -68,7 +69,7 @@ class GT7Application:
 
     def create_header(self):
         """Create a header showing connection status and PS5 IP"""
-        from bokeh.models import Div
+        
         
         # Create the header div with full width
         self.header = Div(
@@ -89,15 +90,16 @@ class GT7Application:
         status_text = "Connected" if is_connected else "Not Connected"
         
         return f"""
-        <div style="display: flex; justify-content: space-between; padding: 5px 10px; 
-                   background-color: #f5f5f5; border-bottom: 1px solid #ddd;">
-            <div style="margin-right: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; 
+                   background-color: #f5f5f5; border-bottom: 1px solid #ddd; 
+                   width: 100%; box-sizing: border-box; position: relative; left: 0; right: 0;">
+            <div style="margin-right: 20px; flex: 0 0 auto;">
                 <span style="font-weight: bold;">GT7 Dashboard</span>
             </div>
             <div style="flex-grow: 1; text-align: center;">
                 <span style="color: {status_color}; font-weight: bold;">{status_icon} {status_text}</span>
             </div>
-            <div style="margin-left: 20px;">
+            <div style="margin-left: 20px; flex: 0 0 auto;">
                 PS5 IP: {self.gt7comm.playstation_ip}
             </div>
         </div>
