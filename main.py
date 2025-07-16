@@ -110,6 +110,24 @@ class GT7Application:
         if hasattr(self, 'header'):
             self.header.text = self._get_header_html()
 
+    def delete_lap(self, lap_number):
+        """
+        Delete a lap by its number from the loaded laps.
+        Updates all tabs that display lap data.
+        """
+        # Remove lap from gt7comm.laps
+        original_count = len(self.gt7comm.laps)
+        self.gt7comm.laps = [lap for lap in self.gt7comm.laps if getattr(lap, 'number', None) != lap_number]
+        new_count = len(self.gt7comm.laps)
+
+        # Update time table tab and other relevant tabs
+        if hasattr(self.tab_manager, 'time_table_tab'):
+            self.tab_manager.time_table_tab.show_laps(self.gt7comm.laps)
+        if hasattr(self.tab_manager, 'race_tab'):
+            self.tab_manager.race_tab.update_lap_change()
+
+        logger.info(f"Deleted lap {lap_number}. Laps before: {original_count}, after: {new_count}")
+
 # Create and set up the application
 app = GT7Application()
 #curdoc().theme = 'dark_minimal'
