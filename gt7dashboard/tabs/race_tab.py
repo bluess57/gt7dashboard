@@ -97,7 +97,6 @@ class RaceTab:
         # Create the complete layout
         self.layout = layout(
             children=[
-                # Removed connection info from this row
                 [self.div_header_line, self.reset_button, self.save_button, self.select_title, self.select],
                 [self.race_diagram.f_time_diff, layout(children=[self.manual_log_button, self.checkbox_group, self.reference_lap_select])],
                 [self.race_diagram.f_speed, self.s_race_line],
