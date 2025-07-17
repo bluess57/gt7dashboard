@@ -7,7 +7,7 @@ from bokeh.plotting import figure
 
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
-from gt7dashboard.race_time_table import RaceTimeTable
+from gt7dashboard.race_time_datatable import RaceTimeDataTable
 
 
 def get_throttle_braking_race_line_diagram():
@@ -626,7 +626,7 @@ def get_fuel_map_html_table(last_lap: Lap) -> str:
         no_fuel_consumption = fuel_map.fuel_consumed_per_lap <= 0
         line_style = ""
         if fuel_map.mixture_setting == 0 and not no_fuel_consumption:
-            line_style = "background-color:rgba(0,255,0,0.5)"
+            line_style = "background-color: #444 "
         table += (
                 "<tr id='fuel_map_row_%d' style='%s'>"
                 "<td style='text-align:center'>%d</td>"
@@ -689,11 +689,11 @@ def get_speed_peak_and_valley_diagram(last_lap: Lap, reference_lap: Lap) -> str:
     <col style='border-left: 1px solid #cdd0d4;'/>
     <col/>
     <col/>
-    <col style="background-color: lightblue;"/>
     <col/>
     <col/>
     <col/>
-    <col style="background-color: thistle;"/>
+    <col/>
+    <col/>
     <col/>
   </colgroup>"""
 
@@ -768,12 +768,8 @@ def get_speed_peak_and_valley_diagram(last_lap: Lap, reference_lap: Lap) -> str:
                 <td>-</td>
             """
 
-
-
         table += '</tr>'
         i+=1
-
-
 
     table += '</td>'
     table += '<td>'
@@ -785,9 +781,7 @@ def get_speed_peak_and_valley_diagram(last_lap: Lap, reference_lap: Lap) -> str:
 
 def get_speed_peak_and_valley_diagram_row(peak_speed_data_x, peak_speed_data_y, table, valley_speed_data_x,
                                           valley_speed_data_y):
-    row = ""
-
-    row += "<tr><th>#</th><th>Peak</th><th>Position</th></tr>"
+    row = "<tr><th>#</th><th>Peak</th><th>Position</th></tr>"
     for i, dx in enumerate(peak_speed_data_x):
         row += "<tr><td>%d.</td><td>%d kph</td><td>%d</td></tr>" % (
             i + 1,

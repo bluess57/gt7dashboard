@@ -1,11 +1,11 @@
 import logging
 import os
 from bokeh.plotting import curdoc
-from bokeh.models import Div
+from bokeh.models import Div, GlobalImportedStyleSheet, ImportedStyleSheet
 from bokeh.layouts import column
+
 from gt7dashboard import gt7communication
 from gt7dashboard.tab_manager import TabManager
-from gt7dashboard.styles import get_header_styles  # Rename this function in styles.py
 
 # Set up logging
 logger = logging.getLogger('main.py')
@@ -41,17 +41,21 @@ class GT7Application:
                 self.tab_manager.time_table_tab.show_laps(laps)
                 
     def setup_document(self, doc):
-        # Create a layout with header and tabs
-        
-        
-        # Create header (previously footer)
+
+        doc.theme = 'carbon'
+
+        css_path = "gt7dashboard/static/css/styles.css"
+        globalStylesheet = GlobalImportedStyleSheet(url=css_path)
+
         header = self.create_header()
         
         # Create a layout with header and tabs
         main_layout = column(
             header,     # Put header at the top instead of bottom
             self.tabs,
-            sizing_mode="stretch_both"  # Change to stretch_both instead of stretch_width
+            sizing_mode="stretch_both",
+            name="main",
+            stylesheets=[globalStylesheet]  # Change to stretch_both instead of stretch_width
         )
 
         # Add the layout to the document
@@ -64,21 +68,18 @@ class GT7Application:
         doc.add_periodic_callback(self.tab_manager.config_tab.update_connection_status, 5000)
         doc.add_periodic_callback(self.update_header, 5000)  # Update header every 5 seconds
 
-        # Add CSS for header styling
-        doc.add_root(get_header_styles())
-
     def create_header(self):
         """Create a header showing connection status and PS5 IP"""
         
-        
         # Create the header div with full width
         self.header = Div(
+            name="gt7-header",
             text=self._get_header_html(),
             width=None,  # Remove any width restriction
             height=30,
             sizing_mode="stretch_width",  # Make it stretch horizontally
             css_classes=["gt7-header"]
-        )
+            )
         
         return self.header
 
@@ -90,8 +91,8 @@ class GT7Application:
         status_text = "Connected" if is_connected else "Not Connected"
         
         return f"""
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; 
-                   background-color: #f5f5f5; border-bottom: 1px solid #ddd; 
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;
+                   border-bottom: 1px solid #ddd; 
                    width: 100%; box-sizing: border-box; position: relative; left: 0; right: 0;">
             <div style="margin-right: 20px; flex: 0 0 auto;">
                 <span style="font-weight: bold;">GT7 Dashboard</span>
@@ -130,5 +131,8 @@ class GT7Application:
 
 # Create and set up the application
 app = GT7Application()
-#curdoc().theme = 'dark_minimal'
+
+stylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
+curdoc().add_root(stylesheet)
+
 app.setup_document(curdoc())

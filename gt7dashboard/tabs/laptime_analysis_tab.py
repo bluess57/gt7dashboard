@@ -18,20 +18,20 @@ from .base_tab import GT7Tab
 logger = logging.getLogger('time_table_tab')
 logger.setLevel(logging.DEBUG)
 
-class RaceTimeTableTab(GT7Tab):
+class LapTimeAnalysisTab(GT7Tab):
     """Race Time Table tab for displaying and analyzing lap times"""
     
     def __init__(self, app_instance):
         """Initialize the race time table tab"""
-        super().__init__("Lap Times")
+        super().__init__("Analyze Lap Times")
         self.app = app_instance
         self.create_components()
         self.layout = self.create_layout()
-        
+
     def create_components(self):
         """Create all UI components for this tab"""
         # Create header and info components
-        self.title_div = Div(text="<h3>Race Time Analysis</h3>", width=400)
+        self.title_div = Div(text="<h3>Lap Time Analysis</h3>", width=400)
         self.description_div = Div(text="""
             <p>This tab shows detailed lap time information and analysis.</p>
             <p>Select rows in the table to highlight those laps in the charts.</p>
@@ -65,10 +65,10 @@ class RaceTimeTableTab(GT7Tab):
         """Create the lap times data table"""
         # Create data source for lap times
         self.lap_times_source = ColumnDataSource(data={
-            "index": [], 
-            "car": [], 
-            "time": [], 
-            "number": [], 
+            "index": [],
+            "car": [],
+            "time": [],
+            "number": [],
             "title": [],
             "diff_to_best": [],
             "diff_to_prev": [],
@@ -112,7 +112,7 @@ class RaceTimeTableTab(GT7Tab):
         # Statistics row
         stats_row = row(
             self.lap_count_div,
-            self.best_lap_div, 
+            self.best_lap_div,
             self.avg_lap_div,
             sizing_mode="stretch_width"
         )
@@ -406,4 +406,4 @@ class RaceTimeTableTab(GT7Tab):
     
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""
-        return TabPanel(child=self.layout, title="Lap Times")
+        return TabPanel(child=self.layout, title="Analysze Lap Times")

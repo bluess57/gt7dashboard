@@ -4,7 +4,8 @@ from .tabs.racelines_tab import RaceLinesTab
 from .tabs.race_tab import RaceTab
 from .tabs.config_tab import ConfigTab
 from .tabs.fuel_tab import FuelTab
-from .tabs.time_table_tab import RaceTimeTableTab
+from .tabs.laptime_analysis_tab import LapTimeAnalysisTab
+from .tabs.racetime_datatable_tab import RaceTimeDataTableTab
 from . import gt7diagrams
 
 class TabManager:
@@ -15,7 +16,6 @@ class TabManager:
 
         # Create shared components
         self.race_diagram = gt7diagrams.RaceDiagram(width=1000)
-        self.race_time_table = gt7diagrams.RaceTimeTable()
 
         # Create race line figure
         race_line_tooltips = [("index", "$index"), ("Brakepoint", "")]
@@ -39,20 +39,22 @@ class TabManager:
         # Create tabs
         self.race_lines_tab = RaceLinesTab(app_instance)
         self.race_tab = RaceTab(app_instance)
-        self.race_tab.set_diagrams(self.race_diagram, self.race_time_table, self.s_race_line)
+        self.race_tab.set_diagrams(self.race_diagram, self.s_race_line)
         self.race_tab.initialize()
         self.race_tab.finalize_layout()
 
         self.config_tab = ConfigTab(app_instance)
         self.fuel_tab = FuelTab(app_instance)
-        self.time_table_tab = RaceTimeTableTab(app_instance)
+        self.laptime_table_tab = LapTimeAnalysisTab(app_instance)
+        self.racetime_datatable_tab = RaceTimeDataTableTab(app_instance)
 
     def create_tabs(self):
         """Create and return the Tabs widget with all tab panels"""
         tabs = [
             self.race_tab.get_tab_panel(),
             self.race_lines_tab.get_tab_panel(),
-            self.time_table_tab.get_tab_panel(),
+            self.racetime_datatable_tab.get_tab_panel(),
+            self.laptime_table_tab.get_tab_panel(),
             self.fuel_tab.get_tab_panel(),
             self.config_tab.get_tab_panel(),
         ]

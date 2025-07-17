@@ -9,7 +9,8 @@ from typing import List
 from bokeh.layouts import layout
 from bokeh.models import (
     Div, Button, Select, CheckboxGroup, ColumnDataSource,
-    Paragraph, TabPanel
+    Paragraph, TabPanel,
+    InlineStyleSheet
 )
 from bokeh.palettes import Plasma11 as palette
 
@@ -26,7 +27,7 @@ class RaceTab:
         """Initialize the race telemetry tab"""
         self.app = app_instance
         self.race_diagram = None  # Will be set by tab_manager
-        self.race_time_table = None  # Will be set by tab_manager
+        #self.race_time_table = None  # Will be set by tab_manager
         self.s_race_line = None  # Will be set by tab_manager
         
         # State variables
@@ -38,14 +39,14 @@ class RaceTab:
         self.create_components()
         self.layout = self.create_layout()
         
-    def set_diagrams(self, race_diagram, race_time_table, s_race_line):
+    def set_diagrams(self, race_diagram, s_race_line):
         """Set diagram components that are shared across tabs"""
         self.race_diagram = race_diagram
-        self.race_time_table = race_time_table
         self.s_race_line = s_race_line
         
         # Connect race time table selection callback
-        self.race_time_table.lap_times_source.selected.on_change('indices', self.table_row_selection_callback)
+        # TODO:
+        # self.race_time_table.lap_times_source.selected.on_change('indices', self.table_row_selection_callback)
         
     def create_components(self):
         """Create all UI components for this tab"""
@@ -56,8 +57,8 @@ class RaceTab:
         
         # Create buttons
         self.manual_log_button = Button(label="Log Lap Now")
-        self.save_button = Button(label="Save Laps")
-        self.reset_button = Button(label="Reset Laps")
+        self.save_button = Button(label="Save Laps", button_type="success")
+        self.reset_button = Button(label="Reset Laps", button_type="danger")
         
         # Create selects
         self.select_title = Paragraph(text="Load Laps:", align="center")
@@ -88,8 +89,8 @@ class RaceTab:
             return
             
         # Create help tooltip for race time table
-        from ..gt7help import TIME_TABLE
-        self.race_time_table_help = Div(text=f'<i class="fa fa-question-circle" title="{html.escape(TIME_TABLE)}"></i>', width=20)
+        # from ..gt7help import TIME_TABLE
+        # self.race_time_table_help = Div(text=f'<i class="fa fa-question-circle" title="{html.escape(TIME_TABLE)}"></i>', width=20)
         
         # Create and get diviance laps div
         self.div_deviance_laps_on_display = Div(width=200, height=self.race_diagram.f_speed_variance.height)
@@ -109,21 +110,13 @@ class RaceTab:
                 [self.race_diagram.f_rpm],
                 [self.race_diagram.f_boost],
                 [self.race_diagram.f_tires],
-                [self.race_time_table.t_lap_times, self.race_time_table_help],
+                #[self.race_time_table.t_lap_times, self.race_time_table_help],
                 #[self.div_tuning_info],
             ]
         )
         
         return self.layout
         
-    def update_connection_info(self, step=None):
-        """Update the connection status indicator"""
-        self.div_connection_info.text = ""
-        if self.app.gt7comm.is_connected():
-            self.div_connection_info.text += f"<p title='Connected to {self.app.gt7comm.playstation_ip}'>🟢</p>"
-        else:
-            self.div_connection_info.text += f"<p title='Not connected to {self.app.gt7comm.playstation_ip}'>🔴</p>"
-
     def update_reference_lap_select(self, laps):
         """Update the reference lap selection dropdown"""
         self.reference_lap_select.options = [
@@ -164,8 +157,8 @@ class RaceTab:
             self.reference_lap_race_line.data_source.data = {"raceline_x": [], "raceline_z": []}
         
         # Reset race time table
-        self.race_time_table.lap_times_source.data = {"index": [], "car": [], "time": [], "number": [], "title": []}
-        self.race_time_table.lap_times_source.selected.indices = []
+        # self.race_time_table.lap_times_source.data = {"index": [], "car": [], "time": [], "number": [], "title": []}
+        # self.race_time_table.lap_times_source.selected.indices = []
         
         # Clear information displays
         self.div_header_line.text = "<p><b>Last Lap: None</b></p><p><b>Reference Lap: None</b></p>"
@@ -230,7 +223,7 @@ class RaceTab:
         
     def table_row_selection_callback(self, attrname, old, new):
         """Handle selecting rows in the lap times table"""
-        selectionIndex = self.race_time_table.lap_times_source.selected.indices
+        #selectionIndex = self.race_time_table.lap_times_source.selected.indices
         logger.info("You have selected the row nr " + str(selectionIndex))
 
         colors = ["blue", "magenta", "green", "orange", "black", "purple"]
@@ -315,11 +308,6 @@ class RaceTab:
             #self.update_tuning_info()
             self.session_stored = copy.copy(self.app.gt7comm.session)
 
-        # Removed connection status check:
-        # if hasattr(self, 'connection_status_stored') and self.app.gt7comm.is_connected() != self.connection_status_stored:
-        #     self.update_connection_info()
-        #     self.connection_status_stored = copy.copy(self.app.gt7comm.is_connected())
-
         # This saves on cpu time, 99.9% of the time this is true
         if laps == self.laps_stored and not self.telemetry_update_needed:
             return
@@ -342,9 +330,9 @@ class RaceTab:
 
         logger.debug("Updating of %d laps" % len(laps))
 
-        start_time = time.time()
-        self.race_time_table.show_laps(laps)
-        logger.debug("Updating time table took %dms" % ((time.time() - start_time) * 1000))
+        #start_time = time.time()
+        #self.race_time_table.show_laps(laps)
+        #logger.debug("Updating time table took %dms" % ((time.time() - start_time) * 1000))
 
         start_time = time.time()
         self.update_reference_lap_select(laps)

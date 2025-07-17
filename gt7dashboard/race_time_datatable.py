@@ -1,9 +1,9 @@
 from typing import List
-from bokeh.models import ColumnDataSource, TableColumn, DataTable
+from bokeh.models import ColumnDataSource, TableColumn, DataTable, ImportedStyleSheet
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
 
-class RaceTimeTable(object):
+class RaceTimeDataTable(object):
     def __init__(self):
         self.columns = [
             TableColumn(field="number", title="#"),
@@ -24,8 +24,13 @@ class RaceTimeTable(object):
         )
         self.t_lap_times: DataTable
 
+        dtstylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
+
         self.t_lap_times = DataTable(
-            source=self.lap_times_source, columns=self.columns, index_position=None, css_classes=["lap_times_table"]
+            source=self.lap_times_source, columns=self.columns, index_position=None, 
+            width=1000,
+            autosize_mode ="fit_columns",
+            stylesheets=[dtstylesheet]
         )
 
     def show_laps(self, laps: List[Lap]):
