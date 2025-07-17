@@ -18,6 +18,10 @@ from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7data import GTData
 from gt7dashboard.gt7session import Session
 
+# Set up logging
+logger = logging.getLogger('gt7communication.py')
+logger.setLevel(logging.DEBUG)
+
 class GT7Communication(Thread):
     def __init__(self, playstation_ip):
         # Thread control
@@ -29,6 +33,7 @@ class GT7Communication(Thread):
 
         # Set lap callback function as none
         self.lap_callback_function = None
+        self._on_load_laps_callback = None
 
         self.playstation_ip = playstation_ip
         self.send_port = 33739
@@ -44,6 +49,16 @@ class GT7Communication(Thread):
         # When recording data. Useful when recording replays.
         self.always_record_data = False
 
+    def set_on_connected_callback(self, callback):
+        """Register a callback to be called when connection is established."""
+        self._on_connected_callback = callback
+    
+    def _check_connection_event(self):
+        connected = self.is_connected()
+        if connected and not self._was_connected:
+            if self._on_connected_callback:
+                self._on_connected_callback()
+        self._was_connected = connected
 
     def stop(self):
         self._shall_run = False
@@ -103,6 +118,9 @@ class GT7Communication(Thread):
                             if package_nr > 100:
                                 self._send_hb(s)
                                 package_nr = 0
+
+                        self._check_connection_event()
+
                     except (OSError, TimeoutError) as e:
                         # Handler for package exceptions
                         self._send_hb(s)
@@ -112,7 +130,7 @@ class GT7Communication(Thread):
 
             except Exception as e:
                 # Handler for general socket exceptions
-                # TODO logging not working
+                logger.Error("Error while connecting to %s:%d: %s" % (self.playstation_ip, self.send_port, e))
                 print("Error while connecting to %s:%d: %s" % (self.playstation_ip, self.send_port, e))
                 s.close()
                 # Wait before reconnect
@@ -141,6 +159,11 @@ class GT7Communication(Thread):
     def get_laps(self) -> List[Lap]:
         return self.laps
 
+
+    def set_on_load_laps_callback(self, callback):
+        """Register a callback to be called when laps are loaded."""
+        self._on_load_laps_callback = callback
+
     def load_laps(self, laps: List[Lap], to_last_position = False, to_first_position = False, replace_other_laps = False):
         if to_last_position:
             self.laps = self.laps + laps
@@ -148,6 +171,9 @@ class GT7Communication(Thread):
             self.laps = laps + self.laps
         elif replace_other_laps:
             self.laps = laps
+        
+        if self._on_load_laps_callback:
+            self._on_load_laps_callback(laps)
 
     def _log_data(self, data):
 

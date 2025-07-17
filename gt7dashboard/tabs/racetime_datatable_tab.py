@@ -12,7 +12,6 @@ class RaceTimeDataTableTab:
             self.race_time_table.t_lap_times,
             sizing_mode="stretch_both"
         )
-        # self.panel = Panel(child=self.layout, title="Lap Times")
 
     def show_laps(self, laps):
         self.race_time_table.show_laps(laps)

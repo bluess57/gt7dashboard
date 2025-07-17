@@ -1,7 +1,11 @@
+import logging
 from typing import List
 from bokeh.models import ColumnDataSource, TableColumn, DataTable, ImportedStyleSheet
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
+
+logger = logging.getLogger('RaceTimeDataTable')
+logger.setLevel(logging.DEBUG)
 
 class RaceTimeDataTable(object):
     def __init__(self):
@@ -34,6 +38,7 @@ class RaceTimeDataTable(object):
         )
 
     def show_laps(self, laps: List[Lap]):
+        logger.info("show_laps")
         best_lap = gt7helper.get_best_lap(laps)
         if best_lap is None:
             return

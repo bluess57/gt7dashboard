@@ -62,5 +62,5 @@ class TabManager:
 
     def update_all(self):
         """Update all tab displays"""
-        self.config_tab.update_connection_status()
+        # self.config_tab.update_connection_status()
         # Add other tab updates as needed

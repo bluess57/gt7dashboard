@@ -17,7 +17,9 @@ class GT7Application:
         # Set up GT7 communication
         playstation_ip = os.environ.get("GT7_PLAYSTATION_IP", "255.255.255.255")
         self.gt7comm = gt7communication.GT7Communication(playstation_ip)
-        
+        self.gt7comm.set_on_connected_callback(self.update_header)
+        self.gt7comm.set_on_load_laps_callback(self.on_laps_loaded)
+
         # Load laps if specified
         load_laps_path = os.environ.get("GT7_LOAD_LAPS_PATH")
         if load_laps_path:
@@ -41,21 +43,21 @@ class GT7Application:
                 self.tab_manager.time_table_tab.show_laps(laps)
                 
     def setup_document(self, doc):
-
         doc.theme = 'carbon'
 
         css_path = "gt7dashboard/static/css/styles.css"
         globalStylesheet = GlobalImportedStyleSheet(url=css_path)
+        doc.add_root(globalStylesheet)
 
         header = self.create_header()
         
         # Create a layout with header and tabs
         main_layout = column(
-            header,     # Put header at the top instead of bottom
+            header,
             self.tabs,
             sizing_mode="stretch_both",
             name="main",
-            stylesheets=[globalStylesheet]  # Change to stretch_both instead of stretch_width
+            stylesheets=[globalStylesheet]
         )
 
         # Add the layout to the document
@@ -65,8 +67,7 @@ class GT7Application:
         # Set up periodic callbacks
         doc.add_periodic_callback(self.tab_manager.race_tab.update_lap_change, 1000)
         #doc.add_periodic_callback(lambda step=None: self.tab_manager.fuel_tab.update_fuel_map(step), 5000)
-        doc.add_periodic_callback(self.tab_manager.config_tab.update_connection_status, 5000)
-        doc.add_periodic_callback(self.update_header, 5000)  # Update header every 5 seconds
+        #doc.add_periodic_callback(self.update_header, 5000)  # Update header every 5 seconds
 
     def create_header(self):
         """Create a header showing connection status and PS5 IP"""
@@ -74,16 +75,14 @@ class GT7Application:
         # Create the header div with full width
         self.header = Div(
             name="gt7-header",
-            text=self._get_header_html(),
-            width=None,  # Remove any width restriction
+            text=self.update_connection_status(),
             height=30,
-            sizing_mode="stretch_width",  # Make it stretch horizontally
-            css_classes=["gt7-header"]
+            sizing_mode="stretch_width"
             )
         
         return self.header
 
-    def _get_header_html(self):
+    def update_connection_status(self):
         """Generate the HTML content for the header"""
         is_connected = self.gt7comm.is_connected()
         status_color = "green" if is_connected else "red"
@@ -109,7 +108,11 @@ class GT7Application:
     def update_header(self, step=None):
         """Update the header with current connection status"""
         if hasattr(self, 'header'):
-            self.header.text = self._get_header_html()
+            self.header.text = self.update_connection_status()
+
+    def on_laps_loaded(self, laps):
+        if hasattr(self, "race_time_data_table_tab"):
+            self.race_time_data_table_tab.show_laps(laps)
 
     def delete_lap(self, lap_number):
         """
@@ -131,8 +134,4 @@ class GT7Application:
 
 # Create and set up the application
 app = GT7Application()
-
-stylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
-curdoc().add_root(stylesheet)
-
 app.setup_document(curdoc())

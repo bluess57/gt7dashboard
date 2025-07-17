@@ -330,9 +330,11 @@ class RaceTab:
 
         logger.debug("Updating of %d laps" % len(laps))
 
-        #start_time = time.time()
+        start_time = time.time()
         #self.race_time_table.show_laps(laps)
-        #logger.debug("Updating time table took %dms" % ((time.time() - start_time) * 1000))
+        if hasattr(self.app, "race_time_data_table_tab"):
+          self.app.race_time_data_table_tab.show_laps(laps)
+        logger.debug("Updating time table took %dms" % ((time.time() - start_time) * 1000))
 
         start_time = time.time()
         self.update_reference_lap_select(laps)

@@ -137,7 +137,7 @@ class ConfigTab(GT7Tab):
         self.app.gt7comm.restart()
         
         # Update connection status
-        self.update_connection_status()
+        #self.update_connection_status()
         
     def load_path_button_handler(self, event):
         """Handle loading laps from specified path"""
@@ -197,23 +197,23 @@ class ConfigTab(GT7Tab):
             
         self.lap_path_status.text = f"<div style='color: green;'>Successfully loaded data from: {path}</div>"
         
-    def update_connection_status(self, step=None):
-        """Update the connection status display on config tab"""
-        if self.app.gt7comm.is_connected():
-            self.connection_status.text = f"""
-            <div style="color: green; font-weight: bold;">
-                ✓ Connected to PlayStation at {self.app.gt7comm.playstation_ip}
-            </div>
-            """
-        else:
-            self.connection_status.text = f"""
-            <div style="color: red; font-weight: bold;">
-                ✗ Not connected to PlayStation at {self.app.gt7comm.playstation_ip}
-            </div>
-            <div>
-                Make sure your PS5 is on the same network and Gran Turismo 7 is running.
-            </div>
-            """
+    # def update_connection_status(self, step=None):
+    #     """Update the connection status display on config tab"""
+    #     if self.app.gt7comm.is_connected():
+    #         self.connection_status.text = f"""
+    #         <div style="color: green; font-weight: bold;">
+    #             ✓ Connected to PlayStation at {self.app.gt7comm.playstation_ip}
+    #         </div>
+    #         """
+    #     else:
+    #         self.connection_status.text = f"""
+    #         <div style="color: red; font-weight: bold;">
+    #             ✗ Not connected to PlayStation at {self.app.gt7comm.playstation_ip}
+    #         </div>
+    #         <div>
+    #             Make sure your PS5 is on the same network and Gran Turismo 7 is running.
+    #         </div>
+    #         """
     
     def download_cars_csv_handler(self, event):
         """Handler to download cars.csv using the helper script"""

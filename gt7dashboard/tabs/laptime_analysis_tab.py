@@ -15,7 +15,7 @@ from ..gt7help import TIME_TABLE
 from ..gt7lap import Lap
 from .base_tab import GT7Tab
 
-logger = logging.getLogger('time_table_tab')
+logger = logging.getLogger('laptime_analysis_tab')
 logger.setLevel(logging.DEBUG)
 
 class LapTimeAnalysisTab(GT7Tab):
