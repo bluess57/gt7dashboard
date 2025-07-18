@@ -173,7 +173,7 @@ class RaceTab:
         self.laps_stored = []
         
         # Clear GT7 communication data
-        self.app.gt7comm.load_laps([], replace_other_laps=True)
+        self.app.gt7comm.session.load_laps([], replace_other_laps=True)
         self.app.gt7comm.reset()
         
         # Force full UI update
@@ -193,21 +193,21 @@ class RaceTab:
     def log_lap_button_handler(self, event):
         """Handle manual lap logging"""
         self.app.gt7comm.finish_lap(manual=True)
-        logger.info("Added a lap manually to the list of laps: %s" % self.app.gt7comm.laps[0])
+        logger.info("Added a lap manually to the list of laps: %s" % self.app.gt7comm.session.laps[0])
 
     def save_button_handler(self, event):
         """Handle saving laps"""
-        if len(self.app.gt7comm.laps) > 0:
+        if len(self.app.gt7comm.session.laps) > 0:
             from ..gt7helper import save_laps_to_json
-            path = save_laps_to_json(self.app.gt7comm.laps)
-            logger.info("Saved %d laps as %s" % (len(self.app.gt7comm.laps), path))
+            path = save_laps_to_json(self.app.gt7comm.session.laps)
+            logger.info("Saved %d laps as %s" % (len(self.app.gt7comm.session.laps), path))
 
     def load_laps_handler(self, attr, old, new):
         """Handle loading laps from file"""
         logger.info("Loading %s" % new)
         from ..gt7helper import load_laps_from_json
         self.race_diagram.delete_all_additional_laps()
-        self.app.gt7comm.load_laps(load_laps_from_json(new), replace_other_laps=True)
+        self.app.gt7comm.session.load_laps(load_laps_from_json(new), replace_other_laps=True)
 
     def load_reference_lap_handler(self, attr, old, new):
         """Handle changing the reference lap"""

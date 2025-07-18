@@ -94,13 +94,11 @@ class Lap:
         )
 
     def car_name(self) -> str:
-        # FIXME Breaking change. Not all log files up to this point have this attribute, remove this later
         if (not hasattr(self, "car_id")):
-            return "Car not logged"
+            return "Car N/A"
         return gt7helper.get_car_name_for_car_id(self.car_id)
 
     def get_data_dict(self, distance_mode=True) -> dict[str, list]:
-
         raceline_y_throttle, raceline_x_throttle, raceline_z_throttle = gt7helper.get_race_line_coordinates_when_mode_is_active(self, mode=gt7helper.RACE_LINE_THROTTLE_MODE)
         raceline_y_braking, raceline_x_braking, raceline_z_braking = gt7helper.get_race_line_coordinates_when_mode_is_active(self, mode=gt7helper.RACE_LINE_BRAKING_MODE)
         raceline_y_coasting, raceline_x_coasting, raceline_z_coasting = gt7helper.get_race_line_coordinates_when_mode_is_active(self, mode=gt7helper.RACE_LINE_COASTING_MODE)

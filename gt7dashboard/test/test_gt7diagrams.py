@@ -161,7 +161,7 @@ class TestHelper(unittest.TestCase):
 
 
     def test_race_table(self):
-        rt = gt7diagrams.RaceTimeTable()
+        rt = gt7diagrams.RaceTimeDataTable()
         rt.show_laps(self.test_laps)
 
         out_file = "test_out/test_race_table.html"

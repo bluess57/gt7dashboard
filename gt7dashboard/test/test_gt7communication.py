@@ -49,21 +49,21 @@ class GT7CommunicationTest(unittest.TestCase):
     #         # print(car_data.rpm, car_data.in_race)
 
     def test_load_laps(self):
-        self.gt7comm.laps = [Lap()]
-        self.gt7comm.laps[0].number = 0
+        self.gt7comm.session.laps = [Lap()]
+        self.gt7comm.session.laps[0].number = 0
 
         laps = [Lap(), Lap()]
         laps[0].number = 1
         laps[1].number = 2
 
-        self.gt7comm.load_laps(laps, to_last_position=True)
-        self.assertEqual(3, len(self.gt7comm.laps))
-        self.assertEqual(1, self.gt7comm.laps[1].number)
+        self.gt7comm.session.load_laps(laps, to_last_position=True)
+        self.assertEqual(3, len(self.gt7comm.session.laps))
+        self.assertEqual(1, self.gt7comm.session.laps[1].number)
 
-        self.gt7comm.load_laps(laps, to_first_position=True)
-        self.assertEqual(5, len(self.gt7comm.laps))
-        self.assertEqual(1, self.gt7comm.laps[3].number)
+        self.gt7comm.session.load_laps(laps, to_first_position=True)
+        self.assertEqual(5, len(self.gt7comm.session.laps))
+        self.assertEqual(1, self.gt7comm.session.laps[3].number)
 
-        self.gt7comm.load_laps(laps, replace_other_laps=True)
-        self.assertEqual(2, len(self.gt7comm.laps))
-        self.assertEqual(1, self.gt7comm.laps[0].number)
+        self.gt7comm.session.load_laps(laps, replace_other_laps=True)
+        self.assertEqual(2, len(self.gt7comm.session.laps))
+        self.assertEqual(1, self.gt7comm.session.laps[0].number)

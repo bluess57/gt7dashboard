@@ -16,7 +16,7 @@ from Crypto.Cipher import Salsa20
 from gt7dashboard.gt7helper import seconds_to_lap_time
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7data import GT7Data
-from gt7dashboard.gt7session import Session
+from gt7dashboard.gt7session import GT7Session
 
 # Set up logging
 logger = logging.getLogger('gt7communication.py')
@@ -33,7 +33,7 @@ class GT7Communication(Thread):
 
         # Set lap callback function as none
         self.lap_callback_function = None
-        self._on_load_laps_callback = None
+
         self._on_reset_callback = None
 
         self.playstation_ip = playstation_ip
@@ -42,8 +42,7 @@ class GT7Communication(Thread):
         self._last_time_data_received = 0
 
         self.current_lap = Lap()
-        self.session = Session()
-        self.laps = []
+        self.session = GT7Session()
         self.last_data = GT7Data(None)
 
         # This is used to record race data in any case. This will override the "in_race" flag.
@@ -63,6 +62,7 @@ class GT7Communication(Thread):
 
     def stop(self):
         self._shall_run = False
+
     def run(self):
         while self._shall_run:
             s = None
@@ -137,6 +137,7 @@ class GT7Communication(Thread):
 
     def restart(self):
         self._shall_restart = True
+        self._shall_run = True
 
     def is_connected(self) -> bool:
         return self._last_time_data_received > 0 and (time.time() - self._last_time_data_received) <= 1
@@ -154,25 +155,6 @@ class GT7Communication(Thread):
 
             if time.time() > timeout:
                 break
-
-    def get_laps(self) -> List[Lap]:
-        return self.laps
-
-
-    def set_on_load_laps_callback(self, callback):
-        """Register a callback to be called when laps are loaded."""
-        self._on_load_laps_callback = callback
-
-    def load_laps(self, laps: List[Lap], to_last_position = False, to_first_position = False, replace_other_laps = False):
-        if to_last_position:
-            self.laps = self.laps + laps
-        elif to_first_position:
-            self.laps = laps + self.laps
-        elif replace_other_laps:
-            self.laps = laps
-        
-        if self._on_load_laps_callback:
-            self._on_load_laps_callback(laps)
 
     def _log_data(self, data):
 
@@ -297,7 +279,7 @@ class GT7Communication(Thread):
         # And those laps which have data for speed logged. This will prevent empty laps.
         # TODO Correct this comment, this is about Laptime not lap numbers
         if self.current_lap.lap_finish_time > 0 and len(self.current_lap.data_speed) > 0:
-            self.laps.insert(0, self.current_lap)
+            self.session.laps.insert(0, self.current_lap)
 
             # Make a copy of this lap and call the callback function if set
             if self.lap_callback_function:
@@ -313,9 +295,8 @@ class GT7Communication(Thread):
         Resets the current lap, all stored laps and the current session.
         """
         self.current_lap = Lap()
-        self.session = Session()
+        self.session = GT7Session()
         self.last_data = GT7Data(None)
-        self.laps = []
         if self._on_reset_callback:
             self._on_reset_callback
 

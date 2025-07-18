@@ -2,7 +2,7 @@ import os
 import logging
 import html
 from bokeh.layouts import layout, column
-from bokeh.models import Div, Button, TextInput, TabPanel
+from bokeh.models import Div, Button, TextInput, TabPanel, CheckboxGroup
 import subprocess
 from ..gt7help import add_help_tooltip
 from ..tabs.base_tab import GT7Tab
@@ -16,6 +16,13 @@ class ConfigTab(GT7Tab):
     def __init__(self, app_instance):
         super().__init__("config")
         self.app = app_instance
+
+        # Checkbox for GT7_ADD_BRAKEPOINTS
+        self.brakepoints_checkbox = CheckboxGroup(
+            labels=["Enable GT7 Add Brakepoints"], 
+            active=[0] if os.environ.get("GT7_ADD_BRAKEPOINTS") == "true" else []
+        )
+        self.brakepoints_checkbox.on_change("active", self.on_brakepoints_checkbox_change)
 
         self.create_components()
         self.layout = self.create_layout()
@@ -95,8 +102,8 @@ class ConfigTab(GT7Tab):
                 [column(self.ps5_ip_input, width=250, height=50, sizing_mode="fixed")],
                 [self.ip_validation_message],
                 [column(self.connect_button, width=100, height=50, sizing_mode="fixed")],
-                [self.connection_status],
                 [Div(text="<hr>", sizing_mode="stretch_width")],
+                [self.brakepoints_checkbox],
                 [self.lap_path_help],
                 [self.lap_path_input],
                 [column(self.load_path_button, width=250, height=50, sizing_mode="fixed")],
@@ -132,12 +139,9 @@ class ConfigTab(GT7Tab):
         logger.info(f"Connecting to PlayStation at IP: {new_ip}")
         
         # Update connection with new IP
-        self.app.gt7comm.disconnect()
+        self.app.gt7comm.stop()
         self.app.gt7comm.playstation_ip = new_ip
         self.app.gt7comm.restart()
-        
-        # Update connection status
-        #self.update_connection_status()
         
     def load_path_button_handler(self, event):
         """Handle loading laps from specified path"""
@@ -174,11 +178,11 @@ class ConfigTab(GT7Tab):
                 laps = None
                 if path.endswith('.pickle'):
                     laps = load_laps_from_pickle(path)
-                    self.app.gt7comm.load_laps(laps, replace_other_laps=True)
+                    self.app.gt7comm.session.load_laps(laps, replace_other_laps=True)
                     logger.info(f"Loaded {len(laps)} laps from pickle file: {path}")
                 elif path.endswith('.json'):
                     laps = load_laps_from_json(path)
-                    self.app.gt7comm.load_laps(laps, replace_other_laps=True)
+                    self.app.gt7comm.session.load_laps(laps, replace_other_laps=True)
                     logger.info(f"Loaded {len(laps)} laps from JSON file: {path}")
                 else:
                     logger.warning(f"Unsupported file format: {path}")
@@ -197,24 +201,6 @@ class ConfigTab(GT7Tab):
             
         self.lap_path_status.text = f"<div style='color: green;'>Successfully loaded data from: {path}</div>"
         
-    # def update_connection_status(self, step=None):
-    #     """Update the connection status display on config tab"""
-    #     if self.app.gt7comm.is_connected():
-    #         self.connection_status.text = f"""
-    #         <div style="color: green; font-weight: bold;">
-    #             ✓ Connected to PlayStation at {self.app.gt7comm.playstation_ip}
-    #         </div>
-    #         """
-    #     else:
-    #         self.connection_status.text = f"""
-    #         <div style="color: red; font-weight: bold;">
-    #             ✗ Not connected to PlayStation at {self.app.gt7comm.playstation_ip}
-    #         </div>
-    #         <div>
-    #             Make sure your PS5 is on the same network and Gran Turismo 7 is running.
-    #         </div>
-    #         """
-    
     def download_cars_csv_handler(self, event):
         """Handler to download cars.csv using the helper script"""
         try:
@@ -224,6 +210,10 @@ class ConfigTab(GT7Tab):
             self.download_cars_status.text = "<span style='color:green;'>cars.csv downloaded successfully.</span>"
         except Exception as e:
             self.download_cars_status.text = f"<span style='color:red;'>Failed to download cars.csv: {e}</span>"
+    
+    def on_brakepoints_checkbox_change(self, attr, old, new):
+        # Set the environment variable (note: this only affects the current process)
+        os.environ["GT7_ADD_BRAKEPOINTS"] = "true" if 0 in new else "false"
     
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""

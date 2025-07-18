@@ -14,6 +14,10 @@ logger.setLevel(logging.DEBUG)
 # Create the application
 class GT7Application:
     def __init__(self):
+                # Set up tabs
+        self.tab_manager = TabManager(self)
+        self.tabs = self.tab_manager.create_tabs()
+
         # Set up GT7 communication
         playstation_ip = os.environ.get("GT7_PLAYSTATION_IP", "255.255.255.255")
         self.gt7comm = gt7communication.GT7Communication(playstation_ip)
@@ -25,23 +29,21 @@ class GT7Application:
         if load_laps_path:
             from gt7dashboard.gt7helper import load_laps_from_pickle
             laps = load_laps_from_pickle(load_laps_path)
-            self.gt7comm.load_laps(
+            self.gt7comm.session.load_laps(
                 laps, replace_other_laps=True
             )
-            
-        # Start communication
-        self.gt7comm.start()
-        
-        # Set up tabs
-        self.tab_manager = TabManager(self)
-        self.tabs = self.tab_manager.create_tabs()
-        
+
+
         # Initialize time table tab with laps if any were loaded
         if load_laps_path and hasattr(self.tab_manager, 'time_table_tab'):
-            laps = self.gt7comm.get_laps()
+            laps = self.gt7comm.session.get_laps()
             if laps:
                 self.tab_manager.time_table_tab.show_laps(laps)
-                
+
+        # Start communication
+        self.gt7comm.start()
+
+
     def setup_document(self, doc):
         doc.theme = 'carbon'
 
@@ -50,7 +52,7 @@ class GT7Application:
         doc.add_root(globalStylesheet)
 
         header = self.create_header()
-        
+
         # Create a layout with header and tabs
         main_layout = column(
             header,
@@ -63,7 +65,7 @@ class GT7Application:
         # Add the layout to the document
         doc.add_root(main_layout)
         doc.title = "GT7 Dashboard"
-        
+
         # Set up periodic callbacks
         doc.add_periodic_callback(self.tab_manager.race_tab.update_lap_change, 1000)
         #doc.add_periodic_callback(lambda step=None: self.tab_manager.fuel_tab.update_fuel_map(step), 5000)
@@ -71,7 +73,7 @@ class GT7Application:
 
     def create_header(self):
         """Create a header showing connection status and PS5 IP"""
-        
+
         # Create the header div with full width
         self.header = Div(
             name="gt7-header",
@@ -79,7 +81,7 @@ class GT7Application:
             height=30,
             sizing_mode="stretch_width"
             )
-        
+
         return self.header
 
     def update_connection_status(self):
@@ -88,7 +90,7 @@ class GT7Application:
         status_color = "green" if is_connected else "red"
         status_icon = "✓" if is_connected else "✗"
         status_text = "Connected" if is_connected else "Not Connected"
-        
+
         return f"""
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;
                    border-bottom: 1px solid #ddd; 
@@ -119,14 +121,11 @@ class GT7Application:
         Delete a lap by its number from the loaded laps.
         Updates all tabs that display lap data.
         """
-        # Remove lap from gt7comm.laps
-        original_count = len(self.gt7comm.laps)
-        self.gt7comm.laps = [lap for lap in self.gt7comm.laps if getattr(lap, 'number', None) != lap_number]
-        new_count = len(self.gt7comm.laps)
+        self.gt7comm.session.delete_lap(lap_number)
 
         # Update time table tab and other relevant tabs
         if hasattr(self.tab_manager, 'time_table_tab'):
-            self.tab_manager.time_table_tab.show_laps(self.gt7comm.laps)
+            self.tab_manager.time_table_tab.show_laps(self.gt7comm.session.laps)
         if hasattr(self.tab_manager, 'race_tab'):
             self.tab_manager.race_tab.update_lap_change()
 
