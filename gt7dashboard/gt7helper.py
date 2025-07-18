@@ -155,7 +155,7 @@ def format_laps_to_table(laps: List[Lap], best_lap: float) -> str:
         tb_ticks = lap.throttle_and_brake_ticks / lap.lap_ticks * 1000
         fb_ticks = lap.full_brake_ticks / lap.lap_ticks * 1000
         nt_ticks = lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000
-        ti_ticks = lap.tires_spinning_ticks / lap.lap_ticks * 1000
+        ti_ticks = lap.tyres_spinning_ticks / lap.lap_ticks * 1000
 
         list_of_ticks = [ft_ticks, tb_ticks, fb_ticks, nt_ticks, ti_ticks]
 
@@ -523,7 +523,7 @@ def pd_data_frame_from_lap(
                     "nothrottle": "%d"
                                   % (lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000),
                     "tyrespinning": "%d"
-                                    % (lap.tires_spinning_ticks / lap.lap_ticks * 1000),
+                                    % (lap.tyres_spinning_ticks / lap.lap_ticks * 1000),
                 }
             ],
             index=[i],

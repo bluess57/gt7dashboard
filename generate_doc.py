@@ -82,8 +82,8 @@ If they had one graph it would be the deviation in the (best) laps of the same d
     out_markdown += add_screenshot("screenshot_boost.png") + "\n\n"
     out_markdown += gt7help.BOOST_DIAGRAM + "\n\n"
 
-    out_markdown += "#### Tire Speed / Car Speed\n\n"
-    out_markdown += add_screenshot("screenshot_tirespeed.png") + "\n\n"
+    out_markdown += "#### Tyre Speed / Car Speed\n\n"
+    out_markdown += add_screenshot("screenshot_tyrespeed.png") + "\n\n"
     out_markdown += gt7help.TIRE_DIAGRAM + "\n\n"
 
     out_markdown += "#### Time Table\n\n"

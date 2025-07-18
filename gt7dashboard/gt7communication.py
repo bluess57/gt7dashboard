@@ -15,7 +15,7 @@ from Crypto.Cipher import Salsa20
 
 from gt7dashboard.gt7helper import seconds_to_lap_time
 from gt7dashboard.gt7lap import Lap
-from gt7dashboard.gt7data import GTData
+from gt7dashboard.gt7data import GT7Data
 from gt7dashboard.gt7session import Session
 
 # Set up logging
@@ -34,6 +34,7 @@ class GT7Communication(Thread):
         # Set lap callback function as none
         self.lap_callback_function = None
         self._on_load_laps_callback = None
+        self._on_reset_callback = None
 
         self.playstation_ip = playstation_ip
         self.send_port = 33739
@@ -43,7 +44,7 @@ class GT7Communication(Thread):
         self.current_lap = Lap()
         self.session = Session()
         self.laps = []
-        self.last_data = GTData(None)
+        self.last_data = GT7Data(None)
 
         # This is used to record race data in any case. This will override the "in_race" flag.
         # When recording data. Useful when recording replays.
@@ -85,14 +86,13 @@ class GT7Communication(Thread):
                         ddata = salsa20_dec(data)
                         if len(ddata) > 0 and struct.unpack('i', ddata[0x70:0x70 + 4])[0] > package_id:
 
-                            self.last_data = GTData(ddata)
+                            self.last_data = GT7Data(ddata)
                             self._last_time_data_received = time.time()
 
-                            package_id = struct.unpack('i', ddata[0x70:0x70 + 4])[0]
-
-                            bstlap = struct.unpack('i', ddata[0x78:0x78 + 4])[0]
-                            lstlap = struct.unpack('i', ddata[0x7C:0x7C + 4])[0]
-                            curlap = struct.unpack('h', ddata[0x74:0x74 + 2])[0]
+                            package_id = self.last_data.package_id
+                            bstlap = self.last_data.best_lap
+                            lstlap = self.last_data.last_lap
+                            curlap = self.last_data.current_lap
 
                             if curlap == 0:
                                 self.session.special_packet_time = 0
@@ -131,7 +131,6 @@ class GT7Communication(Thread):
             except Exception as e:
                 # Handler for general socket exceptions
                 logger.Error("Error while connecting to %s:%d: %s" % (self.playstation_ip, self.send_port, e))
-                print("Error while connecting to %s:%d: %s" % (self.playstation_ip, self.send_port, e))
                 s.close()
                 # Wait before reconnect
                 time.sleep(5)
@@ -146,7 +145,7 @@ class GT7Communication(Thread):
         send_data = 'A'
         s.sendto(send_data.encode('utf-8'), (self.playstation_ip, self.send_port))
 
-    def get_last_data(self) -> GTData:
+    def get_last_data(self) -> GT7Data:
         timeout = time.time() + 5  # 5 seconds timeout
         while True:
 
@@ -206,8 +205,8 @@ class GT7Communication(Thread):
 
         self.current_lap.lap_ticks += 1
 
-        if data.tyre_temp_FL > 100 or data.tyre_temp_FR > 100 or data.tyre_temp_rl > 100 or data.tyre_temp_rr > 100:
-            self.current_lap.tires_overheated_ticks += 1
+        if data.tyre_temp_FL > 100 or data.tyre_temp_FR > 100 or data.tyre_temp_RL > 100 or data.tyre_temp_RR > 100:
+            self.current_lap.tyres_overheated_ticks += 1
 
         self.current_lap.data_braking.append(data.brake)
         self.current_lap.data_throttle.append(data.throttle)
@@ -223,9 +222,9 @@ class GT7Communication(Thread):
         delta_rr = data.type_speed_FR / delta_divisor
 
         if delta_fl > 1.1 or delta_fr > 1.1 or delta_rl > 1.1 or delta_rr > 1.1:
-            self.current_lap.tires_spinning_ticks += 1
+            self.current_lap.tyres_spinning_ticks += 1
 
-        self.current_lap.data_tires.append(delta_fl + delta_fr + delta_rl + delta_rr)
+        self.current_lap.data_tyres.append(delta_fl + delta_fr + delta_rl + delta_rr)
 
         ## RPM and shifting
 
@@ -315,8 +314,13 @@ class GT7Communication(Thread):
         """
         self.current_lap = Lap()
         self.session = Session()
-        self.last_data = GTData(None)
+        self.last_data = GT7Data(None)
         self.laps = []
+        if self._on_reset_callback:
+            self._on_reset_callback
+
+    def set_reset_callback(self, new_reset_callback):
+        self._on_reset_callback = new_reset_callback
 
     def set_lap_callback(self, new_lap_callback):
         self.lap_callback_function = new_lap_callback

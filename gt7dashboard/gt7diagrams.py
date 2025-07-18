@@ -128,7 +128,7 @@ class RaceDiagram(object):
         self.braking_lines = []
         self.coasting_lines = []
         self.throttle_lines = []
-        self.tires_lines = []
+        self.tyres_lines = []
         self.rpm_lines = []
         self.gears_lines = []
         self.boost_lines = []
@@ -231,7 +231,7 @@ class RaceDiagram(object):
             active_drag="box_zoom",
         )
 
-        self.f_tires = figure(
+        self.f_tyres = figure(
             x_range=self.f_speed.x_range,
             y_axis_label="Tire Spd / Car Spd",
             width=width,
@@ -301,8 +301,8 @@ class RaceDiagram(object):
         self.f_coasting.xaxis.visible = False
         self.f_coasting.toolbar.autohide = True
 
-        self.f_tires.xaxis.visible = False
-        self.f_tires.toolbar.autohide = True
+        self.f_tyres.xaxis.visible = False
+        self.f_tyres.toolbar.autohide = True
 
         self.f_gear.xaxis.visible = False
         self.f_gear.toolbar.autohide = True
@@ -336,7 +336,7 @@ class RaceDiagram(object):
         self.f_throttle.legend.click_policy = self.f_speed.legend.click_policy
         self.f_braking.legend.click_policy = self.f_speed.legend.click_policy
         self.f_coasting.legend.click_policy = self.f_speed.legend.click_policy
-        self.f_tires.legend.click_policy = self.f_speed.legend.click_policy
+        self.f_tyres.legend.click_policy = self.f_speed.legend.click_policy
         self.f_gear.legend.click_policy = self.f_speed.legend.click_policy
         self.f_rpm.legend.click_policy = self.f_speed.legend.click_policy
         self.f_boost.legend.click_policy = self.f_speed.legend.click_policy
@@ -349,14 +349,14 @@ class RaceDiagram(object):
         self.f_throttle.min_border_left = min_border_left
         self.f_braking.min_border_left = min_border_left
         self.f_coasting.min_border_left = min_border_left
-        self.f_tires.min_border_left = min_border_left
+        self.f_tyres.min_border_left = min_border_left
         self.f_gear.min_border_left = min_border_left
         self.f_rpm.min_border_left = min_border_left
         self.f_speed_variance.min_border_left = min_border_left
         self.f_boost.min_border_left = min_border_left
         self.f_yaw_rate.min_border_left = min_border_left
 
-        self.layout = layout(self.f_time_diff, self.f_speed, self.f_speed_variance, self.f_throttle, self.f_yaw_rate, self.f_braking, self.f_coasting, self.f_tires, self.f_gear, self.f_rpm, self.f_boost)
+        self.layout = layout(self.f_time_diff, self.f_speed, self.f_speed_variance, self.f_throttle, self.f_yaw_rate, self.f_braking, self.f_coasting, self.f_tyres, self.f_gear, self.f_rpm, self.f_boost)
 
         self.source_speed_variance = ColumnDataSource(data={"distance": [], "speed_variance": []})
 
@@ -432,9 +432,9 @@ class RaceDiagram(object):
             visible=visible
         ))
 
-        self.tires_lines.append(self.f_tires.line(
+        self.tyres_lines.append(self.f_tyres.line(
             x="distance",
-            y="tires",
+            y="tyres",
             source=source,
             legend_label=legend,
             line_width=1,
@@ -502,7 +502,7 @@ class RaceDiagram(object):
                 self.f_throttle.renderers.remove(self.f_throttle.renderers[i])  # remove the line renderer
                 self.f_braking.renderers.remove(self.f_braking.renderers[i])  # remove the line renderer
                 self.f_coasting.renderers.remove(self.f_coasting.renderers[i])  # remove the line renderer
-                self.f_tires.renderers.remove(self.f_tires.renderers[i])  # remove the line renderer
+                self.f_tyres.renderers.remove(self.f_tyres.renderers[i])  # remove the line renderer
                 self.f_boost.renderers.remove(self.f_boost.renderers[i])  # remove the line renderer
                 self.f_yaw_rate.renderers.remove(self.f_yaw_rate.renderers[i])  # remove the line renderer
                 # self.f_time_diff.renderers.remove(self.f_time_diff.renderers[i])  # remove the line renderer
@@ -511,7 +511,7 @@ class RaceDiagram(object):
                 self.f_throttle.legend.items.pop(i)
                 self.f_braking.legend.items.pop(i)
                 self.f_coasting.legend.items.pop(i)
-                self.f_tires.legend.items.pop(i)
+                self.f_tyres.legend.items.pop(i)
                 self.f_yaw_rate.legend.items.pop(i)
                 self.f_boost.legend.items.pop(i)
                 # self.f_time_diff.legend.items.pop(i)

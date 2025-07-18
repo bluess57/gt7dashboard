@@ -109,7 +109,7 @@ class RaceTab:
                 [self.race_diagram.f_gear],
                 [self.race_diagram.f_rpm],
                 [self.race_diagram.f_boost],
-                [self.race_diagram.f_tires],
+                [self.race_diagram.f_tyres],
                 #[self.race_time_table.t_lap_times, self.race_time_table_help],
                 #[self.div_tuning_info],
             ]

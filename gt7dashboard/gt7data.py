@@ -2,7 +2,7 @@ import struct
 import json
 from datetime import timedelta
 
-class GTData:
+class GT7Data:
     def __init__(self, ddata):
         if not ddata:
             return
@@ -48,12 +48,11 @@ class GTData:
         self.throttle = struct.unpack('B', ddata[0x91:0x91 + 1])[0] / 2.55
         self.rpm = struct.unpack('f', ddata[0x3C:0x3C + 4])[0]
         self.rpm_rev_warning = struct.unpack('H', ddata[0x88:0x88 + 2])[0]
+        self.rpm_rev_limiter = struct.unpack('H', ddata[0x8A:0x8A + 2])[0]
 
         self.brake = struct.unpack('B', ddata[0x92:0x92 + 1])[0] / 2.55
 
         self.boost = struct.unpack('f', ddata[0x50:0x50 + 4])[0] - 1
-
-        self.rpm_rev_limiter = struct.unpack('H', ddata[0x8A:0x8A + 2])[0]
 
         self.estimated_top_speed = struct.unpack('h', ddata[0x8C:0x8C + 2])[0]
 
@@ -69,13 +68,11 @@ class GTData:
 
         self.tyre_temp_FL = struct.unpack('f', ddata[0x60:0x60 + 4])[0]
         self.tyre_temp_FR = struct.unpack('f', ddata[0x64:0x64 + 4])[0]
+        self.tyre_temp_RL = struct.unpack('f', ddata[0x68:0x68 + 4])[0]
+        self.tyre_temp_RR = struct.unpack('f', ddata[0x6C:0x6C + 4])[0]
 
         self.suspension_fl = struct.unpack('f', ddata[0xC4:0xC4 + 4])[0]
         self.suspension_fr = struct.unpack('f', ddata[0xC8:0xC8 + 4])[0]
-
-        self.tyre_temp_rl = struct.unpack('f', ddata[0x68:0x68 + 4])[0]
-        self.tyre_temp_rr = struct.unpack('f', ddata[0x6C:0x6C + 4])[0]
-
         self.suspension_rl = struct.unpack('f', ddata[0xCC:0xCC + 4])[0]
         self.suspension_rr = struct.unpack('f', ddata[0xD0:0xD0 + 4])[0]
 

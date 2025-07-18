@@ -48,7 +48,7 @@ class TestHelper(unittest.TestCase):
         lap1.full_brake_ticks = 10000
         lap1.no_throttle_and_no_brake_ticks = 50
         lap1.lap_ticks = 33333
-        lap1.tires_spinning_ticks = 260
+        lap1.tyres_spinning_ticks = 260
 
         lap2 = Lap()
         lap2.number = 2
@@ -59,7 +59,7 @@ class TestHelper(unittest.TestCase):
         lap2.full_brake_ticks = 1000
         lap2.no_throttle_and_no_brake_ticks = 40
         lap2.lap_ticks = 33333
-        lap2.tires_spinning_ticks = 240
+        lap2.tyres_spinning_ticks = 240
 
         lap3 = Lap()
         lap3.number = 3
@@ -70,7 +70,7 @@ class TestHelper(unittest.TestCase):
         lap3.full_brake_ticks = 1000
         lap3.no_throttle_and_no_brake_ticks = 100
         lap3.lap_ticks = 33333
-        lap3.tires_spinning_ticks = 120
+        lap3.tyres_spinning_ticks = 120
 
         laps = [lap3, lap2, lap1]
 

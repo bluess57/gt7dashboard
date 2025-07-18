@@ -9,8 +9,8 @@
         "no_throttle_and_no_brake_ticks": 3,
         "full_brake_ticks": 0,
         "full_throttle_ticks": 1418,
-        "tires_overheated_ticks": 892,
-        "tires_spinning_ticks": 17,
+        "tyres_overheated_ticks": 892,
+        "tyres_spinning_ticks": 17,
         "data_throttle": [
             100,
             100,
@@ -13766,7 +13766,7 @@
             4,
             4
         ],
-        "data_tires": [
+        "data_tyres": [
             4.03953730146546,
             4.039556313452158,
             4.039592400510632,
@@ -27541,8 +27541,8 @@
         "no_throttle_and_no_brake_ticks": 6,
         "full_brake_ticks": 25,
         "full_throttle_ticks": 1418,
-        "tires_overheated_ticks": 844,
-        "tires_spinning_ticks": 0,
+        "tyres_overheated_ticks": 844,
+        "tyres_spinning_ticks": 0,
         "data_throttle": [
             100,
             100,
@@ -41235,7 +41235,7 @@
             4,
             4
         ],
-        "data_tires": [
+        "data_tyres": [
             4.039746663571886,
             4.0400640993556625,
             4.040057161157895,
@@ -54947,8 +54947,8 @@
         "no_throttle_and_no_brake_ticks": 4,
         "full_brake_ticks": 34,
         "full_throttle_ticks": 1363,
-        "tires_overheated_ticks": 760,
-        "tires_spinning_ticks": 0,
+        "tyres_overheated_ticks": 760,
+        "tyres_spinning_ticks": 0,
         "data_throttle": [
             100,
             100,
@@ -68690,7 +68690,7 @@
             4,
             4
         ],
-        "data_tires": [
+        "data_tyres": [
             4.039632774342137,
             4.039945555353614,
             4.039852904197737,
@@ -82451,8 +82451,8 @@
         "no_throttle_and_no_brake_ticks": 4,
         "full_brake_ticks": 46,
         "full_throttle_ticks": 1399,
-        "tires_overheated_ticks": 790,
-        "tires_spinning_ticks": 0,
+        "tyres_overheated_ticks": 790,
+        "tyres_spinning_ticks": 0,
         "data_throttle": [
             100,
             100,
@@ -96180,7 +96180,7 @@
             4,
             4
         ],
-        "data_tires": [
+        "data_tyres": [
             4.039284479016597,
             4.039665594730044,
             4.039673957438399,

@@ -20,8 +20,8 @@ class Lap:
         self.no_throttle_and_no_brake_ticks = 0
         self.full_brake_ticks = 0
         self.full_throttle_ticks = 0
-        self.tires_overheated_ticks = 0
-        self.tires_spinning_ticks = 0
+        self.tyres_overheated_ticks = 0
+        self.tyres_spinning_ticks = 0
         # Data points with value for every tick
         self.data_throttle = []
         self.data_braking = []
@@ -30,7 +30,7 @@ class Lap:
         self.data_time = []
         self.data_rpm = []
         self.data_gear = []
-        self.data_tires = []
+        self.data_tyres = []
         # Positions on x,y,z
         self.data_position_x = []
         self.data_position_y = []
@@ -110,7 +110,7 @@ class Lap:
             "brake": self.data_braking,
             "speed": self.data_speed,
             "time": self.data_time,
-            "tires": self.data_tires,
+            "tyres": self.data_tyres,
             "rpm": self.data_rpm,
             "boost": self.data_boost,
             "yaw_rate": self.data_absolute_yaw_rate_per_second,
