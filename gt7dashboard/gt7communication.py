@@ -157,7 +157,6 @@ class GT7Communication(Thread):
                 break
 
     def _log_data(self, data):
-
         if not (data.in_race or self.always_record_data):
             return
 
@@ -269,7 +268,6 @@ class GT7Communication(Thread):
         self.current_lap.title = seconds_to_lap_time(self.current_lap.lap_finish_time / 1000)
         self.current_lap.car_id = self.last_data.car_id
         self.current_lap.number = self.last_data.current_lap - 1  # Is not counting the same way as the in-game timetable
-        # TODO Proper pythonic name
         self.current_lap.EstimatedTopSpeed = self.last_data.estimated_top_speed
 
         self.current_lap.lap_end_timestamp = datetime.datetime.now()
@@ -277,7 +275,6 @@ class GT7Communication(Thread):
         # Race is not in 0th lap, which is before starting the race.
         # We will only persist those laps that have crossed the starting line at least once
         # And those laps which have data for speed logged. This will prevent empty laps.
-        # TODO Correct this comment, this is about Laptime not lap numbers
         if self.current_lap.lap_finish_time > 0 and len(self.current_lap.data_speed) > 0:
             self.session.laps.insert(0, self.current_lap)
 

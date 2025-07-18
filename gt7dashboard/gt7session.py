@@ -32,6 +32,9 @@ class GT7Session:
         elif replace_other_laps:
             self.laps = laps
         
+        if self.laps:
+          self.max_speed = max((getattr(lap, 'max_speed', 0) for lap in self.laps), default=0)
+
         if self._on_load_laps_callback:
             self._on_load_laps_callback(laps)
 
