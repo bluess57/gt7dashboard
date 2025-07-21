@@ -301,7 +301,7 @@ class RaceTab:
         
         update_start_time = time.time()
 
-        laps = self.app.gt7comm.get_laps()
+        laps = self.app.gt7comm.session.get_laps()
 
         # Check for session change
         if hasattr(self, 'session_stored') and self.app.gt7comm.session != self.session_stored:

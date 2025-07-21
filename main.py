@@ -6,6 +6,7 @@ from bokeh.layouts import column
 
 from gt7dashboard import gt7communication
 from gt7dashboard.tab_manager import TabManager
+from gt7dashboard.gt7helper import load_laps_from_pickle
 
 # Set up logging
 logger = logging.getLogger('main.py')
@@ -15,23 +16,23 @@ logger.setLevel(logging.DEBUG)
 class GT7Application:
     def __init__(self):
                 # Set up tabs
-        self.tab_manager = TabManager(self)
-        self.tabs = self.tab_manager.create_tabs()
-
         # Set up GT7 communication
         playstation_ip = os.environ.get("GT7_PLAYSTATION_IP", "255.255.255.255")
         self.gt7comm = gt7communication.GT7Communication(playstation_ip)
         self.gt7comm.set_on_connected_callback(self.update_header)
-        self.gt7comm.set_on_load_laps_callback(self.on_laps_loaded)
+        self.gt7comm.set_lap_callback(self.on_laps_loaded)
 
         # Load laps if specified
         load_laps_path = os.environ.get("GT7_LOAD_LAPS_PATH")
         if load_laps_path:
-            from gt7dashboard.gt7helper import load_laps_from_pickle
+            
             laps = load_laps_from_pickle(load_laps_path)
             self.gt7comm.session.load_laps(
                 laps, replace_other_laps=True
             )
+
+        self.tab_manager = TabManager(self)
+        self.tabs = self.tab_manager.create_tabs()
 
 
         # Initialize time table tab with laps if any were loaded
