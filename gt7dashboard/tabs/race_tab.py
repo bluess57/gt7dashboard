@@ -6,7 +6,7 @@ import html
 import itertools
 from typing import List
 
-from bokeh.layouts import layout
+from bokeh.layouts import layout, row
 from bokeh.models import (
     Div, Button, Select, CheckboxGroup, ColumnDataSource,
     Paragraph, TabPanel,
@@ -14,8 +14,21 @@ from bokeh.models import (
 )
 from bokeh.palettes import Plasma11 as palette
 
-from ..gt7helper import bokeh_tuple_for_list_of_laps, bokeh_tuple_for_list_of_lapfiles
+from ..gt7helper import (
+    bokeh_tuple_for_list_of_laps,
+    bokeh_tuple_for_list_of_lapfiles,
+    save_laps_to_json,
+    load_laps_from_json,
+    list_lap_files_from_path,
+    get_brake_points,
+    get_last_reference_median_lap,
+    get_brake_points,
+    calculate_time_diff_by_distance
+    )
+
+from ..gt7helper import 
 from ..gt7lap import Lap
+from ..gt7diagrams import get_speed_peak_and_valley_diagram
 
 logger = logging.getLogger('race_tab')
 logger.setLevel(logging.DEBUG)
@@ -35,6 +48,8 @@ class RaceTab:
         self.reference_lap_selected = None
         self.telemetry_update_needed = False
         
+        self.tyre_temp_display = self.create_tyre_temp_display()
+
         # Create components and layout
         self.create_components()
         self.layout = self.create_layout()
@@ -75,6 +90,8 @@ class RaceTab:
         self.select.on_change("value", self.load_laps_handler)
         self.reference_lap_select.on_change("value", self.load_reference_lap_handler)
         self.checkbox_group.on_change("active", self.always_record_checkbox_handler)
+
+        self.app.gt7comm.set_lap_callback (self.on_lap_finished)
         
     def create_layout(self):
         """Create layout for this tab"""
@@ -198,14 +215,14 @@ class RaceTab:
     def save_button_handler(self, event):
         """Handle saving laps"""
         if len(self.app.gt7comm.session.laps) > 0:
-            from ..gt7helper import save_laps_to_json
+            
             path = save_laps_to_json(self.app.gt7comm.session.laps)
             logger.info("Saved %d laps as %s" % (len(self.app.gt7comm.session.laps), path))
 
     def load_laps_handler(self, attr, old, new):
         """Handle loading laps from file"""
         logger.info("Loading %s" % new)
-        from ..gt7helper import load_laps_from_json
+        
         self.race_diagram.delete_all_additional_laps()
         self.app.gt7comm.session.load_laps(load_laps_from_json(new), replace_other_laps=True)
 
@@ -241,8 +258,7 @@ class RaceTab:
             
     def update_speed_velocity_graph(self, laps):
         """Update the speed velocity graphs"""
-        from ..gt7helper import get_last_reference_median_lap, get_brake_points, calculate_time_diff_by_distance
-        
+                
         last_lap, reference_lap, median_lap = get_last_reference_median_lap(
             laps, reference_lap_selected=self.reference_lap_selected
         )
@@ -281,7 +297,7 @@ class RaceTab:
     
     def update_brake_points(self, lap, race_line, color):
         """Update brake points on race line"""
-        from ..gt7helper import get_brake_points
+        
         
         brake_points_x, brake_points_y = get_brake_points(lap)
 
@@ -296,8 +312,6 @@ class RaceTab:
             
     def update_lap_change(self, step=None):
         """Update the display when laps change"""
-        from ..gt7helper import get_last_reference_median_lap
-        from ..gt7diagrams import get_speed_peak_and_valley_diagram
         
         update_start_time = time.time()
 
@@ -352,8 +366,6 @@ class RaceTab:
     def initialize(self):
         """Initialize race lines and setup available lap files"""
 
-        from ..gt7helper import list_lap_files_from_path, bokeh_tuple_for_list_of_lapfiles
-        
         # Set up race line components if they haven't been created yet
         if self.s_race_line and not hasattr(self, 'last_lap_race_line'):
             # Create race lines if needed
@@ -388,3 +400,29 @@ class RaceTab:
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""
         return TabPanel(child=self.layout, title="Get Faster")
+
+    def create_tyre_temp_display(self):
+        """Create a display for tyre temperatures."""
+        self.tyre_temp_FL = Div(text="FL: -- °C", width=80)
+        self.tyre_temp_FR = Div(text="FR: -- °C", width=80)
+        self.tyre_temp_RL = Div(text="RL: -- °C", width=80)
+        self.tyre_temp_RR = Div(text="RR: -- °C", width=80)
+        return row(
+            Div(text="<b>Tyre Temps:</b>", width=100),
+            self.tyre_temp_FL,
+            self.tyre_temp_FR,
+            self.tyre_temp_RL,
+            self.tyre_temp_RR,
+            css_classes=["tyre-temp-row"]
+        )
+
+    def update_tyre_temp_display(self, lap):
+        """Update the tyre temperature display with values from the finished lap."""
+        self.tyre_temp_FL.text = f"FL: {getattr(lap, 'tyre_temp_FL', '--'):.1f} °C"
+        self.tyre_temp_FR.text = f"FR: {getattr(lap, 'tyre_temp_FR', '--'):.1f} °C"
+        self.tyre_temp_RL.text = f"RL: {getattr(lap, 'tyre_temp_RL', '--'):.1f} °C"
+        self.tyre_temp_RR.text = f"RR: {getattr(lap, 'tyre_temp_RR', '--'):.1f} °C"
+
+    # In your lap finish callback (e.g., in RaceTab or wherever you handle lap completion):
+    def on_lap_finished(self, lap):
+        self.update_tyre_temp_display(lap)
