@@ -26,7 +26,7 @@ See the [Manual](#manual) for detailed instructions.
 * List off all recent laps with additional metrics, measured in percentage * 1000 for better readability
 * Additional data for tuning such as Max Speed and Min Body Height
 * Ability to Save current laps and reset all laps
-* Race Lines for the most recent laps depicting throttling (green), braking (red) and coasting (blue)
+* Race Lines for the most recent laps depicting throttling (green), braking (red) and coasting (cyan)
 * Additional "Race view" with only fuel map
 * Optional Brake Points (slow) when setting `GT7_ADD_BRAKEPOINTS=true`
 * Add additional laps from the race lap table to the diagrams
@@ -169,7 +169,7 @@ The total speed of the laps selected. This value is in km/h. or mph. depending o
 
 ![screenshot_header](README.assets/screenshot_raceline.png)
 
-This is a race line map with the last lap (blue) and the reference lap (magenta). Zoom in for more details.
+This is a race line map with the last lap (cyan) and the reference lap (magenta). Zoom in for more details.
 
 This map is helpful if you are using the index number of a graph to quickly determine where in the lap a measurement was taken.
 
@@ -281,6 +281,6 @@ Here is some useful information you may use for tuning. Such as Max Speed and mi
 
 ![screenshot_header](README.assets/screenshot_race_line.png)
 
-This is a race line map with the last lap (blue) and the reference lap (magenta). This diagram does also feature spead peaks (▴) and valleys (▾) as well as throttle, brake and coasting zones.
+This is a race line map with the last lap (cyan) and the reference lap (magenta). This diagram does also feature spead peaks (▴) and valleys (▾) as well as throttle, brake and coasting zones.
 
 The thinner line of the two is your last lap. The reference line is the thicker translucent line. If you want to make out differences in the race line have a look at the middle of the reference lap line and your line. You may zoom in to spot the differences and read the values on peaks and valleys.

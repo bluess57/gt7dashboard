@@ -8,7 +8,7 @@ from bokeh.plotting import figure
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.race_time_datatable import RaceTimeDataTable
-
+from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR
 
 def get_throttle_braking_race_line_diagram():
     # TODO Make this work, tooltips just show breakpoint
@@ -56,7 +56,7 @@ def get_throttle_braking_race_line_diagram():
         y="raceline_z_coasting",
         legend_label="Coasting Last Lap",
         line_width=5,
-        color="blue",
+        color="cyan",
         source=ColumnDataSource(
             data={"raceline_z_coasting": [], "raceline_x_coasting": []}
         ),
@@ -93,7 +93,7 @@ def get_throttle_braking_race_line_diagram():
         legend_label="Coasting Reference",
         line_width=15,
         alpha=0.3,
-        color="blue",
+        color="cyan",
         source=ColumnDataSource(
             data={"raceline_z_coasting": [], "raceline_x_coasting": []}
         ),
@@ -269,7 +269,7 @@ class RaceDiagram(object):
 
         self.f_yaw_rate = figure(
             x_range=self.f_speed.x_range,
-            y_axis_label="Yaw Rate / Second",
+            y_axis_label="Yaw Rate / s",
             width=width,
             height=int(self.f_speed.height / 2),
             tooltips=tooltips,
@@ -281,7 +281,7 @@ class RaceDiagram(object):
         span_zero_time_diff = bokeh.models.Span(
             location=0,
             dimension="width",
-            line_color="black",
+            line_color="white",
             line_dash="dashed",
             line_width=1,
         )
@@ -322,15 +322,13 @@ class RaceDiagram(object):
             y="timedelta",
             source=self.source_time_diff,
             line_width=1,
-            color="blue",
+            color="cyan",
             line_alpha=1,
         )
 
-        self.source_last_lap = self.add_lap_to_race_diagram("blue", "Last Lap", True)
-
-        self.source_reference_lap = self.add_lap_to_race_diagram("magenta", "Reference Lap", True)
-
-        self.source_median_lap = self.add_lap_to_race_diagram("green", "Median Lap", False)
+        self.source_last_lap = self.add_lap_to_race_diagram(LAST_LAP_COLOR, "Last Lap", True)
+        self.source_reference_lap = self.add_lap_to_race_diagram(REFERENCE_LAP_COLOR, "Reference Lap", True)
+        self.source_median_lap = self.add_lap_to_race_diagram(MEDIAN_LAP_COLOR, "Median Lap", False)
 
         self.f_speed.legend.click_policy = "hide"
         self.f_throttle.legend.click_policy = self.f_speed.legend.click_policy
@@ -531,7 +529,7 @@ def add_annotations_to_race_line(
     decorations = []
     decorations.extend(
         _add_peaks_and_valley_decorations_for_lap(
-            last_lap, race_line, color="blue", offset=0
+            last_lap, race_line, color="cyan", offset=0
         )
     )
     decorations.extend(

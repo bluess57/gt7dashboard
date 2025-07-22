@@ -25,7 +25,6 @@ class GT7Application:
         # Load laps if specified
         load_laps_path = os.environ.get("GT7_LOAD_LAPS_PATH")
         if load_laps_path:
-            
             laps = load_laps_from_pickle(load_laps_path)
             self.gt7comm.session.load_laps(
                 laps, replace_other_laps=True

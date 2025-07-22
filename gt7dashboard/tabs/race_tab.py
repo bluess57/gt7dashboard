@@ -14,7 +14,7 @@ from bokeh.models import (
 )
 from bokeh.palettes import Plasma11 as palette
 
-from ..gt7helper import (
+from gt7dashboard.gt7helper import (
     bokeh_tuple_for_list_of_laps,
     bokeh_tuple_for_list_of_lapfiles,
     save_laps_to_json,
@@ -26,9 +26,11 @@ from ..gt7helper import (
     calculate_time_diff_by_distance
     )
 
-from ..gt7helper import 
-from ..gt7lap import Lap
-from ..gt7diagrams import get_speed_peak_and_valley_diagram
+from gt7dashboard.gt7lap import Lap
+from gt7dashboard.gt7diagrams import get_speed_peak_and_valley_diagram
+from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR
+
+# Use LAST_LAP_COLOR wherever needed
 
 logger = logging.getLogger('race_tab')
 logger.setLevel(logging.DEBUG)
@@ -243,14 +245,13 @@ class RaceTab:
         #selectionIndex = self.race_time_table.lap_times_source.selected.indices
         logger.info("You have selected the row nr " + str(selectionIndex))
 
-        colors = ["blue", "magenta", "green", "orange", "black", "purple"]
         colors_index = len(self.race_diagram.sources_additional_laps) + self.race_diagram.number_of_default_laps
 
         for index in selectionIndex:
-            if index >= len(colors):
+            if index >= len(TABLE_ROW_COLORS):
                 colors_index = 0
 
-            color = colors[colors_index]
+            color = TABLE_ROW_COLORS[colors_index]
             colors_index += 1
             lap_to_add = self.laps_stored[index]
             new_lap_data_source = self.race_diagram.add_lap_to_race_diagram(color, legend=self.laps_stored[index].title, visible=True)
@@ -290,10 +291,10 @@ class RaceTab:
         brake_points_enabled = os.environ.get("GT7_ADD_BRAKEPOINTS") == "true"
 
         if brake_points_enabled and len(last_lap.data_braking) > 0:
-            self.update_brake_points(last_lap, self.s_race_line, "blue")
+            self.update_brake_points(last_lap, self.s_race_line, LAST_LAP_COLOR)
 
         if brake_points_enabled and len(reference_lap.data_braking) > 0:
-            self.update_brake_points(reference_lap, self.s_race_line, "magenta")
+            self.update_brake_points(reference_lap, self.s_race_line, REFERENCE_LAP_COLOR)
     
     def update_brake_points(self, lap, race_line, color):
         """Update brake points on race line"""
@@ -374,7 +375,7 @@ class RaceTab:
                 y="raceline_z",
                 legend_label="Last Lap",
                 line_width=1,
-                color="blue",
+                color="cyan",
                 source=ColumnDataSource(data={"raceline_x": [], "raceline_z": []})
             )
             

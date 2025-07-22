@@ -16,7 +16,7 @@ The list on the right hand side shows your best laps that are token into conside
 HEADER = """The red or green button reflects the current connection status to Gran Turismo 7. i.e. if there was a packet received successfully in the last second, the button will turn green.
 
 Next is a brief description of the last and reference lap. The reference lap can be selected on the right side."""
-RACE_LINE_MINI = """This is a race line map with the last lap (blue) and the reference lap (magenta). Zoom in for more details.
+RACE_LINE_MINI = """This is a race line map with the last lap (cyan) and the reference lap (magenta). Zoom in for more details.
 
 This map is helpful if you are using the index number of a graph to quickly determine where in the lap a measurement was taken.
 
@@ -60,7 +60,7 @@ The current fuel setting will always be at 0. If you want to change the fuel to 
 It will give you a raw assumption of the laps and time remaining and the assumed time difference in lap time for the new setting."""
 TUNING_INFO = """Here is some useful information you may use for tuning. Such as Max Speed and minimal body height in relation to the track. The later seems to be helpful when determining the possible body height."""
 
-RACE_LINE_BIG = """This is a race line map with the last lap (blue) and the reference lap (magenta). This diagram does also feature spead peaks (▴) and valleys (▾) as well as throttle, brake and coasting zones.
+RACE_LINE_BIG = """This is a race line map with the last lap (cyan) and the reference lap (magenta). This diagram does also feature spead peaks (▴) and valleys (▾) as well as throttle, brake and coasting zones.
 
 The thinner line of the two is your last lap. The reference line is the thicker translucent line. If you want to make out differences in the race line have a look at the middle of the reference lap line and your line. You may zoom in to spot the differences and read the values on peaks and valleys.
 """

@@ -55,7 +55,7 @@ class RaceLinesTab(GT7Tab):
             This diagram shows the racing line on the track.
             Green segments indicate throttle application.
             Red segments indicate braking.
-            Blue segments indicate coasting (neither throttle nor brake).
+            Cyan segments indicate coasting (neither throttle nor brake).
             """,
           position="right"
         )
@@ -163,7 +163,7 @@ class RaceLinesTab(GT7Tab):
             x="raceline_x_coasting",
             y="raceline_z_coasting",
             line_width=2,
-            color="blue",
+            color="cyan",
             legend_label=f"{lap.title} (Coasting)",
             source=coasting_source
         )
