@@ -2,7 +2,7 @@ import logging
 import os
 from bokeh.plotting import curdoc
 from bokeh.models import Div, GlobalImportedStyleSheet, ImportedStyleSheet
-from bokeh.layouts import column
+from bokeh.layouts import column, row
 
 from gt7dashboard import gt7communication
 from gt7dashboard.tab_manager import TabManager
@@ -55,8 +55,8 @@ class GT7Application:
 
         # Create a layout with header and tabs
         main_layout = column(
-            header,
-            self.tabs,
+            row(header),
+            row(self.tabs),
             sizing_mode="stretch_both",
             name="main",
             stylesheets=[globalStylesheet]
@@ -94,7 +94,7 @@ class GT7Application:
         return f"""
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 10px;
                    border-bottom: 1px solid #ddd; 
-                   width: 100%; box-sizing: border-box; position: relative; left: 0; right: 0;">
+                   width: fit-content; box-sizing: border-box; position: relative; left: 0; right: 0;">
             <div style="margin-right: 20px; flex: 0 0 auto;">
                 <span style="font-weight: bold;">GT7 Dashboard</span>
             </div>
