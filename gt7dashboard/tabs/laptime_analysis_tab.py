@@ -406,4 +406,4 @@ class LapTimeAnalysisTab(GT7Tab):
     
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""
-        return TabPanel(child=self.layout, title="Analysze Lap Times")
+        return TabPanel(child=self.layout, title="Analyze Lap Times")

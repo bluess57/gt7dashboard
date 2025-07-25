@@ -2,16 +2,14 @@ import os
 import logging
 import copy
 import time
-import html
-import itertools
-from typing import List
 
-from bokeh.layouts import layout, row
+from typing import List
+from bokeh.layouts import layout, row, column
 from bokeh.models import (
     Div, Button, Select, CheckboxGroup, ColumnDataSource,
-    Paragraph, TabPanel,
-    InlineStyleSheet
+    Paragraph, TabPanel, HelpButton, Tooltip, InlineStyleSheet
 )
+from bokeh.models.dom import HTML
 from bokeh.palettes import Plasma11 as palette
 
 from gt7dashboard.gt7helper import (
@@ -28,7 +26,8 @@ from gt7dashboard.gt7helper import (
 
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7diagrams import get_speed_peak_and_valley_diagram
-from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR
+from gt7dashboard.gt7help import THROTTLE_DIAGRAM, SPEED_VARIANCE, RACE_LINE_MINI, SPEED_PEAKS_AND_VALLEYS
+from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR, TABLE_ROW_COLORS
 
 # Use LAST_LAP_COLOR wherever needed
 
@@ -39,6 +38,7 @@ class RaceTab:
     """Main telemetry tab (Get Faster) for GT7 Dashboard"""
     
     def __init__(self, app_instance):
+        
         """Initialize the race telemetry tab"""
         self.app = app_instance
         self.race_diagram = None  # Will be set by tab_manager
@@ -73,14 +73,14 @@ class RaceTab:
         self.div_header_line = Div(width=400, height=30)
         
         # Create buttons
-        self.manual_log_button = Button(label="Log Lap Now")
-        self.save_button = Button(label="Save Laps", button_type="success")
-        self.reset_button = Button(label="Reset Laps", button_type="danger")
+        self.manual_log_button = Button(label="Log Lap Now", width=150, button_type="primary")
+        self.save_button = Button(label="Save Laps", width=150, button_type="success")
+        self.reset_button = Button(label="Reset Laps", width=150, button_type="danger")
         
         # Create selects
-        self.select_title = Paragraph(text="Load Laps:", align="center")
-        self.select = Select(value="laps", options=[])
-        self.reference_lap_select = Select(value="-1")
+        self.select_title = Paragraph(text="Load Laps:")
+        self.select = Select(value="laps", options=[], width=150)
+        self.reference_lap_select = Select(value="-1", width=150)
         
         # Create checkbox for recording replays
         self.checkbox_group = CheckboxGroup(labels=["Record Replays"], active=[1])
@@ -106,34 +106,49 @@ class RaceTab:
         if not self.race_diagram:
             logger.error("Can't finalize layout - diagrams not set")
             return
-            
+
         # Create help tooltip for race time table
         # from ..gt7help import TIME_TABLE
         # self.race_time_table_help = Div(text=f'<i class="fa fa-question-circle" title="{html.escape(TIME_TABLE)}"></i>', width=20)
         
         # Create and get diviance laps div
         self.div_deviance_laps_on_display = Div(width=200, height=self.race_diagram.f_speed_variance.height)
-            
-        # Create the complete layout
-        self.layout = layout(
-            children=[
-                [self.div_header_line, self.reset_button, self.save_button, self.select_title, self.select],
-                [self.race_diagram.f_time_diff, layout(children=[self.manual_log_button, self.checkbox_group, self.reference_lap_select])],
-                [self.race_diagram.f_speed, self.s_race_line],
-                [self.race_diagram.f_speed_variance, self.div_deviance_laps_on_display],
-                [self.race_diagram.f_throttle, self.div_speed_peak_valley_diagram],
-                [self.race_diagram.f_braking],
-                [self.race_diagram.f_yaw_rate],
-                [self.race_diagram.f_coasting],
-                [self.race_diagram.f_gear],
-                [self.race_diagram.f_rpm],
-                [self.race_diagram.f_boost],
-                [self.race_diagram.f_tyres],
-                #[self.race_time_table.t_lap_times, self.race_time_table_help],
-                #[self.div_tuning_info],
-            ]
+
+
+        racelinemini_help_button = HelpButton(tooltip=Tooltip(content=HTML(RACE_LINE_MINI), position="right",css_classes=["custom-tooltip"]), css_classes=["help-button"])
+
+
+        left_column = column([self.manual_log_button, 
+                              self.checkbox_group, 
+                              self.reset_button, 
+                              self.save_button, 
+                              self.select_title, 
+                              self.select, 
+                              self.reference_lap_select, 
+                              self.div_deviance_laps_on_display, 
+                              row(self.s_race_line,racelinemini_help_button )
+                              ], css_classes=["floating-area"])
+
+        throttle_help_button = HelpButton(css_classes=["info-icon-button"], tooltip=Tooltip(content=HTML(THROTTLE_DIAGRAM), position="right",css_classes=["custom-tooltip"]))
+        speedvar_help_button = HelpButton(css_classes=["info-icon-button"],tooltip=Tooltip(content=HTML(SPEED_VARIANCE), position="right",css_classes=["custom-tooltip"]))
+        speedpeaksandvalleys_help_button = HelpButton(css_classes=["info-icon-button"],tooltip=Tooltip(content=HTML(SPEED_PEAKS_AND_VALLEYS), position="right",css_classes=["custom-tooltip"]))
+                                          
+        main_diagrams_column = column(
+            row([self.race_diagram.f_time_diff]),
+            row([self.race_diagram.f_speed]),
+            row([self.race_diagram.f_speed_variance, speedvar_help_button]),
+            row([self.race_diagram.f_throttle, throttle_help_button]),
+            row([self.race_diagram.f_braking]),
+            row([self.race_diagram.f_yaw_rate]),
+            row([self.race_diagram.f_coasting]),
+            row([self.race_diagram.f_gear]),
+            row([self.race_diagram.f_rpm]),
+            row([self.race_diagram.f_boost]),
+            row([self.race_diagram.f_tyres, self.tyre_temp_display]),
+            row([self.div_speed_peak_valley_diagram,speedpeaksandvalleys_help_button])
         )
-        
+
+        self.layout = row(left_column, main_diagrams_column)
         return self.layout
         
     def update_reference_lap_select(self, laps):
@@ -242,7 +257,7 @@ class RaceTab:
         
     def table_row_selection_callback(self, attrname, old, new):
         """Handle selecting rows in the lap times table"""
-        #selectionIndex = self.race_time_table.lap_times_source.selected.indices
+        selectionIndex = self.race_time_table.lap_times_source.selected.indices
         logger.info("You have selected the row nr " + str(selectionIndex))
 
         colors_index = len(self.race_diagram.sources_additional_laps) + self.race_diagram.number_of_default_laps
@@ -283,7 +298,7 @@ class RaceTab:
 
         fastest_laps = self.race_diagram.update_fastest_laps_variance(laps)
         logger.info("Updating Speed Deviance with %d fastest laps" % len(fastest_laps))
-        self.div_deviance_laps_on_display.text = ""
+        self.div_deviance_laps_on_display.text = "3 Fastest Lap Times<br>"
         for fastest_lap in fastest_laps:
             self.div_deviance_laps_on_display.text += f"<b>Lap {fastest_lap.number}:</b> {fastest_lap.title}<br>"
 
@@ -347,8 +362,8 @@ class RaceTab:
 
         start_time = time.time()
         #self.race_time_table.show_laps(laps)
-        if hasattr(self.app, "race_time_data_table_tab"):
-          self.app.race_time_data_table_tab.show_laps(laps)
+        if hasattr(self.app, "racetime_datatable_tab"):
+          self.app.racetime_datatable_tab.show_laps(laps)
         logger.debug("Updating time table took %dms" % ((time.time() - start_time) * 1000))
 
         start_time = time.time()

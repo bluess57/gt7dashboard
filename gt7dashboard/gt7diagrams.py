@@ -514,11 +514,6 @@ class RaceDiagram(object):
                 self.f_boost.legend.items.pop(i)
                 # self.f_time_diff.legend.items.pop(i)
 
-
-
-
-
-
 def add_annotations_to_race_line(
     race_line: figure, last_lap: Lap, reference_lap: Lap
 ):

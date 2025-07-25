@@ -730,7 +730,7 @@ def get_n_fastest_laps_within_percent_threshold_ignoring_replays(laps: List[Lap]
 
 
 DEFAULT_FASTEST_LAPS_PERCENT_THRESHOLD = 0.05
-def get_variance_for_fastest_laps(laps: List[Lap], number_of_laps: int = 3, percent_threshold: float = DEFAULT_FASTEST_LAPS_PERCENT_THRESHOLD) -> (DataFrame, list[Lap]):
+def get_variance_for_fastest_laps(laps: List[Lap], number_of_laps: int = 3, percent_threshold: float = DEFAULT_FASTEST_LAPS_PERCENT_THRESHOLD) -> tuple[DataFrame, list[Lap]]:
     fastest_laps: list[Lap] = get_n_fastest_laps_within_percent_threshold_ignoring_replays(laps, number_of_laps, percent_threshold)
     variance: DataFrame = get_variance_for_laps(fastest_laps)
     return variance, fastest_laps
