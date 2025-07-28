@@ -81,7 +81,7 @@ class GT7Communication(Thread):
                 package_nr = 0
                 while not self._shall_restart and self._shall_run:
                     try:
-                        data, address = s.recvfrom(4096)
+                        data = s.recvfrom(4096)
                         package_nr = package_nr + 1
                         ddata = self.salsa20_dec(data)
                         if len(ddata) > 0 and struct.unpack('i', ddata[0x70:0x70 + 4])[0] > package_id:
