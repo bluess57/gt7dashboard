@@ -1,7 +1,7 @@
 import logging
 import os
 from bokeh.plotting import curdoc
-from bokeh.models import Div, GlobalImportedStyleSheet, Button, Dropdown, HelpButton
+from bokeh.models import Div, GlobalImportedStyleSheet, InlineStyleSheet, Button, Dropdown, HelpButton
 from bokeh.layouts import column, row
 
 from gt7dashboard import gt7communication
@@ -53,9 +53,15 @@ class GT7Application:
 
         header = self.create_header()
 
+        self.heartbeat_indicator = Div(
+            text='<span id="heartbeat-dot" style="font-size:2em; color:gray;">&#10084;</span>'
+        )
+
+        self.gt7comm.set_on_heartbeat_callback(self.show_heartbeat(doc))
+
         # Create a layout with header and tabs
         main_layout = column(
-            row(header),
+            row(header, self.heartbeat_indicator),
             row(self.tabs),
             sizing_mode="stretch_both",
             name="main",
@@ -111,6 +117,17 @@ class GT7Application:
         """Update the header with current connection status"""
         if hasattr(self, 'header'):
             self.header.text = self.update_connection_status()
+
+    def show_heartbeat(self, doc):
+        def update():
+            self.heartbeat_indicator.text = '<span id="heartbeat-dot" style="font-size:2em; color:lime;">&#10084;</span>'
+            doc.add_timeout_callback(
+                lambda: self.heartbeat_indicator.update(
+                    text='<span id="heartbeat-dot" style="font-size:2em; color:gray;">&#10084;</span>'
+                ),
+                500
+            )
+        doc.add_next_tick_callback(update)
 
     def on_laps_loaded(self, laps):
         if hasattr(self, "race_time_data_table_tab"):

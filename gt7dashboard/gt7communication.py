@@ -30,7 +30,7 @@ class GT7Communication(Thread):
         self._shall_restart = False
         # True will always quit with the main process
         self.daemon = True
-
+        self._on_heartbeat_callback = None
         # Set lap callback function as none
         self.lap_callback_function = None
 
@@ -118,19 +118,19 @@ class GT7Communication(Thread):
                             if package_nr > 100:
                                 self._send_hb(s)
                                 package_nr = 0
-
-                        self._check_connection_event()
+                                self._check_connection_event()
 
                     except (OSError, TimeoutError) as e:
-                        # Handler for package exceptions
-                        self._send_hb(s)
                         package_nr = 0
                         # Reset package id for new connections
                         package_id = 0
+                        # Handler for package exceptions
+                        self._send_hb(s)
+
 
             except Exception as e:
                 # Handler for general socket exceptions
-                logger.Error("Error while connecting to %s:%d: %s" % (self.playstation_ip, self.send_port, e))
+                logger.error("Error while connecting to %s:%d: %s" % (self.playstation_ip, self.send_port, e))
                 s.close()
                 # Wait before reconnect
                 time.sleep(5)
@@ -142,9 +142,16 @@ class GT7Communication(Thread):
     def is_connected(self) -> bool:
         return self._last_time_data_received > 0 and (time.time() - self._last_time_data_received) <= 1
 
+    def set_on_heartbeat_callback(self, callback):
+            """Register a callback to be called when a heartbeat is sent."""
+            self._on_heartbeat_callback = callback
+
     def _send_hb(self, s):
         send_data = 'A'
         s.sendto(send_data.encode('utf-8'), (self.playstation_ip, self.send_port))
+        # Raise the heartbeat event for consumers
+        if self._on_heartbeat_callback:
+            self._on_heartbeat_callback()
 
     def get_last_data(self) -> GT7Data:
         timeout = time.time() + 5  # 5 seconds timeout
