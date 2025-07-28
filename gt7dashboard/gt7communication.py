@@ -83,7 +83,7 @@ class GT7Communication(Thread):
                     try:
                         data, address = s.recvfrom(4096)
                         package_nr = package_nr + 1
-                        ddata = salsa20_dec(data)
+                        ddata = self.salsa20_dec(data)
                         if len(ddata) > 0 and struct.unpack('i', ddata[0x70:0x70 + 4])[0] > package_id:
 
                             self.last_data = GT7Data(ddata)
