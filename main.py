@@ -20,7 +20,9 @@ class GT7Application:
         playstation_ip = os.environ.get("GT7_PLAYSTATION_IP", "255.255.255.255")
         self.gt7comm = gt7communication.GT7Communication(playstation_ip)
         self.gt7comm.set_on_connected_callback(self.update_header)
-        self.gt7comm.set_lap_callback(self.on_laps_loaded)
+
+        self.tab_manager = TabManager(self)
+        self.tabs = self.tab_manager.create_tabs()
 
         # Load laps if specified
         load_laps_path = os.environ.get("GT7_LOAD_LAPS_PATH")
@@ -29,18 +31,10 @@ class GT7Application:
             self.gt7comm.session.load_laps(
                 laps, replace_other_laps=True
             )
+            self.tab_manager.time_table_tab.show_laps(laps)
 
-        self.tab_manager = TabManager(self)
-        self.tabs = self.tab_manager.create_tabs()
-
-
-        # Initialize time table tab with laps if any were loaded
-        if load_laps_path and hasattr(self.tab_manager, 'time_table_tab'):
-            laps = self.gt7comm.session.get_laps()
-            if laps:
-                self.tab_manager.time_table_tab.show_laps(laps)
-
-        # Start communication
+        # Start communication with PS5
+        logger.info(f"Starting GT7 communication with PS5 at {playstation_ip}")
         self.gt7comm.start()
 
 
@@ -72,8 +66,8 @@ class GT7Application:
         doc.add_root(main_layout)
         doc.title = "GT7 Dashboard"
 
-        # Set up periodic callbacks
-        doc.add_periodic_callback(self.tab_manager.race_tab.update_lap_change, 1000)
+        # Revisit if periodic callbacks are needed, trying not to use them
+        #doc.add_periodic_callback(self.tab_manager.race_tab.update_lap_change, 1000)
         #doc.add_periodic_callback(lambda step=None: self.tab_manager.fuel_tab.update_fuel_map(step), 5000)
         #doc.add_periodic_callback(self.update_header, 5000)  # Update header every 5 seconds
 
@@ -128,10 +122,6 @@ class GT7Application:
                 500
             )
         doc.add_next_tick_callback(update)
-
-    def on_laps_loaded(self, laps):
-        if hasattr(self, "race_time_data_table_tab"):
-            self.race_time_data_table_tab.show_laps(laps)
 
 # Create and set up the application
 app = GT7Application()

@@ -1,4 +1,4 @@
-from gt7helper import seconds_to_lap_time
+from gt7dashboard import gt7helper
 
 class FuelMap:
     """A Fuel Map with calculated attributes of the fuel setting
@@ -32,6 +32,6 @@ class FuelMap:
             self.consumption_percentage * 100,
             self.fuel_consumed_per_lap,
             self.laps_remaining_on_current_fuel,
-            seconds_to_lap_time(self.time_remaining_on_current_fuel / 1000),
-            seconds_to_lap_time(self.lap_time_diff / 1000),
+            gt7helper.seconds_to_lap_time(self.time_remaining_on_current_fuel / 1000),
+            gt7helper.seconds_to_lap_time(self.lap_time_diff / 1000),
         )

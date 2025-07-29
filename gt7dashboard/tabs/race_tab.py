@@ -98,7 +98,7 @@ class RaceTab:
         self.div_header_line = Div(width=400, height=30)
         
         # Create buttons
-        self.manual_log_button = Button(label="Log Lap Now", width=150, button_type="primary")
+        self.manual_log_button = Button(label="Log Lap Now", width=150, button_type="primary", html_attributes={"title": "Immediately add the lap data to the list of laps"})
         self.save_button = Button(label="Save Laps", width=150, button_type="success")
         self.reset_button = Button(label="Reset Laps", width=150, button_type="danger")
         
@@ -159,10 +159,11 @@ class RaceTab:
         racelinemini_help_button = HelpButton(tooltip=Tooltip(content=HTML(RACE_LINE_MINI), position="right",css_classes=["custom-tooltip"]), css_classes=["help-button"])
 
 
-        left_column = column([self.manual_log_button, 
-                              self.checkbox_group, 
-                              self.reset_button, 
+        left_column = column([
                               self.save_button, 
+                              self.reset_button, 
+                              self.manual_log_button, 
+                              self.checkbox_group, 
                               self.select_title, 
                               self.select, 
                               self.reference_lap_select, 
@@ -382,11 +383,11 @@ class RaceTab:
         if laps == self.laps_stored and not self.telemetry_update_needed:
             return
 
-        logger.debug("Rerendering laps")
+        logger.debug("update_lap_change laps")
 
         reference_lap = Lap()
 
-        if len(laps) > 0:
+        if laps is not None and len(laps) > 0:
             last_lap = laps[0]
 
             if len(laps) > 1:
@@ -398,26 +399,26 @@ class RaceTab:
 
             self.update_header_line(last_lap, reference_lap)
 
-        logger.debug("Updating of %d laps" % len(laps))
+            logger.debug("Updating of %d laps" % len(laps))
 
-        start_time = time.time()
-        #self.race_time_table.show_laps(laps)
-        if hasattr(self.app, "racetime_datatable_tab"):
-          self.app.racetime_datatable_tab.show_laps(laps)
-        logger.debug("Updating time table took %dms" % ((time.time() - start_time) * 1000))
+            start_time = time.time()
+            #self.race_time_table.show_laps(laps)
+            if hasattr(self.app, "racetime_datatable_tab"):
+                self.app.racetime_datatable_tab.show_laps(laps)
+                logger.debug("Updating time table took %dms" % ((time.time() - start_time) * 1000))
 
-        start_time = time.time()
-        self.update_reference_lap_select(laps)
-        logger.debug("Updating reference lap select took %dms" % ((time.time() - start_time) * 1000))
+                start_time = time.time()
+                self.update_reference_lap_select(laps)
+                logger.debug("Updating reference lap select took %dms" % ((time.time() - start_time) * 1000))
 
-        start_time = time.time()
-        self.update_speed_velocity_graph(laps)
-        logger.debug("Updating speed velocity graph took %dms" % ((time.time() - start_time) * 1000))
+                start_time = time.time()
+                self.update_speed_velocity_graph(laps)
+                logger.debug("Updating speed velocity graph took %dms" % ((time.time() - start_time) * 1000))
 
-        logger.debug("End of updating laps, whole Update took %dms" % ((time.time() - update_start_time) * 1000))
+                logger.debug("End of updating laps, whole Update took %dms" % ((time.time() - update_start_time) * 1000))
 
-        self.laps_stored = laps.copy()
-        self.telemetry_update_needed = False
+                self.laps_stored = laps.copy()
+                self.telemetry_update_needed = False
 
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""

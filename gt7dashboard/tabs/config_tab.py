@@ -112,7 +112,6 @@ class ConfigTab(GT7Tab):
                 [self.download_cars_status],
                 [self.div_gt7_dashboard],
             ],
-            sizing_mode="stretch_width",
         )
     
     def validate_ip(self, attr, old, new):

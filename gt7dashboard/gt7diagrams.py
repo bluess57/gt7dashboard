@@ -9,6 +9,7 @@ from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.race_time_datatable import RaceTimeDataTable
 from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR
+from gt7dashboard.gt7helper import seconds_to_lap_time
 
 def get_throttle_braking_race_line_diagram():
     # TODO Make this work, tooltips just show breakpoint
@@ -235,10 +236,10 @@ def get_fuel_map_html_table(last_lap: Lap) -> str:
                     fuel_map.mixture_setting,
                     0 if no_fuel_consumption else fuel_map.fuel_consumed_per_lap,
                     0 if no_fuel_consumption else fuel_map.laps_remaining_on_current_fuel,
-                    "No Fuel" if no_fuel_consumption else (gt7helper.seconds_to_lap_time(
+                    "No Fuel" if no_fuel_consumption else (seconds_to_lap_time(
                         fuel_map.time_remaining_on_current_fuel / 1000
                     )),
-                    "Consumption" if no_fuel_consumption else (gt7helper.seconds_to_lap_time(fuel_map.lap_time_diff / 1000)),
+                    "Consumption" if no_fuel_consumption else (seconds_to_lap_time(fuel_map.lap_time_diff / 1000)),
                 )
         )
     table += "</table>"

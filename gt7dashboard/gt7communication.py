@@ -105,7 +105,6 @@ class GT7Communication(Thread):
                                     self.finish_lap()
 
                             else:
-                                curLapTime = 0
                                 # Reset lap
                                 self.current_lap = Lap()
 
@@ -152,7 +151,6 @@ class GT7Communication(Thread):
     def get_last_data(self) -> GT7Data:
         timeout = time.time() + 5  # 5 seconds timeout
         while True:
-
             if self.last_data is not None:
                 return self.last_data
 
@@ -279,11 +277,12 @@ class GT7Communication(Thread):
         # We will only persist those laps that have crossed the starting line at least once
         # And those laps which have data for speed logged. This will prevent empty laps.
         if self.current_lap.lap_finish_time > 0 and len(self.current_lap.data_speed) > 0:
-            self.session.laps.insert(0, self.current_lap)
+            self.session.add_lap(self.current_lap)
 
             # Make a copy of this lap and call the callback function if set
             if self.lap_callback_function:
                 self.lap_callback_function(copy.deepcopy(self.current_lap))
+
 
         # Reset current lap with an empty one
         self.current_lap = Lap()

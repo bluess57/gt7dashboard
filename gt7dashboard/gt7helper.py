@@ -44,7 +44,7 @@ def get_x_axis_for_distance(lap: Lap) -> List:
             x_axis.append(0)
             continue
 
-        x_axis.append(x_axis[i - 1] + (lap.data_speed[i] / 3.6 / 1000) * tick_time)
+        x_axis.append(x_axis[i - 1] + (float(lap.data_speed[i]) / 3.6 / 1000) * tick_time)
 
     return x_axis
 
@@ -315,20 +315,21 @@ def load_laps_from_pickle(path: str) -> List[Lap]:
 
 
 def load_laps_from_json(json_file):
-    with open(json_file, 'r') as file:
-        data = json.load(file)
+    if json_file and os.path.isfile(json_file):
+        with open(json_file, 'r') as file:
+            data = json.load(file)
 
-    laps = []
-    for lap_data in data:
-        lap = Lap()
-        lap.__dict__.update(lap_data)
-        for key, value in lap_data.items():
-            if key.endswith('_timestamp') and isinstance(value, str):
-                value = datetime.fromisoformat(value)
-                setattr(lap, key, value)
-        laps.append(lap)
+        laps = []
+        for lap_data in data:
+            lap = Lap()
+            lap.__dict__.update(lap_data)
+            for key, value in lap_data.items():
+                if key.endswith('_timestamp') and isinstance(value, str):
+                    value = datetime.fromisoformat(value)
+                    setattr(lap, key, value)
+            laps.append(lap)
 
-    return laps
+        return laps
 
 def save_laps_to_pickle(laps: List[Lap]) -> str:
     storage_folder = "data"
@@ -366,12 +367,6 @@ def get_safe_filename(unsafe_filename: str) -> str:
     return "".join(x for x in unsafe_filename if x.isalnum() or x in "._- ").replace(" ", "_")
 
 
-def human_readable_size(size, decimal_places=3):
-    for unit in ["B", "KB", "MB", "GB", "TB"]:
-        if size < 1024.0:
-            break
-        size /= 1024.0
-    return f"{size:.{decimal_places}f} {unit}"
 
 
 def get_last_reference_median_lap(

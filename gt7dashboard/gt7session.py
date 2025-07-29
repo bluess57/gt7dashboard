@@ -21,6 +21,13 @@ class GT7Session:
             and self.max_speed == other.max_speed
         )
 
+    def add_lap(self, lap: Lap):
+            """Add a single lap to the session."""
+            self.laps.append(lap)
+            # Optionally update max_speed or other stats here
+            if hasattr(lap, 'max_speed'):
+                self.max_speed = max(self.max_speed, getattr(lap, 'max_speed', 0))
+
     def get_laps(self) -> List[Lap]:
         return self.laps
 
