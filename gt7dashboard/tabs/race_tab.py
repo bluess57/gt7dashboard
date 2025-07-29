@@ -4,10 +4,11 @@ import copy
 import time
 
 from typing import List
+from bokeh.plotting import figure
 from bokeh.layouts import layout, row, column
 from bokeh.models import (
     Div, Button, Select, CheckboxGroup, ColumnDataSource,
-    Paragraph, TabPanel, HelpButton, Tooltip, InlineStyleSheet
+    Paragraph, TabPanel, HelpButton, Tooltip
 )
 from bokeh.models.dom import HTML
 from bokeh.palettes import Plasma11 as palette
@@ -28,6 +29,7 @@ from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7diagrams import get_speed_peak_and_valley_diagram
 from gt7dashboard.gt7help import THROTTLE_DIAGRAM, SPEED_VARIANCE, RACE_LINE_MINI, SPEED_PEAKS_AND_VALLEYS
 from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR, TABLE_ROW_COLORS
+from gt7dashboard.race_diagram import RaceDiagram
 
 # Use LAST_LAP_COLOR wherever needed
 
@@ -36,15 +38,31 @@ logger.setLevel(logging.DEBUG)
 
 class RaceTab:
     """Main telemetry tab (Get Faster) for GT7 Dashboard"""
-    
+
     def __init__(self, app_instance):
-        
         """Initialize the race telemetry tab"""
         self.app = app_instance
-        self.race_diagram = None  # Will be set by tab_manager
-        #self.race_time_table = None  # Will be set by tab_manager
-        self.s_race_line = None  # Will be set by tab_manager
-        
+
+        # Create race line figure
+        race_line_tooltips = [("index", "$index"), ("Brakepoint", "")]
+        race_line_width = 250
+
+        self.s_race_line = figure(
+            title="Race Line",
+            x_axis_label="x",
+            y_axis_label="z",
+            match_aspect=True,
+            width=race_line_width,
+            height=race_line_width,
+            active_drag="box_zoom",
+            tooltips=race_line_tooltips,
+        )
+        # We set this to true, since maps appear flipped in the game
+        # compared to their actual coordinates
+        self.s_race_line.y_range.flipped = True
+        self.s_race_line.toolbar.autohide = True
+
+
         # State variables
         self.laps_stored = []
         self.reference_lap_selected = None
@@ -52,15 +70,22 @@ class RaceTab:
         
         self.tyre_temp_display = self.create_tyre_temp_display()
 
+        self.race_diagram = RaceDiagram(width=1000)
+
+        # Track session data
+        self.session_stored = None
+        self.connection_status_stored = None
+
         # Create components and layout
         self.create_components()
-        self.layout = self.create_layout()
-        
-    def set_diagrams(self, race_diagram, s_race_line):
-        """Set diagram components that are shared across tabs"""
-        self.race_diagram = race_diagram
-        self.s_race_line = s_race_line
-        
+        self.finalize_layout()
+
+        # Initialize available lap files
+        stored_lap_files = bokeh_tuple_for_list_of_lapfiles(
+            list_lap_files_from_path(os.path.join(os.getcwd(), "data"))
+        )
+        self.select.options = stored_lap_files
+               
         # Connect race time table selection callback
         # TODO:
         # self.race_time_table.lap_times_source.selected.on_change('indices', self.table_row_selection_callback)
@@ -94,12 +119,28 @@ class RaceTab:
         self.checkbox_group.on_change("active", self.always_record_checkbox_handler)
 
         self.app.gt7comm.set_lap_callback (self.on_lap_finished)
-        
-    def create_layout(self):
-        """Create layout for this tab"""
-        # This layout will be populated after diagrams are set
-        # For now, create a placeholder layout
-        return layout([])
+
+                # Set up race line components if they haven't been created yet
+        if self.s_race_line and not hasattr(self, 'last_lap_race_line'):
+            # Create race lines if needed
+            self.last_lap_race_line = self.s_race_line.line(
+                x="raceline_x",
+                y="raceline_z",
+                legend_label="Last Lap",
+                line_width=1,
+                color="cyan",
+                source=ColumnDataSource(data={"raceline_x": [], "raceline_z": []})
+            )
+            
+            self.reference_lap_race_line = self.s_race_line.line(
+                x="raceline_x",
+                y="raceline_z",
+                legend_label="Reference Lap",
+                line_width=1,
+                color="magenta",
+                source=ColumnDataSource(data={"raceline_x": [], "raceline_z": []})
+            )
+
         
     def finalize_layout(self):
         """Create the final layout after all diagrams are set"""
@@ -132,7 +173,7 @@ class RaceTab:
         throttle_help_button = HelpButton(css_classes=["info-icon-button"], tooltip=Tooltip(content=HTML(THROTTLE_DIAGRAM), position="right",css_classes=["custom-tooltip"]))
         speedvar_help_button = HelpButton(css_classes=["info-icon-button"],tooltip=Tooltip(content=HTML(SPEED_VARIANCE), position="right",css_classes=["custom-tooltip"]))
         speedpeaksandvalleys_help_button = HelpButton(css_classes=["info-icon-button"],tooltip=Tooltip(content=HTML(SPEED_PEAKS_AND_VALLEYS), position="right",css_classes=["custom-tooltip"]))
-                                          
+
         main_diagrams_column = column(
             row([self.race_diagram.f_time_diff]),
             row([self.race_diagram.f_speed]),
@@ -150,18 +191,18 @@ class RaceTab:
 
         self.layout = row(left_column, main_diagrams_column)
         return self.layout
-        
+
     def update_reference_lap_select(self, laps):
         """Update the reference lap selection dropdown"""
         self.reference_lap_select.options = [
             tuple(("-1", "Best Lap"))
         ] + bokeh_tuple_for_list_of_laps(laps)
-            
+
     def update_header_line(self, last_lap, reference_lap):
         """Update the header line with lap information"""
         self.div_header_line.text = f"<p><b>Last Lap: {last_lap.title} ({last_lap.car_name()})<b></p>" \
                    f"<p><b>Reference Lap: {reference_lap.title} ({reference_lap.car_name()})<b></p>"
-                   
+
     # def update_tuning_info(self):
     #     """Update tuning information display"""
     #     self.div_tuning_info.text = """<h4>Tuning Info</h4>
@@ -170,14 +211,14 @@ class RaceTab:
     #         self.app.gt7comm.session.max_speed,
     #         self.app.gt7comm.session.min_body_height,
     #     )
-        
+
     def reset_button_handler(self, event):
         """Reset all data and graphs"""
         logger.info("Reset button clicked - clearing all data and graphs")
-        
+
         # Clear race diagram data
         self.race_diagram.delete_all_additional_laps()
-        
+
         # Clear data sources for main graphs
         self.race_diagram.source_last_lap.data = {"distance": [], "speed": [], "throttle": [], "brake": [], "time": []}
         self.race_diagram.source_reference_lap.data = {"distance": [], "speed": [], "throttle": [], "brake": [], "time": []}
@@ -335,7 +376,6 @@ class RaceTab:
 
         # Check for session change
         if hasattr(self, 'session_stored') and self.app.gt7comm.session != self.session_stored:
-            #self.update_tuning_info()
             self.session_stored = copy.copy(self.app.gt7comm.session)
 
         # This saves on cpu time, 99.9% of the time this is true
@@ -378,40 +418,6 @@ class RaceTab:
 
         self.laps_stored = laps.copy()
         self.telemetry_update_needed = False
-        
-    def initialize(self):
-        """Initialize race lines and setup available lap files"""
-
-        # Set up race line components if they haven't been created yet
-        if self.s_race_line and not hasattr(self, 'last_lap_race_line'):
-            # Create race lines if needed
-            self.last_lap_race_line = self.s_race_line.line(
-                x="raceline_x",
-                y="raceline_z",
-                legend_label="Last Lap",
-                line_width=1,
-                color="cyan",
-                source=ColumnDataSource(data={"raceline_x": [], "raceline_z": []})
-            )
-            
-            self.reference_lap_race_line = self.s_race_line.line(
-                x="raceline_x",
-                y="raceline_z",
-                legend_label="Reference Lap",
-                line_width=1,
-                color="magenta",
-                source=ColumnDataSource(data={"raceline_x": [], "raceline_z": []})
-            )
-        
-        # Initialize available lap files
-        stored_lap_files = bokeh_tuple_for_list_of_lapfiles(
-            list_lap_files_from_path(os.path.join(os.getcwd(), "data"))
-        )
-        self.select.options = stored_lap_files
-        
-        # Track session data
-        self.session_stored = None
-        self.connection_status_stored = None
 
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""

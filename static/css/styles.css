@@ -5,3 +5,23 @@ body {
     margin: 0;
     padding: 0;
 }
+
+
+/* Links */
+a {
+    color: #4f8cff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+a:hover {
+    color: #82b1ff;
+}
+
+.custom-tooltip {
+    max-width: fit-content;
+    width: 300px;
+    white-space: normal;
+    word-break: break-word;
+    height: auto;
+    max-height: fit-content;
+}

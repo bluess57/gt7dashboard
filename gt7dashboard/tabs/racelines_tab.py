@@ -6,7 +6,7 @@ import numpy as np
 from bokeh.layouts import layout, column, row
 from bokeh.models import (
     ColumnDataSource, TabPanel, Div, Button, CheckboxGroup,
-    Select, ColorBar, LinearColorMapper, HelpButton, Tooltip
+    Select, HelpButton, Tooltip
 )
 from bokeh.palettes import Plasma11 as palette
 from bokeh.plotting import figure
@@ -57,7 +57,8 @@ class RaceLinesTab(GT7Tab):
             Red segments indicate braking.
             Cyan segments indicate coasting (neither throttle nor brake).
             """,
-          position="right"
+          position="right",
+          css_classes=["custom-tooltip"]
         )
         self.help = HelpButton(label="?", tooltip=help_tooltip)
 
