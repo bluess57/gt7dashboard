@@ -1,7 +1,7 @@
 import logging
 import os
 from bokeh.plotting import curdoc
-from bokeh.models import Div, GlobalImportedStyleSheet, InlineStyleSheet, Button, Dropdown, HelpButton, Tooltip
+from bokeh.models import Div, GlobalImportedStyleSheet
 from bokeh.layouts import column, row
 
 from gt7dashboard import gt7communication

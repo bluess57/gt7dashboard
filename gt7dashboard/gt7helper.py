@@ -5,7 +5,7 @@ import logging
 import os
 import pickle
 import statistics
-import sys
+
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import StatisticsError
@@ -17,8 +17,8 @@ from scipy.signal import find_peaks
 from tabulate import tabulate
 
 from gt7dashboard.gt7lap import Lap
-from gt7dashboard import gt7helper
-
+from gt7dashboard.gt7lapfile import LapFile
+from gt7dashboard.gt7fuelmap import FuelMap
 
 def calculate_remaining_fuel(
         fuel_start_lap: int, fuel_end_lap: int, lap_time: int
@@ -38,7 +38,7 @@ def calculate_remaining_fuel(
 def get_x_axis_for_distance(lap: Lap) -> List:
     x_axis = []
     tick_time = 16.668  # https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13806131
-    for i, s in enumerate(lap.data_speed):
+    for i in enumerate(lap.data_speed):
         # distance traveled + (Speed in km/h / 3.6 / 1000 = mm / ms) * tick_time
         if i == 0:
             x_axis.append(0)
@@ -292,15 +292,6 @@ def none_ignoring_median(data):
         i = n // 2
         return (filtered_data[i - 1] + filtered_data[i]) / 2
 
-
-class LapFile:
-    def __init__(self):
-        self.name = None
-        self.path = None
-        self.size = None
-
-    def __str__(self):
-        return "%s - %s" % (self.name, human_readable_size(self.size, decimal_places=0))
 
 
 def list_lap_files_from_path(root: str):
@@ -636,44 +627,6 @@ def bokeh_tuple_for_list_of_laps(laps: List[Lap]):
         tuples.append(tuple((str(i), lap.format())))
     return tuples
 
-
-class FuelMap:
-    """A Fuel Map with calculated attributes of the fuel setting
-
-    Attributes:
-            fuel_consumed_per_lap   The amount of fuel consumed per lap with this fuel map
-    """
-
-    def __init__(self, mixture_setting, power_percentage, consumption_percentage):
-        """
-        Create a Fuel Map that is relative to the base setting
-
-        :param mixture_setting: Mixture Setting of the Fuel Map
-        :param power_percentage: Percentage of available power to the car relative to the base setting
-        :param consumption_percentage: Percentage of fuel consumption relative to the base setting
-        """
-        self.mixture_setting = mixture_setting
-        self.power_percentage = power_percentage
-        self.consumption_percentage = consumption_percentage
-
-        self.fuel_consumed_per_lap = 0
-        self.laps_remaining_on_current_fuel = 0
-        self.time_remaining_on_current_fuel = 0
-        self.lap_time_diff = 0
-        self.lap_time_expected = 0
-
-    def __str__(self):
-        return "%d\t\t %d%%\t\t\t %d%%\t%d\t%.1f\t%s\t%s" % (
-            self.mixture_setting,
-            self.power_percentage * 100,
-            self.consumption_percentage * 100,
-            self.fuel_consumed_per_lap,
-            self.laps_remaining_on_current_fuel,
-            seconds_to_lap_time(self.time_remaining_on_current_fuel / 1000),
-            seconds_to_lap_time(self.lap_time_diff / 1000),
-        )
-
-
 def get_fuel_on_consumption_by_relative_fuel_levels(lap: Lap) -> List[FuelMap]:
     # Relative Setting, Laps to Go, Time to Go, Assumed Diff in Lap Times
     fuel_consumed_per_lap, laps_remaining, time_remaining = calculate_remaining_fuel(
@@ -741,7 +694,7 @@ def get_variance_for_laps(laps: List[Lap]) -> DataFrame:
     dataframe_distance_columns = []
     merged_df = pd.DataFrame(columns=['distance'])
     for lap in laps:
-        d = {'speed': lap.data_speed, 'distance' : gt7helper.get_x_axis_for_distance(lap)}
+        d = {'speed': lap.data_speed, 'distance' : get_x_axis_for_distance(lap)}
         df = pd.DataFrame(data=d)
         dataframe_distance_columns.append(df)
         merged_df = pd.merge(merged_df, df, on='distance', how='outer')
