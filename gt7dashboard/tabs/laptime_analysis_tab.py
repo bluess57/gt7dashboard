@@ -401,7 +401,7 @@ class LapTimeAnalysisTab(GT7Tab):
     
     def update_lap_data(self, step=None):
         """Periodic update of lap data"""
-        laps = self.app.gt7comm.get_laps()
+        laps = self.app.gt7comm.session.get_laps()
         self.show_laps(laps)
     
     def get_tab_panel(self):

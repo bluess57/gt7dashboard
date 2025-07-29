@@ -38,6 +38,7 @@ class TabManager:
 
         # Create tabs
         self.race_lines_tab = RaceLinesTab(app_instance)
+        
         self.race_tab = RaceTab(app_instance)
         self.race_tab.set_diagrams(self.race_diagram, self.s_race_line)
         self.race_tab.initialize()

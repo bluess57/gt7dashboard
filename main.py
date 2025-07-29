@@ -1,7 +1,7 @@
 import logging
 import os
 from bokeh.plotting import curdoc
-from bokeh.models import Div, GlobalImportedStyleSheet, InlineStyleSheet, Button, Dropdown, HelpButton
+from bokeh.models import Div, GlobalImportedStyleSheet, InlineStyleSheet, Button, Dropdown, HelpButton, Tooltip
 from bokeh.layouts import column, row
 
 from gt7dashboard import gt7communication
@@ -54,7 +54,7 @@ class GT7Application:
         header = self.create_header()
 
         self.heartbeat_indicator = Div(
-            text='<span id="heartbeat-dot" style="font-size:2em; color:gray;">&#10084;</span>'
+            text='<span id="heartbeat-dot" title="Heart beat indicator, when data is received will flash green." style="font-size:2em; color:gray;">&#10084;</span>'
         )
 
         self.gt7comm.set_on_heartbeat_callback(self.show_heartbeat(doc))
@@ -132,21 +132,6 @@ class GT7Application:
     def on_laps_loaded(self, laps):
         if hasattr(self, "race_time_data_table_tab"):
             self.race_time_data_table_tab.show_laps(laps)
-
-    def delete_lap(self, lap_number):
-        """
-        Delete a lap by its number from the loaded laps.
-        Updates all tabs that display lap data.
-        """
-        self.gt7comm.session.delete_lap(lap_number)
-
-        # Update time table tab and other relevant tabs
-        if hasattr(self.tab_manager, 'time_table_tab'):
-            self.tab_manager.time_table_tab.show_laps(self.gt7comm.session.laps)
-        if hasattr(self.tab_manager, 'race_tab'):
-            self.tab_manager.race_tab.update_lap_change()
-
-        logger.info(f"Deleted lap {lap_number}. Laps before: {original_count}, after: {new_count}")
 
 # Create and set up the application
 app = GT7Application()

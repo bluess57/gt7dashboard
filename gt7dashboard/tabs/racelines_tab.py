@@ -263,7 +263,7 @@ class RaceLinesTab(GT7Tab):
         
     def update_lap_options(self):
         """Update available laps in the dropdown"""
-        laps = self.app.gt7comm.get_laps()
+        laps = self.app.gt7comm.session.get_laps()
         options = [(str(i), f"{lap.title} - {lap.car_name()}") for i, lap in enumerate(laps)]
         self.lap_select.options = options
         
@@ -274,7 +274,7 @@ class RaceLinesTab(GT7Tab):
             return
             
         lap_index = int(self.lap_select.value)
-        laps = self.app.gt7comm.get_laps()
+        laps = self.app.gt7comm.session.get_laps()
         
         if lap_index >= len(laps):
             logger.error(f"Invalid lap index: {lap_index}")

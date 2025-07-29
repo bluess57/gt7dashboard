@@ -6,17 +6,13 @@ import socket
 import struct
 import time
 import copy
-import traceback
-from datetime import timedelta
 from threading import Thread
-from typing import List
-
-from Crypto.Cipher import Salsa20
 
 from gt7dashboard.gt7helper import seconds_to_lap_time
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7data import GT7Data
 from gt7dashboard.gt7session import GT7Session
+from gt7dashboard.gt7salsa import salsa20_dec
 
 # Set up logging
 logger = logging.getLogger('gt7communication.py')
@@ -309,22 +305,3 @@ class GT7Communication(Thread):
 
     def set_lap_callback(self, new_lap_callback):
         self.lap_callback_function = new_lap_callback
-
-
-    # data stream decoding
-def salsa20_dec(dat):
-    key = b'Simulator Interface Packet GT7 ver 0.0'
-    # Seed IV is always located here
-    oiv = dat[0x40:0x44]
-    iv1 = int.from_bytes(oiv, byteorder='little')
-    # Notice DEADBEAF, not DEADBEEF
-    iv2 = iv1 ^ 0xDEADBEAF
-    iv = bytearray()
-    iv.extend(iv2.to_bytes(4, 'little'))
-    iv.extend(iv1.to_bytes(4, 'little'))
-    cipher = Salsa20.new(key[0:32], bytes(iv))
-    ddata = cipher.decrypt(dat)
-    magic = int.from_bytes(ddata[0:4], byteorder='little')
-    if magic != 0x47375330:
-        return bytearray(b'')
-    return ddata
