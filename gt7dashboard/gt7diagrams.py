@@ -1,14 +1,9 @@
-from typing import List
 
-import bokeh
-from bokeh.layouts import layout
-from bokeh.models import ColumnDataSource, Label, Scatter, Column, Line, TableColumn, DataTable, Range1d
+from bokeh.models import ColumnDataSource, Label
 from bokeh.plotting import figure
 
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
-from gt7dashboard.race_time_datatable import RaceTimeDataTable
-from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR
 from gt7dashboard.gt7helper import seconds_to_lap_time
 
 def get_throttle_braking_race_line_diagram():

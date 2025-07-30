@@ -51,8 +51,6 @@ class GT7Application:
             text='<span id="heartbeat-dot" title="Heart beat indicator, when data is received will flash green." style="font-size:2em; color:gray;">&#10084;</span>'
         )
 
-        self.gt7comm.set_on_heartbeat_callback(self.show_heartbeat(doc))
-
         # Create a layout with header and tabs
         main_layout = column(
             row(header, self.heartbeat_indicator),
@@ -70,6 +68,8 @@ class GT7Application:
         #doc.add_periodic_callback(self.tab_manager.race_tab.update_lap_change, 1000)
         #doc.add_periodic_callback(lambda step=None: self.tab_manager.fuel_tab.update_fuel_map(step), 5000)
         #doc.add_periodic_callback(self.update_header, 5000)  # Update header every 5 seconds
+
+        self.gt7comm.set_on_heartbeat_callback(self.show_heartbeat(doc))
 
     def create_header(self):
         """Create a header showing connection status and PS5 IP"""
