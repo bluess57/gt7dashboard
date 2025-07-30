@@ -1,19 +1,17 @@
 import os
-import pickle
 import unittest
 
-from bokeh.io import output_file, show
+from bokeh.io import output_file
 from bokeh.layouts import layout
-from bokeh.models import Div, Plot, Scatter, Label
-from bokeh.plotting import save, figure
+from bokeh.models import Div
+from bokeh.plotting import save
 
-import gt7dashboard.gt7diagrams
-import gt7dashboard.gt7helper
 from gt7dashboard import gt7diagrams, gt7helper
 from gt7dashboard.gt7diagrams import (
     get_throttle_braking_race_line_diagram,
 )
 from gt7dashboard.gt7lap import Lap
+from gt7dashboard.gt7racediagram import RaceDiagram
 
 
 class TestHelper(unittest.TestCase):
@@ -56,7 +54,7 @@ class TestHelper(unittest.TestCase):
         self.assertAlmostEqual(file_size, 3000000, delta=1000000)
 
     def helper_get_race_diagram(self):
-        rd = gt7diagrams.RaceDiagram(600)
+        rd = RaceDiagram(600)
 
         lap_data_1 = self.test_laps[0].get_data_dict()
         lap_data_2 = self.test_laps[1].get_data_dict()

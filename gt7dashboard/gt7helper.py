@@ -36,15 +36,15 @@ def calculate_remaining_fuel(
 
 
 def get_x_axis_for_distance(lap: Lap) -> List:
-    x_axis = []
+    x_axis = [0.0]
     tick_time = 16.668  # https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13806131
-    for i in enumerate(lap.data_speed):
-        # distance traveled + (Speed in km/h / 3.6 / 1000 = mm / ms) * tick_time
-        if i == 0:
-            x_axis.append(0)
+    for i in range(1, len(lap.data_speed)):
+        if lap.data_speed[i] is None or lap.data_speed[i] == 0:
+            # If speed is None or 0, we cannot calculate distance
+            x_axis.append(x_axis[i - 1])
             continue
-
-        x_axis.append(x_axis[i - 1] + (float(lap.data_speed[i]) / 3.6 / 1000) * tick_time)
+        increment = (float(lap.data_speed[i]) / 3.6 / 1000) * tick_time
+        x_axis.append(x_axis[i - 1] + increment)
 
     return x_axis
 

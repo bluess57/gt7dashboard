@@ -1,14 +1,15 @@
-import pickle
 import unittest
 import os
+from unittest.mock import patch
 
 from gt7dashboard.gt7helper import calculate_remaining_fuel, format_laps_to_table, calculate_time_diff_by_distance, \
-    get_n_fastest_laps_within_percent_threshold_ignoring_replays
+    get_n_fastest_laps_within_percent_threshold_ignoring_replays, get_fuel_on_consumption_by_relative_fuel_levels, load_laps_from_json, \
+    convert_seconds_to_milliseconds, seconds_to_lap_time, get_variance_for_laps, \
+    get_median_lap, get_last_reference_median_lap, filter_max_min_laps, get_brake_points, \
+    get_peaks_and_valleys_sorted_tuple_list, calculate_laps_left_on_fuel, \
+    save_laps_to_json, get_car_name_for_car_id, get_safe_filename, find_speed_peaks_and_valleys
+
 from gt7dashboard.gt7lap import Lap
-
-from gt7dashboard import gt7helper
-from gt7dashboard import gt7lap
-
 
 class TestHelper(unittest.TestCase):
     def test_calculate_remaining_fuel(self):
@@ -32,7 +33,7 @@ class TestHelper(unittest.TestCase):
         fuel_lap.fuel_at_start = 100
         fuel_lap.fuel_at_end = 50
         fuel_lap.lap_finish_time = 1000
-        fuel_maps = gt7helper.get_fuel_on_consumption_by_relative_fuel_levels(fuel_lap)
+        fuel_maps = get_fuel_on_consumption_by_relative_fuel_levels(fuel_lap)
         self.assertEqual(11, len(fuel_maps))
         print("\nFuelLvl	 Power%		    Fuel% Consum. LapsRem 	Time Rem Exp. Lap Time\n")
         for fuel_map in fuel_maps:
@@ -81,7 +82,7 @@ class TestHelper(unittest.TestCase):
 
     def test_calculate_time_diff_by_distance_from_pickle(self):
         path = os.path.join(os.getcwd(), 'test_data', 'broad_bean_raceway_time_trial_4laps.json')
-        laps = gt7helper.load_laps_from_json(path)
+        laps = load_laps_from_json(path)
 
         df = calculate_time_diff_by_distance(laps[0], laps[1])
 
@@ -104,8 +105,8 @@ class TestHelper(unittest.TestCase):
 
     def test_convert_seconds_to_milliseconds(self):
         seconds = 10000
-        ms = gt7helper.convert_seconds_to_milliseconds(seconds)
-        s_s = gt7helper.seconds_to_lap_time(seconds / 1000)
+        ms = convert_seconds_to_milliseconds(seconds)
+        s_s = seconds_to_lap_time(seconds / 1000)
         print(ms, s_s)
 
 
@@ -129,52 +130,52 @@ class TestLastReferenceMedian(unittest.TestCase):
         self.l_reference.data_speed = [300]
 
     def test_one_lap(self):
-        last, reference, median = gt7helper.get_last_reference_median_lap([self.l_slow], None)
+        last, reference, median = get_last_reference_median_lap([self.l_slow], None)
         self.assertEqual(self.l_slow, last)
         self.assertIsNone(reference)
         self.assertIsNone(median)
 
     def test_one_lap_with_reference(self):
-        last, reference, median = gt7helper.get_last_reference_median_lap([self.l_fast], self.l_reference)
+        last, reference, median = get_last_reference_median_lap([self.l_fast], self.l_reference)
         self.assertEqual(self.l_fast, last)
         self.assertEqual(self.l_reference, reference)
         self.assertIsNone(median)
 
     def test_two_laps(self):
-        last, reference, median = gt7helper.get_last_reference_median_lap([self.l_slow, self.l_fast], None)
+        last, reference, median = get_last_reference_median_lap([self.l_slow, self.l_fast], None)
         self.assertEqual(self.l_slow, last)
         self.assertEqual(self.l_fast, reference)
         self.assertIsNone(median, Lap)
 
     def test_two_laps_with_reference(self):
-        last, reference, median = gt7helper.get_last_reference_median_lap([self.l_slow, self.l_fast], self.l_reference)
+        last, reference, median = get_last_reference_median_lap([self.l_slow, self.l_fast], self.l_reference)
         self.assertEqual(self.l_slow, last)
         self.assertEqual(self.l_reference, reference)
         self.assertIsNone(median, Lap)
 
     def test_three_laps(self):
-        last, reference, median = gt7helper.get_last_reference_median_lap([self.l_slow, self.l_fast, self.l_middle],
+        last, reference, median = get_last_reference_median_lap([self.l_slow, self.l_fast, self.l_middle],
                                                                           None)
         self.assertEqual(self.l_slow, last)
         self.assertEqual(self.l_fast, reference)
         self.assertIsInstance(median, Lap)
 
     def test_two_three_with_reference(self):
-        last, reference, median = gt7helper.get_last_reference_median_lap([self.l_slow, self.l_fast, self.l_middle],
+        last, reference, median = get_last_reference_median_lap([self.l_slow, self.l_fast, self.l_middle],
                                                                           self.l_reference)
         self.assertEqual(self.l_slow, last)
         self.assertEqual(self.l_reference, reference)
         self.assertIsInstance(median, Lap)
 
     def test_fastest_is_latest(self):
-        last, reference, median = gt7helper.get_last_reference_median_lap([self.l_fast, self.l_slow, self.l_middle],
+        last, reference, median = get_last_reference_median_lap([self.l_fast, self.l_slow, self.l_middle],
                                                                           None)
         self.assertEqual(self.l_fast, last)
         self.assertEqual(self.l_fast, reference)
         self.assertIsInstance(median, Lap)
 
     def test_reference_slower_than_latest(self):
-        last, reference, median = gt7helper.get_last_reference_median_lap(
+        last, reference, median = get_last_reference_median_lap(
             [self.l_reference, self.l_slow, self.l_middle], self.l_fast)
         self.assertEqual(self.l_reference, last)
         self.assertEqual(self.l_fast, reference)
@@ -207,13 +208,13 @@ class TestLaps(unittest.TestCase):
 
     def test_list_eq(self):
         """Will fail"""
-        brake_points_x, brake_points_y = gt7helper.get_brake_points(self.Lap)
+        brake_points_x, brake_points_y = get_brake_points(self.Lap)
         # A break point will be the point after a zero for breaking
         self.assertListEqual(brake_points_x, [2, 18])
         self.assertListEqual(brake_points_y, [1, 8])
 
     def test_get_median_lap(self):
-        median_lap = gt7helper.get_median_lap(self.Laps)
+        median_lap = get_median_lap(self.Laps)
         self.assertEqual(len(median_lap.data_throttle), len(self.Laps[0].data_throttle))
         self.assertEqual(1225, median_lap.lap_finish_time)
         self.assertListEqual([0, 37.5, 75, 99, 100, 50, 27.5, 0], median_lap.data_throttle)
@@ -232,38 +233,38 @@ class TestLaps(unittest.TestCase):
         laps[2].lap_finish_time = 1250  # should be in
         laps[3].lap_finish_time = 1275  # should be out
         laps[3].lap_finish_time = 400  # odd lap, should be out
-        filtered_laps = gt7helper.filter_max_min_laps(laps, max_lap_time=1270, min_lap_time=600)
+        filtered_laps = filter_max_min_laps(laps, max_lap_time=1270, min_lap_time=600)
         self.assertEqual(3, len(filtered_laps))
 
     def test_find_speed_peaks_and_valleys(self):
         valleyLap = Lap()
         valleyLap.data_speed = [0, 2, 3, 5, 5, 4.5, 3, 6, 7, 8, 7, 8, 3, 2]
-        peaks, valleys = gt7helper.find_speed_peaks_and_valleys(valleyLap, width=1)
+        peaks, valleys = find_speed_peaks_and_valleys(valleyLap, width=1)
         self.assertEqual([3, 9, 11], peaks)
 
     def test_find_speed_peaks_and_valleys_real_data(self):
         path = os.path.join(os.getcwd(), 'test_data', 'broad_bean_raceway_time_trial_4laps.json')
-        laps = gt7helper.load_laps_from_json(path)
+        laps = load_laps_from_json(path)
 
-        peaks, valleys = gt7helper.find_speed_peaks_and_valleys(laps[1], width=100)
+        peaks, valleys = find_speed_peaks_and_valleys(laps[1], width=100)
 
         self.assertEqual([759, 1437], peaks)
         self.assertEqual([1132, 1625], valleys)
 
     def test_get_car_name_for_car_id(self):
-        car_name = gt7helper.get_car_name_for_car_id(1448)
+        car_name = get_car_name_for_car_id(1448)
         self.assertEqual("SILVIA spec-R Aero (S15) '02", car_name)
 
-        non_existing_car_name = gt7helper.get_car_name_for_car_id(89239843984983)
+        non_existing_car_name = get_car_name_for_car_id(89239843984983)
         self.assertEqual(non_existing_car_name, "CAR-ID-89239843984983")
 
     def test_get_car_name_for_car_id_when_csv_file_does_not_exist(self):
-        gt7helper.CARS_CSV_FILENAME = "not_existing_file"
-        car_name = gt7helper.get_car_name_for_car_id(1448)
-        self.assertEqual(car_name, "CAR-ID-1448")
+        with patch('gt7dashboard.gt7helper.CARS_CSV_FILENAME', 'not_existing_file'):
+            car_name = get_car_name_for_car_id(1448)
+            self.assertEqual(car_name, "CAR-ID-1448")
 
     def test_get_safe_filename(self):
-        self.assertEqual("Cio_123_98", gt7helper.get_safe_filename("Cio 123 '98"))
+        self.assertEqual("Cio_123_98", get_safe_filename("Cio 123 '98"))
 
     def test_get_n_fastest_laps_within_percent_threshold_ignoring_replays(self):
         l1 = Lap()
@@ -286,7 +287,7 @@ class TestLaps(unittest.TestCase):
         l6.lap_finish_time = 1010  # second to last
 
         number_of_laps_to_get = 3
-        filtered_laps = gt7helper.get_n_fastest_laps_within_percent_threshold_ignoring_replays([l1, l2, l3, l4, l5, l6],
+        filtered_laps = get_n_fastest_laps_within_percent_threshold_ignoring_replays([l1, l2, l3, l4, l5, l6],
                                                                                                number_of_laps_to_get,
                                                                                                0.15)
         self.assertEqual(number_of_laps_to_get, len(filtered_laps))
@@ -296,7 +297,7 @@ class TestLaps(unittest.TestCase):
         self.assertEqual(1010, filtered_laps[2].lap_finish_time)
 
         threshold_percentage = 0.006
-        tighter_filtered_laps = gt7helper.get_n_fastest_laps_within_percent_threshold_ignoring_replays(
+        tighter_filtered_laps = get_n_fastest_laps_within_percent_threshold_ignoring_replays(
             [l1, l2, l3, l4, l5, l6], number_of_laps_to_get, percent_threshold=threshold_percentage)
 
         # Should only contain 1000 and 1005 within 0,6% difference
@@ -316,7 +317,7 @@ class TestLaps(unittest.TestCase):
         l3.data_speed = [50, 150, 200, 200]
         l3.data_time =  [10, 100,200,300]
 
-        variance = gt7helper.get_variance_for_laps([l1, l2, l3])
+        variance = get_variance_for_laps([l1, l2, l3])
         print("")
         print(variance)
 
@@ -341,19 +342,19 @@ class TestLaps(unittest.TestCase):
         path = os.path.join(
             os.getcwd(), "test_data", "broad_bean_raceway_time_trial_4laps.json"
         )
-        test_laps = gt7helper.load_laps_from_json(path)
+        test_laps = load_laps_from_json(path)
 
         return test_laps
     def test_get_peaks_and_valleys_sorted_tuple_list(self):
         test_laps = self.get_test_laps()
 
-        tuple_list = gt7helper.get_peaks_and_valleys_sorted_tuple_list(test_laps[3])
+        tuple_list = get_peaks_and_valleys_sorted_tuple_list(test_laps[3])
         print(tuple_list)
 
     @unittest.skip("Not yet implemented")
     def test_calculate_fuel_left(self):
         lap = Lap()
-        fuel_left = gt7helper.calculate_laps_left_on_fuel(lap, lap)
+        fuel_left = calculate_laps_left_on_fuel(lap, lap)
         print(fuel_left)
 
     def test_save_laps_to_json(self):
@@ -363,10 +364,10 @@ class TestLaps(unittest.TestCase):
         l2.data_boost = [2.6, 2.7, 3.9]
 
         laps = [l1, l2]
-        json_path = gt7helper.save_laps_to_json(laps)
+        json_path = save_laps_to_json(laps)
         print(json_path)
 
-        laps_read = gt7helper.load_laps_from_json(json_path)
+        laps_read = load_laps_from_json(json_path)
 
         self.assertEqual(len(laps), len(laps_read))
         for obj1, obj2 in zip(laps, laps_read):

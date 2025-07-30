@@ -29,7 +29,7 @@ from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7diagrams import get_speed_peak_and_valley_diagram
 from gt7dashboard.gt7help import THROTTLE_DIAGRAM, SPEED_VARIANCE, RACE_LINE_MINI, SPEED_PEAKS_AND_VALLEYS
 from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR, TABLE_ROW_COLORS
-from gt7dashboard.race_diagram import RaceDiagram
+from gt7dashboard.gt7racediagram import RaceDiagram
 
 # Use LAST_LAP_COLOR wherever needed
 
