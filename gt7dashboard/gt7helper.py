@@ -1,9 +1,5 @@
 
 import itertools
-import json
-import logging
-import os
-import pickle
 import statistics
 
 from datetime import datetime, timezone
@@ -268,7 +264,7 @@ def filter_max_min_laps(laps: List[Lap], max_lap_time=-1, min_lap_time=-1) -> Li
 def pd_data_frame_from_lap(
         laps: List[Lap], best_lap_time: int
 ) -> pd.DataFrame:
-    df = pd.DataFrame()
+    rows = []
     for i, lap in enumerate(laps):
         time_diff = ""
         info = ""
@@ -277,43 +273,30 @@ def pd_data_frame_from_lap(
             info += "Replay"
 
         if best_lap_time == lap.lap_finish_time:
-            # lap_color = 35 # magenta
-            # TODO add some formatting
             pass
         elif lap.lap_finish_time < best_lap_time:
-            # lap_finish_time cannot be smaller than last_lap, last_lap is always the smallest.
-            # This can only mean that lap.lap_finish_time is from an earlier race on a different track
             time_diff = "-"
         elif best_lap_time > 0:
             time_diff = "+" + seconds_to_lap_time(
                 -1 * (best_lap_time / 1000 - lap.lap_finish_time / 1000)
             )
 
-        df_add = pd.DataFrame(
-            [
-                {
-                    "number": lap.number,
-                    "time": seconds_to_lap_time(lap.lap_finish_time / 1000),
-                    "diff": time_diff,
-                    "timestamp": lap.lap_start_timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                    "info": info,
-                    "car_name": car_name(lap.car_id),
-                    "fuelconsumed": "%d" % lap.fuel_consumed,
-                    "fullthrottle": "%d"
-                                    % (lap.full_throttle_ticks / lap.lap_ticks * 1000),
-                    "throttleandbreak": "%d"
-                                        % (lap.throttle_and_brake_ticks / lap.lap_ticks * 1000),
-                    "fullbreak": "%d" % (lap.full_brake_ticks / lap.lap_ticks * 1000),
-                    "nothrottle": "%d"
-                                  % (lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000),
-                    "tyrespinning": "%d"
-                                    % (lap.tyres_spinning_ticks / lap.lap_ticks * 1000),
-                }
-            ],
-            index=[i],
-        )
-        df = pd.concat([df, df_add])
+        rows.append({
+            "number": lap.number,
+            "time": seconds_to_lap_time(lap.lap_finish_time / 1000),
+            "diff": time_diff,
+            "timestamp": lap.lap_start_timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            "info": info,
+            "car_name": car_name(lap.car_id),
+            "fuelconsumed": "%d" % lap.fuel_consumed,
+            "fullthrottle": "%d" % (lap.full_throttle_ticks / lap.lap_ticks * 1000),
+            "throttleandbreak": "%d" % (lap.throttle_and_brake_ticks / lap.lap_ticks * 1000),
+            "fullbreak": "%d" % (lap.full_brake_ticks / lap.lap_ticks * 1000),
+            "nothrottle": "%d" % (lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000),
+            "tyrespinning": "%d" % (lap.tyres_spinning_ticks / lap.lap_ticks * 1000),
+        })
 
+    df = pd.DataFrame(rows)
     return df
 
 
