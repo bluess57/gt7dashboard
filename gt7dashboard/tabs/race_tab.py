@@ -53,7 +53,7 @@ from gt7dashboard.gt7lapstorage import (
 # Use LAST_LAP_COLOR wherever needed
 
 logger = logging.getLogger("race_tab")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class RaceTab:
@@ -93,7 +93,6 @@ class RaceTab:
 
         # Track session data
         self.session_stored = None
-        self.connection_status_stored = None
 
         # Create components and layout
         self.create_components()
@@ -103,7 +102,7 @@ class RaceTab:
         stored_lap_files = bokeh_tuple_for_list_of_lapfiles(
             list_lap_files_from_path(os.path.join(os.getcwd(), "data"))
         )
-        self.select.options = stored_lap_files
+        self.selectLoadLaps.options = stored_lap_files
 
         # Connect race time table selection callback
         # TODO:
@@ -129,8 +128,8 @@ class RaceTab:
         self.reset_button = Button(label="Reset Laps", width=150, button_type="danger")
 
         # Create selects
-        self.select_title = Paragraph(text="Load Laps:")
-        self.select = Select(value="laps", options=[], width=150)
+        self.selectLoadLapsTitle = Paragraph(text="Load Laps:")
+        self.selectLoadLaps = Select(value="laps", options=[], width=150)
         self.reference_lap_select = Select(value="-1", width=150)
 
         # Create checkbox for recording replays
@@ -140,7 +139,7 @@ class RaceTab:
         self.manual_log_button.on_click(self.log_lap_button_handler)
         self.save_button.on_click(self.save_button_handler)
         self.reset_button.on_click(self.reset_button_handler)
-        self.select.on_change("value", self.load_laps_handler)
+        self.selectLoadLaps.on_change("value", self.load_laps_handler)
         self.reference_lap_select.on_change("value", self.load_reference_lap_handler)
         self.checkbox_group.on_change("active", self.always_record_checkbox_handler)
 
@@ -197,13 +196,12 @@ class RaceTab:
                 self.reset_button,
                 self.manual_log_button,
                 self.checkbox_group,
-                self.select_title,
-                self.select,
+                self.selectLoadLapsTitle,
+                self.selectLoadLaps,
                 self.reference_lap_select,
                 self.div_deviance_laps_on_display,
                 row(self.s_race_line, racelinemini_help_button),
             ],
-            css_classes=["floating-area"],
         )
 
         throttle_help_button = HelpButton(
@@ -333,7 +331,6 @@ class RaceTab:
         self.laps_stored = []
 
         # Clear GT7 communication data
-        self.app.gt7comm.session.load_laps([], replace_other_laps=True)
         self.app.gt7comm.reset()
 
         # Force full UI update
@@ -361,7 +358,6 @@ class RaceTab:
     def save_button_handler(self, event):
         """Handle saving laps"""
         if len(self.app.gt7comm.session.laps) > 0:
-
             path = save_laps_to_json(self.app.gt7comm.session.laps)
             logger.info(
                 "Saved %d laps as %s" % (len(self.app.gt7comm.session.laps), path)
@@ -369,8 +365,10 @@ class RaceTab:
 
     def load_laps_handler(self, attr, old, new):
         """Handle loading laps from file"""
-        logger.info("Loading %s" % new)
+        if new == "":
+            return
 
+        logger.info("Loading laps from file %s" % new)
         self.race_diagram.delete_all_additional_laps()
         self.app.gt7comm.session.load_laps(
             load_laps_from_json(new), replace_other_laps=True
@@ -425,7 +423,7 @@ class RaceTab:
             if reference_lap and len(reference_lap.data_speed) > 0:
                 reference_lap_data = reference_lap.get_data_dict()
                 self.race_diagram.source_time_diff.data = (
-                    calculate_time_diff_by_distance(reference_lap, last_lap)
+                    Lap.calculate_time_diff_by_distance(reference_lap, last_lap)
                 )
                 self.race_diagram.source_reference_lap.data = reference_lap_data
                 self.reference_lap_race_line.data_source.data = reference_lap_data

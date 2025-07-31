@@ -26,21 +26,14 @@ class RaceTimeDataTableTab:
                 sizing_mode="stretch_both",
             ),
         )
+        self.app.gt7comm.session.set_on_load_laps_callback(self.show_laps)
 
     def show_laps(self, laps):
         """
         Display all laps data in the race time table.
         """
-        logger.info("Showing laps in RaceTimeDataTableTab")
-
-        if hasattr(self.race_time_table, "update_lap_times"):
-            self.race_time_table.update_lap_times(laps)
-        elif hasattr(self.race_time_table.t_lap_times, "data_source"):
-            # Fallback: update the data source directly if update_lap_times is not available
-            self.race_time_table.t_lap_times.data_source.data = {
-                key: [getattr(lap, key, None) for lap in laps]
-                for key in self.race_time_table.t_lap_times.data_source.data.keys()
-            }
+        logger.debug("Showing laps in RaceTimeDataTableTab")
+        self.race_time_table.show_laps(laps)
 
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""

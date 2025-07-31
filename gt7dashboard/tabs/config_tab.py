@@ -1,13 +1,19 @@
 import os
 import logging
-import html
+import re
+
 from bokeh.layouts import layout, column
 from bokeh.models import Div, Button, TextInput, TabPanel, CheckboxGroup
 import subprocess
-from ..gt7help import add_help_tooltip
 from ..tabs.base_tab import GT7Tab
 
-from gt7dashboard.gt7lapstorage import load_laps_from_json
+from gt7dashboard.gt7lapstorage import (
+    load_laps_from_pickle,
+    load_laps_from_json,
+    list_lap_files_from_path,
+)
+
+from gt7dashboard.gt7helper import bokeh_tuple_for_list_of_lapfiles
 
 logger = logging.getLogger("config_tab")
 logger.setLevel(logging.DEBUG)
@@ -103,7 +109,7 @@ class ConfigTab(GT7Tab):
 
         # Dashboard link
         self.div_gt7_dashboard = Div(width=120, height=30)
-        self.div_gt7_dashboard.text = f"Github source: <a href='https://github.com/snipem/gt7dashboard' target='_blank'>GT7 Dashboard</a>"
+        self.div_gt7_dashboard.text = f"Github source: <a href='https://github.com/bluess57/gt7dashboard' target='_blank'>GT7 Dashboard</a>"
 
         # Set up event handlers
         self.ps5_ip_input.on_change("value", self.validate_ip)
@@ -149,7 +155,6 @@ class ConfigTab(GT7Tab):
 
     def validate_ip(self, attr, old, new):
         """Validate IP address format and provide feedback"""
-        import re
 
         ip_pattern = r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
 
@@ -184,11 +189,6 @@ class ConfigTab(GT7Tab):
 
     def load_path_button_handler(self, event):
         """Handle loading laps from specified path"""
-        from ..gt7helper import (
-            load_laps_from_pickle,
-            load_laps_from_json,
-            list_lap_files_from_path,
-        )
 
         logger = logging.getLogger(__name__)
         path = self.lap_path_input.value.strip()
@@ -210,7 +210,6 @@ class ConfigTab(GT7Tab):
                 # If directory, list all JSON files
                 available_files = list_lap_files_from_path(path)
                 if available_files:
-                    from ..gt7helper import bokeh_tuple_for_list_of_lapfiles
 
                     # Update dropdown options - we need to access the select component in the main app
                     # This will require passing the select component to this class or having a callback mechanism
@@ -241,9 +240,9 @@ class ConfigTab(GT7Tab):
                 if (
                     laps
                     and hasattr(self.app, "tab_manager")
-                    and hasattr(self.app.tab_manager, "time_table_tab")
+                    and hasattr(self.app.tab_manager, "laptime_table_tab")
                 ):
-                    self.app.tab_manager.time_table_tab.show_laps(laps)
+                    self.app.tab_manager.laptime_table_tab.show_laps(laps)
                     logger.info(f"Updated time table tab with {len(laps)} laps")
 
         except Exception as e:

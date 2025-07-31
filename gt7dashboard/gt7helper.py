@@ -270,10 +270,10 @@ def pd_data_frame_from_lap(laps: List[Lap], best_lap_time: int) -> pd.DataFrame:
     rows = []
     for i, lap in enumerate(laps):
         time_diff = ""
-        info = ""
+        replay = "N"
 
         if lap.is_replay:
-            info += "Replay"
+            replay = "Y"
 
         if best_lap_time == lap.lap_finish_time:
             pass
@@ -290,13 +290,13 @@ def pd_data_frame_from_lap(laps: List[Lap], best_lap_time: int) -> pd.DataFrame:
                 "time": seconds_to_lap_time(lap.lap_finish_time / 1000),
                 "diff": time_diff,
                 "timestamp": lap.lap_start_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                "info": info,
+                "replay": replay,
                 "car_name": car_name(lap.car_id),
                 "fuelconsumed": "%d" % lap.fuel_consumed,
                 "fullthrottle": "%d" % (lap.full_throttle_ticks / lap.lap_ticks * 1000),
                 "throttleandbreak": "%d"
                 % (lap.throttle_and_brake_ticks / lap.lap_ticks * 1000),
-                "fullbreak": "%d" % (lap.full_brake_ticks / lap.lap_ticks * 1000),
+                "fullbrake": "%d" % (lap.full_brake_ticks / lap.lap_ticks * 1000),
                 "nothrottle": "%d"
                 % (lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000),
                 "tyrespinning": "%d"

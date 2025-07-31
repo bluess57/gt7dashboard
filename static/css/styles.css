@@ -25,3 +25,19 @@ a:hover {
     height: auto;
     max-height: fit-content;
 }
+
+.slick-cell.selected {
+    background-color: green; /* Replace with your desired color */
+}
+
+.slick-row.odd {
+    background-color: #444;
+}
+
+.slick-row.even {
+    background-color: lightslategray;
+}
+
+.bk-data-table .gridcanvas .ui-widget-content .slick-cell {
+    background-color: #444;
+}

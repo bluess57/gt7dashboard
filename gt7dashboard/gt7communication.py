@@ -1,7 +1,5 @@
 import datetime
-import json
 import logging
-import math
 import socket
 import struct
 import time
@@ -76,6 +74,7 @@ class GT7Communication(Thread):
                 previous_lap = -1
                 package_id = 0
                 package_nr = 0
+                self._check_connection_event()
                 while not self._shall_restart and self._shall_run:
                     try:
                         data = s.recvfrom(4096)

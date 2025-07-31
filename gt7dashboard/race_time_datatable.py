@@ -13,21 +13,20 @@ class RaceTimeDataTable(object):
         self.columns = [
             TableColumn(field="number", title="#"),
             TableColumn(field="time", title="Time"),
-            TableColumn(field="diff", title="Diff"),
+            TableColumn(field="diff", title="Delta"),
             TableColumn(field="timestamp", title="Timestamp"),
-            TableColumn(field="info", title="Info"),
-            TableColumn(field="fuelconsumed", title="Fuel Cons."),
             TableColumn(field="fullthrottle", title="Full Throt."),
             TableColumn(field="fullbrake", title="Full Brake"),
             TableColumn(field="nothrottle", title="Coast"),
             TableColumn(field="tyrespinning", title="Tire Spin"),
+            TableColumn(field="fuelconsumed", title="Fuel Cons."),
+            TableColumn(field="replay", title="Replay"),
             TableColumn(field="car_name", title="Car"),
         ]
 
         self.lap_times_source = ColumnDataSource(
             gt7helper.pd_data_frame_from_lap([], best_lap_time=0)
         )
-        self.t_lap_times: DataTable
 
         dtstylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
 

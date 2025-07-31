@@ -6,11 +6,12 @@ from bokeh.layouts import column, row
 
 from gt7dashboard import gt7communication
 from gt7dashboard.tab_manager import TabManager
-from gt7dashboard.gt7helper import load_laps_from_pickle
+from gt7dashboard.gt7lapstorage import load_laps_from_pickle
+
 
 # Set up logging
-logger = logging.getLogger("main.py")
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger("main")
+logger.setLevel(logging.INFO)
 
 
 # Create the application
@@ -24,17 +25,6 @@ class GT7Application:
 
         self.tab_manager = TabManager(self)
         self.tabs = self.tab_manager.create_tabs()
-
-        # Load laps if specified
-        load_laps_path = os.environ.get("GT7_LOAD_LAPS_PATH")
-        if load_laps_path:
-            laps = load_laps_from_pickle(load_laps_path)
-            self.gt7comm.session.load_laps(laps, replace_other_laps=True)
-            self.tab_manager.time_table_tab.show_laps(laps)
-
-        # Start communication with PS5
-        logger.info(f"Starting GT7 communication with PS5 at {playstation_ip}")
-        self.gt7comm.start()
 
     def setup_document(self, doc):
         doc.theme = "carbon"
@@ -68,6 +58,13 @@ class GT7Application:
         # doc.add_periodic_callback(self.update_header, 5000)  # Update header every 5 seconds
 
         self.gt7comm.set_on_heartbeat_callback(self.show_heartbeat(doc))
+
+        # Start communication with PS5
+        logger.info(
+            f"Starting GT7 communication with PS5 at {self.gt7comm.playstation_ip}"
+        )
+
+        self.gt7comm.start()
 
     def create_header(self):
         """Create a header showing connection status and PS5 IP"""

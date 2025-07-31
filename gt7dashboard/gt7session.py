@@ -1,6 +1,10 @@
+import logging
 from typing import List
 
 from gt7dashboard.gt7lap import Lap
+
+logger = logging.getLogger("gt7session")
+logger.setLevel(logging.INFO)
 
 
 class GT7Session:
