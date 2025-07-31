@@ -11,7 +11,7 @@ from bokeh.models import (
     Paragraph, TabPanel, HelpButton, Tooltip
 )
 from bokeh.models.dom import HTML
-from bokeh.palettes import Plasma11 as palette
+
 
 from gt7dashboard.gt7helper import (
     bokeh_tuple_for_list_of_laps,
@@ -21,8 +21,7 @@ from gt7dashboard.gt7helper import (
     list_lap_files_from_path,
     get_brake_points,
     get_last_reference_median_lap,
-    get_brake_points,
-    calculate_time_diff_by_distance
+    get_brake_points
     )
 
 from gt7dashboard.gt7lap import Lap
@@ -30,6 +29,7 @@ from gt7dashboard.gt7diagrams import get_speed_peak_and_valley_diagram
 from gt7dashboard.gt7help import THROTTLE_DIAGRAM, SPEED_VARIANCE, RACE_LINE_MINI, SPEED_PEAKS_AND_VALLEYS
 from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR, TABLE_ROW_COLORS
 from gt7dashboard.gt7racediagram import RaceDiagram
+from gt7dashboard.gt7car import car_name
 
 # Use LAST_LAP_COLOR wherever needed
 
@@ -201,8 +201,8 @@ class RaceTab:
 
     def update_header_line(self, last_lap, reference_lap):
         """Update the header line with lap information"""
-        self.div_header_line.text = f"<p><b>Last Lap: {last_lap.title} ({last_lap.car_name()})<b></p>" \
-                   f"<p><b>Reference Lap: {reference_lap.title} ({reference_lap.car_name()})<b></p>"
+        self.div_header_line.text = f"<p><b>Last Lap: {last_lap.title} ({car_name(last_lap.car_id)})<b></p>" \
+                   f"<p><b>Reference Lap: {reference_lap.title} ({car_name(reference_lap.car_id)})<b></p>"
 
     # def update_tuning_info(self):
     #     """Update tuning information display"""

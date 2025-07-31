@@ -1,4 +1,4 @@
-import csv
+
 import itertools
 import json
 import logging
@@ -18,6 +18,7 @@ from tabulate import tabulate
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7lapfile import LapFile
 from gt7dashboard.gt7fuelmap import FuelMap
+from gt7dashboard.gt7car import car_name
 
 def calculate_remaining_fuel(
         fuel_start_lap: int, fuel_end_lap: int, lap_time: int
@@ -232,7 +233,6 @@ def save_laps_to_pickle(laps: List[Lap]) -> str:
     return path
 
 def save_laps_to_json(laps: List[Lap]) -> str:
-
     storage_folder = "data"
     local_timezone = datetime.now(timezone.utc).astimezone().tzinfo
     dt = datetime.now(tz=local_timezone)
@@ -400,51 +400,6 @@ def pd_data_frame_from_lap(
         df = pd.concat([df, df_add])
 
     return df
-
-
-def car_name(car_id: int) -> str:
-    return get_car_name_for_car_id(car_id)
-
-CARS_CSV_FILENAME = "db/cars.csv"
-
-def get_car_name_for_car_id(car_id: int) -> str:
-    # check if file exists
-    if not os.path.isfile(CARS_CSV_FILENAME):
-        logging.info("Could not find file %s" % CARS_CSV_FILENAME)
-        return "CAR-ID-%d" % car_id
-
-    # Static cache dictionary
-    if not hasattr(get_car_name_for_car_id, "_car_id_cache"):
-        get_car_name_for_car_id._car_id_cache = None
-
-    # Load cache if not already loaded
-    if get_car_name_for_car_id._car_id_cache is None:
-        car_id_cache = {}
-
-        with open(CARS_CSV_FILENAME, 'r') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            for row in csv_reader:
-                if len(row) >= 2:
-                    # Strip whitespace and store as int for robust matching
-                    try:
-                        key = int(row[0].strip())
-                        car_id_cache[key] = row[1].strip()
-                    except ValueError:
-                        continue
-        get_car_name_for_car_id._car_id_cache = car_id_cache
-    else:
-        car_id_cache = get_car_name_for_car_id._car_id_cache
-
-    # Look up car_id as int
-    try:
-        car_id_int = int(car_id)
-    except ValueError:
-        return f"CAR-ID-{car_id}"
-
-    if car_id_int in car_id_cache:
-        return car_id_cache[car_id_int]
-    else:
-        return f"CAR-ID-{car_id}"
 
 
 def bokeh_tuple_for_list_of_lapfiles(lapfiles: List[LapFile]):

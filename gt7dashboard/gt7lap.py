@@ -200,7 +200,6 @@ class Lap:
         raceline_y_braking, raceline_x_braking, raceline_z_braking = self.get_race_line_coordinates_when_mode_is_active(mode=RACE_LINE_BRAKING_MODE)
         raceline_y_coasting, raceline_x_coasting, raceline_z_coasting = self.get_race_line_coordinates_when_mode_is_active( mode=RACE_LINE_COASTING_MODE)
 
-        
         if not self.data_throttle:
             distance = []
         else:

@@ -7,9 +7,10 @@ from gt7dashboard.gt7helper import calculate_remaining_fuel, format_laps_to_tabl
     seconds_to_lap_time, get_variance_for_laps, \
     get_median_lap, get_last_reference_median_lap, filter_max_min_laps, get_brake_points, \
     get_peaks_and_valleys_sorted_tuple_list, calculate_laps_left_on_fuel, \
-    save_laps_to_json, get_car_name_for_car_id, get_safe_filename
+    save_laps_to_json, get_safe_filename
 
 from gt7dashboard.gt7lap import Lap
+from gt7dashboard.gt7car import get_car_name_for_car_id
 
 class TestHelper(unittest.TestCase):
     def test_calculate_remaining_fuel(self):
@@ -259,7 +260,7 @@ class TestLaps(unittest.TestCase):
         self.assertEqual(non_existing_car_name, "CAR-ID-89239843984983")
 
     def test_get_car_name_for_car_id_when_csv_file_does_not_exist(self):
-        with patch('gt7dashboard.gt7helper.CARS_CSV_FILENAME', 'not_existing_file'):
+        with patch('gt7dashboard.gt7car.CARS_CSV_FILENAME', 'not_existing_file'):
             car_name = get_car_name_for_car_id(1448)
             self.assertEqual(car_name, "CAR-ID-1448")
 
