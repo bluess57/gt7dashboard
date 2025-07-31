@@ -12,6 +12,7 @@ from gt7dashboard.gt7diagrams import (
 )
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7racediagram import RaceDiagram
+from gt7dashboard.race_time_datatable import RaceTimeDataTable
 
 
 class TestHelper(unittest.TestCase):
@@ -61,7 +62,7 @@ class TestHelper(unittest.TestCase):
 
         median_lap_data = gt7helper.get_median_lap(self.test_laps).get_data_dict()
 
-        rd.source_time_diff.data = gt7helper.calculate_time_diff_by_distance(
+        rd.source_time_diff.data = Lap.calculate_time_diff_by_distance(
             self.test_laps[0], self.test_laps[1]
         )
         rd.source_last_lap.data = lap_data_2
@@ -159,7 +160,7 @@ class TestHelper(unittest.TestCase):
 
 
     def test_race_table(self):
-        rt = gt7diagrams.RaceTimeDataTable()
+        rt = RaceTimeDataTable()
         rt.show_laps(self.test_laps)
 
         out_file = "test_out/test_race_table.html"

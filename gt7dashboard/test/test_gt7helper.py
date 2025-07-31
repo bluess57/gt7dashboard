@@ -2,12 +2,12 @@ import unittest
 import os
 from unittest.mock import patch
 
-from gt7dashboard.gt7helper import calculate_remaining_fuel, format_laps_to_table, calculate_time_diff_by_distance, \
+from gt7dashboard.gt7helper import calculate_remaining_fuel, format_laps_to_table, \
     get_n_fastest_laps_within_percent_threshold_ignoring_replays, get_fuel_on_consumption_by_relative_fuel_levels, load_laps_from_json, \
-    convert_seconds_to_milliseconds, seconds_to_lap_time, get_variance_for_laps, \
+    seconds_to_lap_time, get_variance_for_laps, \
     get_median_lap, get_last_reference_median_lap, filter_max_min_laps, get_brake_points, \
     get_peaks_and_valleys_sorted_tuple_list, calculate_laps_left_on_fuel, \
-    save_laps_to_json, get_car_name_for_car_id, get_safe_filename, find_speed_peaks_and_valleys
+    save_laps_to_json, get_car_name_for_car_id, get_safe_filename
 
 from gt7dashboard.gt7lap import Lap
 
@@ -84,7 +84,7 @@ class TestHelper(unittest.TestCase):
         path = os.path.join(os.getcwd(), 'test_data', 'broad_bean_raceway_time_trial_4laps.json')
         laps = load_laps_from_json(path)
 
-        df = calculate_time_diff_by_distance(laps[0], laps[1])
+        df = Lap.calculate_time_diff_by_distance(laps[0], laps[1])
 
         # Check for common length but also for columns to exist
         self.assertEqual(len(df.distance), len(df.comparison))
@@ -99,13 +99,13 @@ class TestHelper(unittest.TestCase):
         second_best_lap.data_time = [0, 1, 4, 5, 20, 30, 70, 75]
         second_best_lap.data_speed = [0, 40, 35, 90, 85, 50, 20, 5]
 
-        df = calculate_time_diff_by_distance(best_lap, second_best_lap)
+        df = Lap.calculate_time_diff_by_distance(best_lap, second_best_lap)
 
         print(len(df))
 
     def test_convert_seconds_to_milliseconds(self):
         seconds = 10000
-        ms = convert_seconds_to_milliseconds(seconds)
+        ms = Lap.convert_seconds_to_milliseconds(seconds)
         s_s = seconds_to_lap_time(seconds / 1000)
         print(ms, s_s)
 
@@ -239,14 +239,14 @@ class TestLaps(unittest.TestCase):
     def test_find_speed_peaks_and_valleys(self):
         valleyLap = Lap()
         valleyLap.data_speed = [0, 2, 3, 5, 5, 4.5, 3, 6, 7, 8, 7, 8, 3, 2]
-        peaks, valleys = find_speed_peaks_and_valleys(valleyLap, width=1)
+        peaks, valleys = valleyLap.find_speed_peaks_and_valleys(width=1)
         self.assertEqual([3, 9, 11], peaks)
 
     def test_find_speed_peaks_and_valleys_real_data(self):
         path = os.path.join(os.getcwd(), 'test_data', 'broad_bean_raceway_time_trial_4laps.json')
         laps = load_laps_from_json(path)
 
-        peaks, valleys = find_speed_peaks_and_valleys(laps[1], width=100)
+        peaks, valleys = laps[1].find_speed_peaks_and_valleys(width=100)
 
         self.assertEqual([759, 1437], peaks)
         self.assertEqual([1132, 1625], valleys)

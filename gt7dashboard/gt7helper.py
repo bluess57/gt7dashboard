@@ -13,7 +13,6 @@ from typing import Tuple, List
 
 import pandas as pd
 from pandas import DataFrame
-from scipy.signal import find_peaks
 from tabulate import tabulate
 
 from gt7dashboard.gt7lap import Lap
@@ -33,80 +32,6 @@ def calculate_remaining_fuel(
     time_remaining = laps_remaining * lap_time
 
     return fuel_consumed_per_lap, laps_remaining, time_remaining
-
-
-def get_x_axis_for_distance(lap: Lap) -> List:
-    x_axis = [0.0]
-    tick_time = 16.668  # https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13806131
-    for i in range(1, len(lap.data_speed)):
-        if lap.data_speed[i] is None or lap.data_speed[i] == 0:
-            # If speed is None or 0, we cannot calculate distance
-            x_axis.append(x_axis[i - 1])
-            continue
-        increment = (float(lap.data_speed[i]) / 3.6 / 1000) * tick_time
-        x_axis.append(x_axis[i - 1] + increment)
-
-    return x_axis
-
-
-def get_x_axis_depending_on_mode(lap: Lap, distance_mode: bool):
-    if distance_mode:
-        # Calculate distance for x axis
-        return get_x_axis_for_distance(lap)
-    else:
-        # Use ticks as length, which is the length of any given data list
-        return list(range(len(lap.data_speed)))
-    pass
-
-
-def get_time_delta_dataframe_for_lap(lap: Lap, name: str) -> DataFrame:
-    lap_distance = get_x_axis_for_distance(lap)
-    lap_time = lap.data_time
-
-    # Multiply to match datatype which is nanoseconds?
-    lap_time_ms = [convert_seconds_to_milliseconds(item) for item in lap_time]
-
-    series = pd.Series(
-        lap_distance, index=pd.to_timedelta(lap_time_ms, unit="ms")
-    )
-
-    upsample = series.resample("10ms").asfreq()
-    interpolated_upsample = upsample.interpolate()
-
-    # Make distance to index and time to value, because we want to join on distance
-    inverted = pd.Series(
-        interpolated_upsample.index.values, index=interpolated_upsample
-    )
-
-    # Flip around, we have to convert timedelta back to integer to do this
-    s1 = pd.Series(inverted.values.astype("int64"), name=name, index=inverted.index)
-
-    df1 = DataFrame(data=s1)
-    # returns a dataframe where index is distance travelled and first data field is time passed
-    return df1
-
-
-def calculate_time_diff_by_distance(
-        reference_lap: Lap, comparison_lap: Lap
-) -> DataFrame:
-    df1 = get_time_delta_dataframe_for_lap(reference_lap, "reference")
-    df2 = get_time_delta_dataframe_for_lap(comparison_lap, "comparison")
-
-    df = df1.join(df2, how="outer").sort_index().interpolate()
-
-    # After interpolation, we can make the index a normal field and rename it
-    df.reset_index(inplace=True)
-    df = df.rename(columns={"index": "distance"})
-
-    # Convert integer timestamps back to timestamp format
-    s_reference_timestamped = pd.to_timedelta(getattr(df, "reference"))
-    s_comparison_timestamped = pd.to_timedelta(getattr(df, "comparison"))
-
-    df["reference"] = s_reference_timestamped
-    df["comparison"] = s_comparison_timestamped
-
-    df["timedelta"] = df["comparison"] - df["reference"]
-    return df
 
 
 def mark_if_matches_highest_or_lowest(
@@ -214,13 +139,6 @@ def format_laps_to_table(laps: List[Lap], best_lap: float) -> str:
     )
 
 
-def convert_seconds_to_milliseconds(seconds: int):
-    minutes = seconds // 60
-    remaining = seconds % 60
-
-    return minutes * 60000 + remaining * 1000
-
-
 def seconds_to_lap_time(seconds):
     prefix = ""
     if seconds < 0:
@@ -230,39 +148,6 @@ def seconds_to_lap_time(seconds):
     minutes = seconds // 60
     remaining = seconds % 60
     return prefix + "{:01.0f}:{:06.3f}".format(minutes, remaining)
-
-
-def find_speed_peaks_and_valleys(lap: Lap, width: int = 100) -> tuple[list[int], list[int]]:
-    inv_data_speed = [i * -1 for i in lap.data_speed]
-    peaks, whatisthis = find_peaks(lap.data_speed, width=width)
-    valleys, whatisthis = find_peaks(inv_data_speed, width=width)
-    return list(peaks), list(valleys)
-
-
-def get_speed_peaks_and_valleys(lap: Lap):
-    peaks, valleys = find_speed_peaks_and_valleys(lap, width=100)
-
-    peak_speed_data_x = []
-    peak_speed_data_y = []
-
-    valley_speed_data_x = []
-    valley_speed_data_y = []
-
-    for p in peaks:
-        peak_speed_data_x.append(lap.data_speed[p])
-        peak_speed_data_y.append(p)
-
-    for v in valleys:
-        valley_speed_data_x.append(lap.data_speed[v])
-        valley_speed_data_y.append(v)
-
-    return (
-        peak_speed_data_x,
-        peak_speed_data_y,
-        valley_speed_data_x,
-        valley_speed_data_y,
-    )
-
 
 def none_ignoring_median(data):
     """Return the median (middle value) of numeric data but ignore None values.
@@ -352,7 +237,7 @@ def save_laps_to_json(laps: List[Lap]) -> str:
     local_timezone = datetime.now(timezone.utc).astimezone().tzinfo
     dt = datetime.now(tz=local_timezone)
     str_date_time = dt.strftime("%Y-%m-%d_%H_%M_%S")
-    storage_filename = "%s_%s.json" % (str_date_time, get_safe_filename(laps[0].car_name()))
+    storage_filename = "%s_%s.json" % (str_date_time, get_safe_filename(car_name(laps[0].car_id)))
     Path(storage_folder).mkdir(parents=True, exist_ok=True)
 
     path = os.path.join(os.getcwd(), storage_folder, storage_filename)
@@ -365,8 +250,6 @@ def save_laps_to_json(laps: List[Lap]) -> str:
 
 def get_safe_filename(unsafe_filename: str) -> str:
     return "".join(x for x in unsafe_filename if x.isalnum() or x in "._- ").replace(" ", "_")
-
-
 
 
 def get_last_reference_median_lap(
@@ -499,7 +382,7 @@ def pd_data_frame_from_lap(
                     "diff": time_diff,
                     "timestamp": lap.lap_start_timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                     "info": info,
-                    "car_name": lap.car_name(),
+                    "car_name": car_name(lap.car_id),
                     "fuelconsumed": "%d" % lap.fuel_consumed,
                     "fullthrottle": "%d"
                                     % (lap.full_throttle_ticks / lap.lap_ticks * 1000),
@@ -519,53 +402,8 @@ def pd_data_frame_from_lap(
     return df
 
 
-RACE_LINE_BRAKING_MODE = "RACE_LINE_BRAKING_MODE"
-RACE_LINE_THROTTLE_MODE = "RACE_LINE_THROTTLE_MODE"
-RACE_LINE_COASTING_MODE = "RACE_LINE_COASTING_MODE"
-
-
-def get_race_line_coordinates_when_mode_is_active(lap: Lap, mode: str):
-    return_y = []
-    return_x = []
-    return_z = []
-
-    for i, _ in enumerate(lap.data_braking):
-
-        if mode == RACE_LINE_BRAKING_MODE:
-
-            if lap.data_braking[i] > lap.data_throttle[i]:
-                return_y.append(lap.data_position_y[i])
-                return_x.append(lap.data_position_x[i])
-                return_z.append(lap.data_position_z[i])
-            else:
-                return_y.append("NaN")
-                return_x.append("NaN")
-                return_z.append("NaN")
-
-        elif mode == RACE_LINE_THROTTLE_MODE:
-
-            if lap.data_braking[i] < lap.data_throttle[i]:
-                return_y.append(lap.data_position_y[i])
-                return_x.append(lap.data_position_x[i])
-                return_z.append(lap.data_position_z[i])
-            else:
-                return_y.append("NaN")
-                return_x.append("NaN")
-                return_z.append("NaN")
-
-        if mode == RACE_LINE_COASTING_MODE:
-
-            if lap.data_braking[i] == 0 and lap.data_throttle[i] == 0:
-                return_y.append(lap.data_position_y[i])
-                return_x.append(lap.data_position_x[i])
-                return_z.append(lap.data_position_z[i])
-            else:
-                return_y.append("NaN")
-                return_x.append("NaN")
-                return_z.append("NaN")
-
-    return return_y, return_x, return_z
-
+def car_name(car_id: int) -> str:
+    return get_car_name_for_car_id(car_id)
 
 CARS_CSV_FILENAME = "db/cars.csv"
 
@@ -689,7 +527,7 @@ def get_variance_for_laps(laps: List[Lap]) -> DataFrame:
     dataframe_distance_columns = []
     merged_df = pd.DataFrame(columns=['distance'])
     for lap in laps:
-        d = {'speed': lap.data_speed, 'distance' : get_x_axis_for_distance(lap)}
+        d = {'speed': lap.data_speed, 'distance' : lap.get_x_axis_for_distance()}
         df = pd.DataFrame(data=d)
         dataframe_distance_columns.append(df)
         merged_df = pd.merge(merged_df, df, on='distance', how='outer')

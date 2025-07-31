@@ -1,5 +1,17 @@
+import logging
+import pandas as pd
+from scipy.signal import find_peaks
 from datetime import datetime
-from gt7dashboard import gt7helper
+from typing import List
+from pandas import DataFrame
+
+RACE_LINE_BRAKING_MODE = "RACE_LINE_BRAKING_MODE"
+RACE_LINE_THROTTLE_MODE = "RACE_LINE_THROTTLE_MODE"
+RACE_LINE_COASTING_MODE = "RACE_LINE_COASTING_MODE"
+
+# Set up logging
+logger = logging.getLogger('gt7lap.py')
+logger.setLevel(logging.DEBUG)
 
 class Lap:
     def __init__(self):
@@ -78,13 +90,28 @@ class Lap:
         milliseconds = int((self.data_time % 1) * 1000)
         return f"{minutes}:{seconds:02d}.{milliseconds:03d}"
 
-    def get_speed_peaks_and_valleys(self):
-        (
-            peak_speed_data_x,
-            peak_speed_data_y,
-            valley_speed_data_x,
-            valley_speed_data_y,
-        ) = gt7helper.get_speed_peaks_and_valleys(self)
+    def find_speed_peaks_and_valleys(self, width: int = 100) -> tuple[list[int], list[int]]:
+        inv_data_speed = [i * -1 for i in self.data_speed]
+        peaks, whatisthis = find_peaks(self.data_speed, width=width)
+        valleys, whatisthis = find_peaks(inv_data_speed, width=width)
+        return list(peaks), list(valleys)
+
+    def mget_speed_peaks_and_valleys(self):
+        peaks, valleys = self.find_speed_peaks_and_valleys(width=100)
+
+        peak_speed_data_x = []
+        peak_speed_data_y = []
+
+        valley_speed_data_x = []
+        valley_speed_data_y = []
+
+        for p in peaks:
+            peak_speed_data_x.append(self.data_speed[p])
+            peak_speed_data_y.append(p)
+
+        for v in valleys:
+            valley_speed_data_x.append(self.data_speed[v])
+            valley_speed_data_y.append(v)
 
         return (
             peak_speed_data_x,
@@ -93,15 +120,91 @@ class Lap:
             valley_speed_data_y,
         )
 
-    def car_name(self) -> str:
-        if (not hasattr(self, "car_id")):
-            return "Car N/A"
-        return gt7helper.get_car_name_for_car_id(self.car_id)
+    def get_speed_peaks_and_valleys(self):
+        (
+            peak_speed_data_x,
+            peak_speed_data_y,
+            valley_speed_data_x,
+            valley_speed_data_y,
+        ) = self.mget_speed_peaks_and_valleys()
+
+        return (
+            peak_speed_data_x,
+            peak_speed_data_y,
+            valley_speed_data_x,
+            valley_speed_data_y,
+        )
+
+    def get_x_axis_for_distance(self) -> List:
+        x_axis = [0.0]
+        tick_time = 16.668  # https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13806131
+        for i in range(1, len(self.data_speed)):
+            if self.data_speed[i] is None or self.data_speed[i] == 0:
+                # If speed is None or 0, we cannot calculate distance
+                x_axis.append(x_axis[i - 1])
+                continue
+            increment = (float(self.data_speed[i]) / 3.6 / 1000) * tick_time
+            x_axis.append(x_axis[i - 1] + increment)
+
+        return x_axis
+
+    def get_race_line_coordinates_when_mode_is_active(self, mode: str):
+        return_y = []
+        return_x = []
+        return_z = []
+
+        for i, _ in enumerate(self.data_braking):
+
+            if mode == RACE_LINE_BRAKING_MODE:
+                if self.data_braking[i] > self.data_throttle[i]:
+                    return_y.append(self.data_position_y[i])
+                    return_x.append(self.data_position_x[i])
+                    return_z.append(self.data_position_z[i])
+                else:
+                    return_y.append("NaN")
+                    return_x.append("NaN")
+                    return_z.append("NaN")
+
+            if mode == RACE_LINE_THROTTLE_MODE:
+                if self.data_braking[i] < self.data_throttle[i]:
+                    return_y.append(self.data_position_y[i])
+                    return_x.append(self.data_position_x[i])
+                    return_z.append(self.data_position_z[i])
+                else:
+                    return_y.append("NaN")
+                    return_x.append("NaN")
+                    return_z.append("NaN")
+
+            if mode == RACE_LINE_COASTING_MODE:
+                if self.data_braking[i] == 0 and self.data_throttle[i] == 0:
+                    return_y.append(self.data_position_y[i])
+                    return_x.append(self.data_position_x[i])
+                    return_z.append(self.data_position_z[i])
+                else:
+                    return_y.append("NaN")
+                    return_x.append("NaN")
+                    return_z.append("NaN")
+
+        return return_y, return_x, return_z
+
+    def get_x_axis_depending_on_mode(self, distance_mode: bool):
+        if distance_mode:
+            # Calculate distance for x axis
+            return self.get_x_axis_for_distance()
+        else:
+            # Use ticks as length, which is the length of any given data list
+            return list(range(len(self.data_speed)))
 
     def get_data_dict(self, distance_mode=True) -> dict[str, list]:
-        raceline_y_throttle, raceline_x_throttle, raceline_z_throttle = gt7helper.get_race_line_coordinates_when_mode_is_active(self, mode=gt7helper.RACE_LINE_THROTTLE_MODE)
-        raceline_y_braking, raceline_x_braking, raceline_z_braking = gt7helper.get_race_line_coordinates_when_mode_is_active(self, mode=gt7helper.RACE_LINE_BRAKING_MODE)
-        raceline_y_coasting, raceline_x_coasting, raceline_z_coasting = gt7helper.get_race_line_coordinates_when_mode_is_active(self, mode=gt7helper.RACE_LINE_COASTING_MODE)
+        raceline_y_throttle, raceline_x_throttle, raceline_z_throttle = self.get_race_line_coordinates_when_mode_is_active(mode=RACE_LINE_THROTTLE_MODE)
+        raceline_y_braking, raceline_x_braking, raceline_z_braking = self.get_race_line_coordinates_when_mode_is_active(mode=RACE_LINE_BRAKING_MODE)
+        raceline_y_coasting, raceline_x_coasting, raceline_z_coasting = self.get_race_line_coordinates_when_mode_is_active( mode=RACE_LINE_COASTING_MODE)
+
+        
+        if not self.data_throttle:
+            distance = []
+        else:
+            distance = self.get_x_axis_depending_on_mode(distance_mode)
 
         data = {
             "throttle": self.data_throttle,
@@ -131,7 +234,64 @@ class Lap:
             "raceline_x_coasting": raceline_x_coasting,
             "raceline_z_coasting": raceline_z_coasting,
 
-            "distance": gt7helper.get_x_axis_depending_on_mode(self, distance_mode),
+            "distance": distance
         }
 
         return data
+    
+    @staticmethod
+    def calculate_time_diff_by_distance(
+            reference_lap: "Lap", comparison_lap: "Lap"
+    ) -> DataFrame:
+        df1 = Lap.get_time_delta_dataframe_for_lap(reference_lap, "reference")
+        df2 = Lap.get_time_delta_dataframe_for_lap(comparison_lap, "comparison")
+
+        df = df1.join(df2, how="outer").sort_index().interpolate()
+
+        # After interpolation, we can make the index a normal field and rename it
+        df.reset_index(inplace=True)
+        df = df.rename(columns={"index": "distance"})
+
+        # Convert integer timestamps back to timestamp format
+        s_reference_timestamped = pd.to_timedelta(getattr(df, "reference"))
+        s_comparison_timestamped = pd.to_timedelta(getattr(df, "comparison"))
+
+        df["reference"] = s_reference_timestamped
+        df["comparison"] = s_comparison_timestamped
+
+        df["timedelta"] = df["comparison"] - df["reference"]
+        return df
+
+    @staticmethod
+    def get_time_delta_dataframe_for_lap(lap: "Lap", name: str) -> DataFrame:
+        lap_distance = lap.get_x_axis_for_distance()
+        lap_time = lap.data_time
+
+        # Multiply to match datatype which is nanoseconds?
+        lap_time_ms = [lap.convert_seconds_to_milliseconds(item) for item in lap_time]
+
+        series = pd.Series(
+            lap_distance, index=pd.to_timedelta(lap_time_ms, unit="ms")
+        )
+
+        upsample = series.resample("10ms").asfreq()
+        interpolated_upsample = upsample.interpolate()
+
+        # Make distance to index and time to value, because we want to join on distance
+        inverted = pd.Series(
+            interpolated_upsample.index.values, index=interpolated_upsample
+        )
+
+        # Flip around, we have to convert timedelta back to integer to do this
+        s1 = pd.Series(inverted.values.astype("int64"), name=name, index=inverted.index)
+
+        df1 = DataFrame(data=s1)
+        # returns a dataframe where index is distance travelled and first data field is time passed
+        return df1
+    
+    @staticmethod
+    def convert_seconds_to_milliseconds(seconds: int):
+        minutes = seconds // 60
+        remaining = seconds % 60
+
+        return minutes * 60000 + remaining * 1000

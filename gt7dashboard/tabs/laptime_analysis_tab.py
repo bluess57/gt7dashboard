@@ -236,7 +236,7 @@ class LapTimeAnalysisTab(GT7Tab):
                 # Get car name safely
                 car_name = ""
                 try:
-                    car_name = lap.car_name() if callable(getattr(lap, 'car_name', None)) else str(getattr(lap, 'car', ''))
+                    car_name = car_name(lap.car_id) if callable(getattr(lap, 'car_name', None)) else str(getattr(lap, 'car', ''))
                 except Exception:
                     car_name = "Unknown"
                 

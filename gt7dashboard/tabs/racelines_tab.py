@@ -11,9 +11,9 @@ from bokeh.models import (
 from bokeh.palettes import Plasma11 as palette
 from bokeh.plotting import figure
 
-from ..gt7lap import Lap
-from ..gt7help import add_help_tooltip
+from gt7dashboard.gt7lap import Lap
 from .base_tab import GT7Tab
+from gt7dashboard.gt7helper import car_name
 
 logger = logging.getLogger('racelines_tab')
 logger.setLevel(logging.DEBUG)
@@ -265,7 +265,7 @@ class RaceLinesTab(GT7Tab):
     def update_lap_options(self):
         """Update available laps in the dropdown"""
         laps = self.app.gt7comm.session.get_laps()
-        options = [(str(i), f"{lap.title} - {lap.car_name()}") for i, lap in enumerate(laps)]
+        options = [(str(i), f"{lap.title} - {car_name(lap.car_id)}") for i, lap in enumerate(laps)]
         self.lap_select.options = options
         
     def add_lap_handler(self, event):
