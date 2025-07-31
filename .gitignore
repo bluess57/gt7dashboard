@@ -138,3 +138,5 @@ db/cars.csv
 gt7dashboard/test/data
 /.vs/gt7dashboard/copilot-chat/7ba19113/sessions
 /.vs
+settings.json
+gt7dashboard.code-workspace
