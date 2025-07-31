@@ -2,6 +2,7 @@ import os
 
 import gt7dashboard.gt7help as gt7help
 
+
 def add_screenshot(filename):
     # join path
     str_screenshot_path = os.path.join("README.assets", filename)
@@ -11,7 +12,8 @@ def add_screenshot(filename):
     else:
         raise Exception("File does not exist: " + str_screenshot_path)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
 
     out_markdown = "## Manual\n\n"
 
@@ -105,9 +107,9 @@ If they had one graph it would be the deviation in the (best) laps of the same d
 
     print(out_markdown)
 
-    with open("README.md", 'r+') as f:
+    with open("README.md", "r+") as f:
         content = f.read()
-        pos = content.find('## Manual')
+        pos = content.find("## Manual")
         if pos != -1:
             f.seek(pos)
             f.truncate()

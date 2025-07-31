@@ -2,10 +2,13 @@ import logging
 import csv
 import os
 
+
 def car_name(car_id: int) -> str:
     return get_car_name_for_car_id(car_id)
 
+
 CARS_CSV_FILENAME = "db/cars.csv"
+
 
 def get_car_name_for_car_id(car_id: int) -> str:
     # check if file exists
@@ -21,8 +24,8 @@ def get_car_name_for_car_id(car_id: int) -> str:
     if get_car_name_for_car_id._car_id_cache is None:
         car_id_cache = {}
 
-        with open(CARS_CSV_FILENAME, 'r') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
+        with open(CARS_CSV_FILENAME, "r") as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=",")
             for row in csv_reader:
                 if len(row) >= 2:
                     # Strip whitespace and store as int for robust matching

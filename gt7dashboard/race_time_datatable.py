@@ -4,8 +4,9 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable, ImportedStyle
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
 
-logger = logging.getLogger('RaceTimeDataTable')
+logger = logging.getLogger("RaceTimeDataTable")
 logger.setLevel(logging.DEBUG)
+
 
 class RaceTimeDataTable(object):
     def __init__(self):
@@ -31,10 +32,12 @@ class RaceTimeDataTable(object):
         dtstylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
 
         self.t_lap_times = DataTable(
-            source=self.lap_times_source, columns=self.columns, index_position=None, 
+            source=self.lap_times_source,
+            columns=self.columns,
+            index_position=None,
             width=1000,
-            autosize_mode ="fit_columns",
-            stylesheets=[dtstylesheet]
+            autosize_mode="fit_columns",
+            stylesheets=[dtstylesheet],
         )
 
     def show_laps(self, laps: List[Lap]):
@@ -43,7 +46,9 @@ class RaceTimeDataTable(object):
         if best_lap is None:
             return
 
-        new_df = gt7helper.pd_data_frame_from_lap(laps, best_lap_time=best_lap.lap_finish_time)
+        new_df = gt7helper.pd_data_frame_from_lap(
+            laps, best_lap_time=best_lap.lap_finish_time
+        )
         self.lap_times_source.data = ColumnDataSource.from_df(new_df)
 
     def delete_lap(self, lap_number):
@@ -51,16 +56,15 @@ class RaceTimeDataTable(object):
         Delete a lap by its number from the loaded laps.
         Updates all tabs that display lap data.
         """
-        if lap_number < 0 :
+        if lap_number < 0:
             return
-        logger.info("Deleting lap number: %d", lap_number
-                    )
+        logger.info("Deleting lap number: %d", lap_number)
         self.gt7comm.session.delete_lap(lap_number)
 
         # Update time table tab and other relevant tabs
-        if hasattr(self.tab_manager, 'time_table_tab'):
+        if hasattr(self.tab_manager, "time_table_tab"):
             self.tab_manager.time_table_tab.show_laps(self.gt7comm.session.laps)
-        if hasattr(self.tab_manager, 'race_tab'):
+        if hasattr(self.tab_manager, "race_tab"):
             self.tab_manager.race_tab.update_lap_change()
 
         logger.info(f"Deleted lap {lap_number}.")

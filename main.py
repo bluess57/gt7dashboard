@@ -9,13 +9,14 @@ from gt7dashboard.tab_manager import TabManager
 from gt7dashboard.gt7helper import load_laps_from_pickle
 
 # Set up logging
-logger = logging.getLogger('main.py')
+logger = logging.getLogger("main.py")
 logger.setLevel(logging.DEBUG)
+
 
 # Create the application
 class GT7Application:
     def __init__(self):
-                # Set up tabs
+        # Set up tabs
         # Set up GT7 communication
         playstation_ip = os.environ.get("GT7_PLAYSTATION_IP", "255.255.255.255")
         self.gt7comm = gt7communication.GT7Communication(playstation_ip)
@@ -28,18 +29,15 @@ class GT7Application:
         load_laps_path = os.environ.get("GT7_LOAD_LAPS_PATH")
         if load_laps_path:
             laps = load_laps_from_pickle(load_laps_path)
-            self.gt7comm.session.load_laps(
-                laps, replace_other_laps=True
-            )
+            self.gt7comm.session.load_laps(laps, replace_other_laps=True)
             self.tab_manager.time_table_tab.show_laps(laps)
 
         # Start communication with PS5
         logger.info(f"Starting GT7 communication with PS5 at {playstation_ip}")
         self.gt7comm.start()
 
-
     def setup_document(self, doc):
-        doc.theme = 'carbon'
+        doc.theme = "carbon"
 
         css_path = "gt7dashboard/static/css/styles.css"
         globalStylesheet = GlobalImportedStyleSheet(url=css_path)
@@ -57,7 +55,7 @@ class GT7Application:
             row(self.tabs),
             sizing_mode="stretch_both",
             name="main",
-            stylesheets=[globalStylesheet]
+            stylesheets=[globalStylesheet],
         )
 
         # Add the layout to the document
@@ -65,9 +63,9 @@ class GT7Application:
         doc.title = "GT7 Dashboard"
 
         # Revisit if periodic callbacks are needed, trying not to use them
-        #doc.add_periodic_callback(self.tab_manager.race_tab.update_lap_change, 1000)
-        #doc.add_periodic_callback(lambda step=None: self.tab_manager.fuel_tab.update_fuel_map(step), 5000)
-        #doc.add_periodic_callback(self.update_header, 5000)  # Update header every 5 seconds
+        # doc.add_periodic_callback(self.tab_manager.race_tab.update_lap_change, 1000)
+        # doc.add_periodic_callback(lambda step=None: self.tab_manager.fuel_tab.update_fuel_map(step), 5000)
+        # doc.add_periodic_callback(self.update_header, 5000)  # Update header every 5 seconds
 
         self.gt7comm.set_on_heartbeat_callback(self.show_heartbeat(doc))
 
@@ -79,8 +77,8 @@ class GT7Application:
             name="gt7-header",
             text=self.update_connection_status(),
             height=30,
-            sizing_mode="stretch_width"
-            )
+            sizing_mode="stretch_width",
+        )
 
         return self.header
 
@@ -109,7 +107,7 @@ class GT7Application:
 
     def update_header(self, step=None):
         """Update the header with current connection status"""
-        if hasattr(self, 'header'):
+        if hasattr(self, "header"):
             self.header.text = self.update_connection_status()
 
     def show_heartbeat(self, doc):
@@ -119,9 +117,11 @@ class GT7Application:
                 lambda: self.heartbeat_indicator.update(
                     text='<span id="heartbeat-dot" style="font-size:2em; color:gray;">&#10084;</span>'
                 ),
-                500
+                500,
             )
+
         doc.add_next_tick_callback(update)
+
 
 # Create and set up the application
 app = GT7Application()

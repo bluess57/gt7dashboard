@@ -1,4 +1,3 @@
-
 import itertools
 import statistics
 
@@ -16,8 +15,9 @@ from gt7dashboard.gt7lapfile import LapFile
 from gt7dashboard.gt7fuelmap import FuelMap
 from gt7dashboard.gt7car import car_name
 
+
 def calculate_remaining_fuel(
-        fuel_start_lap: int, fuel_end_lap: int, lap_time: int
+    fuel_start_lap: int, fuel_end_lap: int, lap_time: int
 ) -> Tuple[int, float, float]:
     # no fuel consumed
     if fuel_start_lap == fuel_end_lap:
@@ -32,7 +32,7 @@ def calculate_remaining_fuel(
 
 
 def mark_if_matches_highest_or_lowest(
-        value: float, highest: List[int], lowest: List[int], order: int, high_is_best=True
+    value: float, highest: List[int], lowest: List[int], order: int, high_is_best=True
 ) -> str:
     green = 32
     red = 31
@@ -71,7 +71,9 @@ def format_laps_to_table(laps: List[Lap], best_lap: float) -> str:
             # This can only mean that lap.lap_finish_time is from an earlier race on a different track
             time_diff = "-"
         elif best_lap > 0:
-            time_diff = seconds_to_lap_time(-1 * (best_lap / 1000 - lap.lap_finish_time / 1000))
+            time_diff = seconds_to_lap_time(
+                -1 * (best_lap / 1000 - lap.lap_finish_time / 1000)
+            )
 
         ft_ticks = lap.full_throttle_ticks / lap.lap_ticks * 1000
         tb_ticks = lap.throttle_and_brake_ticks / lap.lap_ticks * 1000
@@ -146,6 +148,7 @@ def seconds_to_lap_time(seconds):
     remaining = seconds % 60
     return prefix + "{:01.0f}:{:06.3f}".format(minutes, remaining)
 
+
 def none_ignoring_median(data):
     """Return the median (middle value) of numeric data but ignore None values.
 
@@ -176,7 +179,7 @@ def none_ignoring_median(data):
 
 
 def get_last_reference_median_lap(
-        laps: List[Lap], reference_lap_selected: Lap
+    laps: List[Lap], reference_lap_selected: Lap
 ) -> Tuple[Lap, Lap, Lap]:
     last_lap = None
     reference_lap = None
@@ -212,7 +215,9 @@ def get_median_lap(laps: List[Lap]) -> Lap:
     best_lap = get_best_lap(laps)
     ten_seconds = 10000
     laps = filter_max_min_laps(
-        laps, best_lap.lap_finish_time + ten_seconds, best_lap.lap_finish_time - ten_seconds
+        laps,
+        best_lap.lap_finish_time + ten_seconds,
+        best_lap.lap_finish_time - ten_seconds,
     )
 
     median_lap = Lap()
@@ -261,9 +266,7 @@ def filter_max_min_laps(laps: List[Lap], max_lap_time=-1, min_lap_time=-1) -> Li
     return laps
 
 
-def pd_data_frame_from_lap(
-        laps: List[Lap], best_lap_time: int
-) -> pd.DataFrame:
+def pd_data_frame_from_lap(laps: List[Lap], best_lap_time: int) -> pd.DataFrame:
     rows = []
     for i, lap in enumerate(laps):
         time_diff = ""
@@ -281,20 +284,25 @@ def pd_data_frame_from_lap(
                 -1 * (best_lap_time / 1000 - lap.lap_finish_time / 1000)
             )
 
-        rows.append({
-            "number": lap.number,
-            "time": seconds_to_lap_time(lap.lap_finish_time / 1000),
-            "diff": time_diff,
-            "timestamp": lap.lap_start_timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            "info": info,
-            "car_name": car_name(lap.car_id),
-            "fuelconsumed": "%d" % lap.fuel_consumed,
-            "fullthrottle": "%d" % (lap.full_throttle_ticks / lap.lap_ticks * 1000),
-            "throttleandbreak": "%d" % (lap.throttle_and_brake_ticks / lap.lap_ticks * 1000),
-            "fullbreak": "%d" % (lap.full_brake_ticks / lap.lap_ticks * 1000),
-            "nothrottle": "%d" % (lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000),
-            "tyrespinning": "%d" % (lap.tyres_spinning_ticks / lap.lap_ticks * 1000),
-        })
+        rows.append(
+            {
+                "number": lap.number,
+                "time": seconds_to_lap_time(lap.lap_finish_time / 1000),
+                "diff": time_diff,
+                "timestamp": lap.lap_start_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "info": info,
+                "car_name": car_name(lap.car_id),
+                "fuelconsumed": "%d" % lap.fuel_consumed,
+                "fullthrottle": "%d" % (lap.full_throttle_ticks / lap.lap_ticks * 1000),
+                "throttleandbreak": "%d"
+                % (lap.throttle_and_brake_ticks / lap.lap_ticks * 1000),
+                "fullbreak": "%d" % (lap.full_brake_ticks / lap.lap_ticks * 1000),
+                "nothrottle": "%d"
+                % (lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000),
+                "tyrespinning": "%d"
+                % (lap.tyres_spinning_ticks / lap.lap_ticks * 1000),
+            }
+        )
 
     df = pd.DataFrame(rows)
     return df
@@ -312,6 +320,7 @@ def bokeh_tuple_for_list_of_laps(laps: List[Lap]):
     for i, lap in enumerate(laps):
         tuples.append(tuple((str(i), lap.format())))
     return tuples
+
 
 def get_fuel_on_consumption_by_relative_fuel_levels(lap: Lap) -> List[FuelMap]:
     # Relative Setting, Laps to Go, Time to Go, Assumed Diff in Lap Times
@@ -334,16 +343,24 @@ def get_fuel_on_consumption_by_relative_fuel_levels(lap: Lap) -> List[FuelMap]:
             consumption_percentage=(100 - i * fuel_consumption_per_level_change) / 100,
         )
 
-        relative_fuel_map.fuel_consumed_per_lap = fuel_consumed_per_lap * relative_fuel_map.consumption_percentage
-        relative_fuel_map.laps_remaining_on_current_fuel = laps_remaining + laps_remaining * (
-                1 - relative_fuel_map.consumption_percentage
+        relative_fuel_map.fuel_consumed_per_lap = (
+            fuel_consumed_per_lap * relative_fuel_map.consumption_percentage
+        )
+        relative_fuel_map.laps_remaining_on_current_fuel = (
+            laps_remaining
+            + laps_remaining * (1 - relative_fuel_map.consumption_percentage)
         )
 
-        relative_fuel_map.time_remaining_on_current_fuel = time_remaining + time_remaining * (
-                1 - relative_fuel_map.consumption_percentage
+        relative_fuel_map.time_remaining_on_current_fuel = (
+            time_remaining
+            + time_remaining * (1 - relative_fuel_map.consumption_percentage)
         )
-        relative_fuel_map.lap_time_diff = lap.lap_finish_time * (1 - relative_fuel_map.power_percentage)
-        relative_fuel_map.lap_time_expected = lap.lap_finish_time + relative_fuel_map.lap_time_diff
+        relative_fuel_map.lap_time_diff = lap.lap_finish_time * (
+            1 - relative_fuel_map.power_percentage
+        )
+        relative_fuel_map.lap_time_expected = (
+            lap.lap_finish_time + relative_fuel_map.lap_time_diff
+        )
 
         relative_fuel_maps.append(relative_fuel_map)
         i += 1
@@ -351,11 +368,14 @@ def get_fuel_on_consumption_by_relative_fuel_levels(lap: Lap) -> List[FuelMap]:
     return relative_fuel_maps
 
 
-def get_n_fastest_laps_within_percent_threshold_ignoring_replays(laps: List[Lap], number_of_laps: int,
-                                                                 percent_threshold: float):
+def get_n_fastest_laps_within_percent_threshold_ignoring_replays(
+    laps: List[Lap], number_of_laps: int, percent_threshold: float
+):
     # FIXME Replace later with this line
     # filtered_laps = [lap for lap in laps if not lap.is_replay]
-    filtered_laps = [lap for lap in laps if not (len(lap.data_speed) == 0 or lap.is_replay)]
+    filtered_laps = [
+        lap for lap in laps if not (len(lap.data_speed) == 0 or lap.is_replay)
+    ]
 
     if len(filtered_laps) == 0:
         return []
@@ -363,14 +383,27 @@ def get_n_fastest_laps_within_percent_threshold_ignoring_replays(laps: List[Lap]
     # sort laps by finish time
     filtered_laps.sort(key=lambda lap: lap.lap_finish_time)
     fastest_lap = filtered_laps[0]
-    threshold_laps = [lap for lap in filtered_laps if
-                      lap.lap_finish_time <= fastest_lap.lap_finish_time * (1 + percent_threshold)]
+    threshold_laps = [
+        lap
+        for lap in filtered_laps
+        if lap.lap_finish_time <= fastest_lap.lap_finish_time * (1 + percent_threshold)
+    ]
     return threshold_laps[:number_of_laps]
 
 
 DEFAULT_FASTEST_LAPS_PERCENT_THRESHOLD = 0.05
-def get_variance_for_fastest_laps(laps: List[Lap], number_of_laps: int = 3, percent_threshold: float = DEFAULT_FASTEST_LAPS_PERCENT_THRESHOLD) -> tuple[DataFrame, list[Lap]]:
-    fastest_laps: list[Lap] = get_n_fastest_laps_within_percent_threshold_ignoring_replays(laps, number_of_laps, percent_threshold)
+
+
+def get_variance_for_fastest_laps(
+    laps: List[Lap],
+    number_of_laps: int = 3,
+    percent_threshold: float = DEFAULT_FASTEST_LAPS_PERCENT_THRESHOLD,
+) -> tuple[DataFrame, list[Lap]]:
+    fastest_laps: list[Lap] = (
+        get_n_fastest_laps_within_percent_threshold_ignoring_replays(
+            laps, number_of_laps, percent_threshold
+        )
+    )
     variance: DataFrame = get_variance_for_laps(fastest_laps)
     return variance, fastest_laps
 
@@ -378,26 +411,28 @@ def get_variance_for_fastest_laps(laps: List[Lap], number_of_laps: int = 3, perc
 def get_variance_for_laps(laps: List[Lap]) -> DataFrame:
 
     dataframe_distance_columns = []
-    merged_df = pd.DataFrame(columns=['distance'])
+    merged_df = pd.DataFrame(columns=["distance"])
     for lap in laps:
-        d = {'speed': lap.data_speed, 'distance' : lap.get_x_axis_for_distance()}
+        d = {"speed": lap.data_speed, "distance": lap.get_x_axis_for_distance()}
         df = pd.DataFrame(data=d)
         dataframe_distance_columns.append(df)
-        merged_df = pd.merge(merged_df, df, on='distance', how='outer')
+        merged_df = pd.merge(merged_df, df, on="distance", how="outer")
 
-    merged_df = merged_df.sort_values(by='distance')
-    merged_df = merged_df.set_index('distance')
+    merged_df = merged_df.sort_values(by="distance")
+    merged_df = merged_df.set_index("distance")
 
     # Interpolate missing values
     merged_df = merged_df.interpolate()
     dbs_df = merged_df.std(axis=1).abs()
-    dbs_df = dbs_df.reset_index().rename(columns={'index': 'distance'})
+    dbs_df = dbs_df.reset_index().rename(columns={"index": "distance"})
     dbs_df.columns = ["distance", "speed_variance"]
 
     return dbs_df
 
+
 PEAK = "PEAK"
 VALLEY = "VALLEY"
+
 
 def get_peaks_and_valleys_sorted_tuple_list(lap: Lap):
     (
@@ -409,8 +444,12 @@ def get_peaks_and_valleys_sorted_tuple_list(lap: Lap):
 
     tuple_list = []
 
-    tuple_list += zip(peak_speed_data_x, peak_speed_data_y, [PEAK]*len(peak_speed_data_x))
-    tuple_list += zip(valley_speed_data_x, valley_speed_data_y, [VALLEY]*len(valley_speed_data_x))
+    tuple_list += zip(
+        peak_speed_data_x, peak_speed_data_y, [PEAK] * len(peak_speed_data_x)
+    )
+    tuple_list += zip(
+        valley_speed_data_x, valley_speed_data_y, [VALLEY] * len(valley_speed_data_x)
+    )
 
     tuple_list.sort(key=lambda a: a[1])
 

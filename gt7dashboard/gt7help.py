@@ -36,8 +36,12 @@ If you see a bump in this graph to the top or the bottom this means that you wer
 LAP_CONTROLS = """You can reset all laps with the 'Reset Laps' button. This is helpful if you are switching tracks or cars in a session. Otherwise the different tracks will mix in the dashboard.
 'Save Laps' will save your recorded laps to a file. You can load the laps afterwards with the dropdown list to the right."""
 SPEED_DIAGRAM = """The total speed of the laps selected. This value is in km/h. or mph. depending on your in-game setting"""
-THROTTLE_DIAGRAM = """This is the amount of throttle pressure from 0% to 100% of the laps selected."""
-BRAKING_DIAGRAM = """This is the amount of braking pressure from 0% to 100% of the laps selected."""
+THROTTLE_DIAGRAM = (
+    """This is the amount of throttle pressure from 0% to 100% of the laps selected."""
+)
+BRAKING_DIAGRAM = (
+    """This is the amount of braking pressure from 0% to 100% of the laps selected."""
+)
 COASTING_DIAGRAM = """This is the amount of coasting from 0% to 100% of the laps selected. Coasting is when neither throttle nor brake are engaged."""
 GEAR_DIAGRAM = """This is the current gear of the laps selected."""
 RPM_DIAGRAM = "This is the current RPM of the laps selected."
@@ -81,11 +85,11 @@ def get_help_text_resource(help_text_resource):
 def add_help_tooltip(ui_element, help_text):
     """
     Add help text as a tooltip to a Bokeh UI element
-    
+
     Args:
         ui_element: The Bokeh UI element to add the tooltip to
         help_text: The help text to display in the tooltip
-        
+
     Returns:
         The modified UI element with tooltip
     """
@@ -97,32 +101,42 @@ def add_help_tooltip(ui_element, help_text):
 def add_enhanced_tooltip(ui_element, help_text):
     """Add enhanced tooltip with custom styling"""
     # Add custom CSS class
-    if not hasattr(ui_element, 'css_classes') or ui_element.css_classes is None:
+    if not hasattr(ui_element, "css_classes") or ui_element.css_classes is None:
         ui_element.css_classes = []
-    
-    ui_element.css_classes.append('tooltip-element')
-    
+
+    ui_element.css_classes.append("tooltip-element")
+
     # Create a unique ID for this tooltip
     import uuid
+
     tooltip_id = f"tooltip-{uuid.uuid4().hex[:8]}"
-    
+
     # Create tooltip HTML
     tooltip_html = f"""
     <div id="{tooltip_id}" class="gt7-tooltip">{help_text}</div>
     """
-    
+
     # Add the tooltip div to the document
-    tooltip_div = Div(text=tooltip_html, css_classes=['tooltip-container'], visible=False)
-    
+    tooltip_div = Div(
+        text=tooltip_html, css_classes=["tooltip-container"], visible=False
+    )
+
     # Add JavaScript for showing/hiding tooltip
-    ui_element.js_on_event('mouseover', f"""
+    ui_element.js_on_event(
+        "mouseover",
+        f"""
         document.getElementById('{tooltip_id}').style.display = 'block';
-    """)
-    ui_element.js_on_event('mouseout', f"""
+    """,
+    )
+    ui_element.js_on_event(
+        "mouseout",
+        f"""
         document.getElementById('{tooltip_id}').style.display = 'none';
-    """)
-    
+    """,
+    )
+
     return ui_element, tooltip_div
+
 
 def add_plot_tooltip(plot, help_text):
     """Add a tooltip to a plot using HoverTool"""
@@ -132,7 +146,7 @@ def add_plot_tooltip(plot, help_text):
             <span style="font-size: 12pt;">{help_text}</span>
         </div>
         """,
-        point_policy='follow_mouse'
+        point_policy="follow_mouse",
     )
     plot.add_tools(hover)
     return plot

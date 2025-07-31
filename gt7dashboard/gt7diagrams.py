@@ -1,10 +1,10 @@
-
 from bokeh.models import ColumnDataSource, Label
 from bokeh.plotting import figure
 
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7helper import seconds_to_lap_time
+
 
 def get_throttle_braking_race_line_diagram():
     # TODO Make this work, tooltips just show breakpoint
@@ -111,10 +111,9 @@ def get_throttle_braking_race_line_diagram():
         reference_coasting_line,
     )
 
-def add_annotations_to_race_line(
-    race_line: figure, last_lap: Lap, reference_lap: Lap
-):
-    """ Adds annotations such as speed peaks and valleys and the starting line to the racing line"""
+
+def add_annotations_to_race_line(race_line: figure, last_lap: Lap, reference_lap: Lap):
+    """Adds annotations such as speed peaks and valleys and the starting line to the racing line"""
 
     remove_all_annotation_text_from_figure(race_line)
 
@@ -218,24 +217,34 @@ def get_fuel_map_html_table(last_lap: Lap) -> str:
         if fuel_map.mixture_setting == 0 and not no_fuel_consumption:
             line_style = "background-color: #444 "
         table += (
-                "<tr id='fuel_map_row_%d' style='%s'>"
-                "<td style='text-align:center'>%d</td>"
-                "<td style='text-align:center'>%d</td>"
-                "<td style='text-align:center'>%.1f</td>"
-                "<td style='text-align:center'>%s</td>"
-                "<td style='text-align:center'>%s</td>"
-                "</tr>"
-                % (
-                    fuel_map.mixture_setting,
-                    line_style,
-                    fuel_map.mixture_setting,
-                    0 if no_fuel_consumption else fuel_map.fuel_consumed_per_lap,
-                    0 if no_fuel_consumption else fuel_map.laps_remaining_on_current_fuel,
-                    "No Fuel" if no_fuel_consumption else (seconds_to_lap_time(
-                        fuel_map.time_remaining_on_current_fuel / 1000
-                    )),
-                    "Consumption" if no_fuel_consumption else (seconds_to_lap_time(fuel_map.lap_time_diff / 1000)),
-                )
+            "<tr id='fuel_map_row_%d' style='%s'>"
+            "<td style='text-align:center'>%d</td>"
+            "<td style='text-align:center'>%d</td>"
+            "<td style='text-align:center'>%.1f</td>"
+            "<td style='text-align:center'>%s</td>"
+            "<td style='text-align:center'>%s</td>"
+            "</tr>"
+            % (
+                fuel_map.mixture_setting,
+                line_style,
+                fuel_map.mixture_setting,
+                0 if no_fuel_consumption else fuel_map.fuel_consumed_per_lap,
+                0 if no_fuel_consumption else fuel_map.laps_remaining_on_current_fuel,
+                (
+                    "No Fuel"
+                    if no_fuel_consumption
+                    else (
+                        seconds_to_lap_time(
+                            fuel_map.time_remaining_on_current_fuel / 1000
+                        )
+                    )
+                ),
+                (
+                    "Consumption"
+                    if no_fuel_consumption
+                    else (seconds_to_lap_time(fuel_map.lap_time_diff / 1000))
+                ),
+            )
         )
     table += "</table>"
     table += "<p>Fuel Remaining: <b>%d</b></p>" % last_lap.fuel_at_end
@@ -263,6 +272,7 @@ def add_starting_line_to_diagram(race_line: figure, last_lap: Lap):
     )
     mytext.text = "===="
     race_line.center.append(mytext)
+
 
 def get_speed_peak_and_valley_diagram(last_lap: Lap, reference_lap: Lap) -> str:
     """
@@ -292,14 +302,14 @@ def get_speed_peak_and_valley_diagram(last_lap: Lap, reference_lap: Lap) -> str:
 
     max_data = max(len(ll_tuple_list), len(rl_tuple_list))
 
-    table += '<tr>'
+    table += "<tr>"
 
-    table += '<th></th>'
+    table += "<th></th>"
     table += '<th colspan="4">%s - %s</th>' % ("Last", last_lap.title)
     table += '<th colspan="4">%s - %s</th>' % ("Ref.", reference_lap.title)
     table += '<th colspan="2">Diff</th>'
 
-    table += '</tr>'
+    table += "</tr>"
 
     table += """<tr>
     <td></td><td>#</td><td></td><td>Pos.</td><td>Speed</td>
@@ -319,18 +329,18 @@ def get_speed_peak_and_valley_diagram(last_lap: Lap, reference_lap: Lap) -> str:
             diff_speed = ll_tuple_list[i][0] - rl_tuple_list[i][0]
 
             if diff_speed > 0:
-                diff_style = f"color: rgba(0, 0, 255, .3)" # Blue
+                diff_style = f"color: rgba(0, 0, 255, .3)"  # Blue
             elif diff_speed >= -3:
-                diff_style = f"color: rgba(0, 255, 0, .3)" # Green
+                diff_style = f"color: rgba(0, 255, 0, .3)"  # Green
             elif diff_speed >= -10:
-                diff_style = f"color: rgba(251, 192, 147, .3)" # Orange
+                diff_style = f"color: rgba(251, 192, 147, .3)"  # Orange
             else:
-                diff_style = f"color: rgba(255, 0, 0, .3)" # Red
+                diff_style = f"color: rgba(255, 0, 0, .3)"  # Red
 
         else:
-            diff_style = f"text-color: rgba(255, 0, 0, .3)" # Red
+            diff_style = f"text-color: rgba(255, 0, 0, .3)"  # Red
 
-        table += '<tr>'
+        table += "<tr>"
         table += f'<td style="width:15px; text-opacity:0.5; {diff_style}">█</td>'
 
         if len(ll_tuple_list) > i:
@@ -358,19 +368,24 @@ def get_speed_peak_and_valley_diagram(last_lap: Lap, reference_lap: Lap) -> str:
                 <td>-</td>
             """
 
-        table += '</tr>'
-        i+=1
+        table += "</tr>"
+        i += 1
 
-    table += '</td>'
-    table += '<td>'
-    table += '</td>'
+    table += "</td>"
+    table += "<td>"
+    table += "</td>"
 
     table = table + """</table>"""
     return table
 
 
-def get_speed_peak_and_valley_diagram_row(peak_speed_data_x, peak_speed_data_y, table, valley_speed_data_x,
-                                          valley_speed_data_y):
+def get_speed_peak_and_valley_diagram_row(
+    peak_speed_data_x,
+    peak_speed_data_y,
+    table,
+    valley_speed_data_x,
+    valley_speed_data_y,
+):
     row = "<tr><th>#</th><th>Peak</th><th>Position</th></tr>"
     for i, dx in enumerate(peak_speed_data_x):
         row += "<tr><td>%d.</td><td>%d kph</td><td>%d</td></tr>" % (

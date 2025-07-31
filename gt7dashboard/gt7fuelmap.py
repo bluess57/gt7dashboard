@@ -1,5 +1,6 @@
 from gt7dashboard import gt7helper
 
+
 class FuelMap:
     """A Fuel Map with calculated attributes of the fuel setting
 

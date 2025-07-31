@@ -5,24 +5,26 @@ from bokeh.driving import linear
 
 from gt7dashboard import gt7diagrams
 
-logger = logging.getLogger('fuel_tab')
+logger = logging.getLogger("fuel_tab")
 logger.setLevel(logging.DEBUG)
+
 
 class FuelTab:
     """Fuel consumption tab for GT7 Dashboard"""
-    
+
     def __init__(self, app_instance):
         """Initialize the fuel tab"""
         self.app = app_instance
         self.stored_fuel_map = None
         self.create_components()
         self.layout = self.create_layout()
-        
+
     def create_components(self):
         """Create all UI components for the fuel tab"""
-        
+
         # Create fuel information div with detailed explanation
-        self.fuel_info_div = Div(text="""
+        self.fuel_info_div = Div(
+            text="""
         <h3>Fuel Consumption</h3>
         <p>This panel shows detailed fuel consumption data for your laps.</p>
         <ul>
@@ -31,11 +33,13 @@ class FuelTab:
             <li><b>Fuel per Minute:</b> Consumption rate over time</li>
             <li><b>Estimated Range:</b> Estimated laps/minutes remaining with current fuel level</li>
         </ul>
-        """, width=600)
-        
+        """,
+            width=600,
+        )
+
         # Fuel map component
         self.div_fuel_map = Div(width=200, height=125, css_classes=["fuel_map"])
-        
+
     def create_layout(self):
         """Create layout for this tab"""
         return layout(
@@ -45,9 +49,8 @@ class FuelTab:
             ],
             sizing_mode="stretch_width",
         )
-    
-    @linear()
 
+    @linear()
     def update_fuel_map(self, step=None):
         """Update the fuel map display with current data"""
         if len(self.app.gt7comm.session.laps) == 0:
@@ -62,7 +65,7 @@ class FuelTab:
             self.stored_fuel_map = last_lap
 
         self.div_fuel_map.text = gt7diagrams.get_fuel_map_html_table(last_lap)
-        
+
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""
         return TabPanel(child=self.layout, title="Fuel")

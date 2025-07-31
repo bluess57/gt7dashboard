@@ -3,7 +3,7 @@ class LapFile:
         self.name = None
         self.path = None
         self.size = None
- 
+
     @staticmethod
     def human_readable_size(size, decimal_places=3):
         for unit in ["B", "KB", "MB", "GB", "TB"]:
@@ -13,4 +13,7 @@ class LapFile:
         return f"{size:.{decimal_places}f} {unit}"
 
     def __str__(self):
-        return "%s - %s" % (self.name, self.human_readable_size(self.size, decimal_places=0))
+        return "%s - %s" % (
+            self.name,
+            self.human_readable_size(self.size, decimal_places=0),
+        )

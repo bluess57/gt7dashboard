@@ -12,15 +12,17 @@ PLAYSTATION_IP = "ps5wifi"
 def is_host_up(ip: str) -> bool:
     response = os.system("ping -c 1 " + PLAYSTATION_IP)
 
-    #and then check the response...
+    # and then check the response...
     if response == 0:
         return True
     else:
         return False
 
 
-@unittest.skipIf(not is_host_up(PLAYSTATION_IP),
-                 "Playstation host is not up on %s" % (PLAYSTATION_IP))
+@unittest.skipIf(
+    not is_host_up(PLAYSTATION_IP),
+    "Playstation host is not up on %s" % (PLAYSTATION_IP),
+)
 class GT7CommunicationTest(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:

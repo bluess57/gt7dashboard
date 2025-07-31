@@ -8,6 +8,7 @@ from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7lapfile import LapFile
 from gt7dashboard.gt7car import car_name
 
+
 def list_lap_files_from_path(root: str):
     lap_files = []
     for path, sub_dirs, files in os.walk(root):
@@ -30,7 +31,7 @@ def load_laps_from_pickle(path: str) -> List[Lap]:
 
 def load_laps_from_json(json_file):
     if json_file and os.path.isfile(json_file):
-        with open(json_file, 'r') as file:
+        with open(json_file, "r") as file:
             data = json.load(file)
 
         laps = []
@@ -38,19 +39,23 @@ def load_laps_from_json(json_file):
             lap = Lap()
             lap.__dict__.update(lap_data)
             for key, value in lap_data.items():
-                if key.endswith('_timestamp') and isinstance(value, str):
+                if key.endswith("_timestamp") and isinstance(value, str):
                     value = datetime.fromisoformat(value)
                     setattr(lap, key, value)
             laps.append(lap)
 
         return laps
 
+
 def save_laps_to_pickle(laps: List[Lap]) -> str:
     storage_folder = "data"
     local_timezone = datetime.now(timezone.utc).astimezone().tzinfo
     dt = datetime.now(tz=local_timezone)
     str_date_time = dt.strftime("%Y-%m-%d_%H_%M_%S")
-    storage_filename = "%s_%s.laps" % (str_date_time, get_safe_filename(laps[0].car_name()))
+    storage_filename = "%s_%s.laps" % (
+        str_date_time,
+        get_safe_filename(laps[0].car_name()),
+    )
     Path(storage_folder).mkdir(parents=True, exist_ok=True)
 
     path = os.path.join(os.getcwd(), storage_folder, storage_filename)
@@ -60,12 +65,16 @@ def save_laps_to_pickle(laps: List[Lap]) -> str:
 
     return path
 
+
 def save_laps_to_json(laps: List[Lap]) -> str:
     storage_folder = "data"
     local_timezone = datetime.now(timezone.utc).astimezone().tzinfo
     dt = datetime.now(tz=local_timezone)
     str_date_time = dt.strftime("%Y-%m-%d_%H_%M_%S")
-    storage_filename = "%s_%s.json" % (str_date_time, get_safe_filename(car_name(laps[0].car_id)))
+    storage_filename = "%s_%s.json" % (
+        str_date_time,
+        get_safe_filename(car_name(laps[0].car_id)),
+    )
     Path(storage_folder).mkdir(parents=True, exist_ok=True)
 
     path = os.path.join(os.getcwd(), storage_folder, storage_filename)
@@ -77,4 +86,6 @@ def save_laps_to_json(laps: List[Lap]) -> str:
 
 
 def get_safe_filename(unsafe_filename: str) -> str:
-    return "".join(x for x in unsafe_filename if x.isalnum() or x in "._- ").replace(" ", "_")
+    return "".join(x for x in unsafe_filename if x.isalnum() or x in "._- ").replace(
+        " ", "_"
+    )

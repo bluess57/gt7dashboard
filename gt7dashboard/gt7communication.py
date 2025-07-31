@@ -15,8 +15,9 @@ from gt7dashboard.gt7session import GT7Session
 from gt7dashboard.gt7salsa import salsa20_dec
 
 # Set up logging
-logger = logging.getLogger('gt7communication.py')
+logger = logging.getLogger("gt7communication.py")
 logger.setLevel(logging.DEBUG)
+
 
 class GT7Communication(Thread):
     def __init__(self, playstation_ip):
@@ -48,7 +49,7 @@ class GT7Communication(Thread):
     def set_on_connected_callback(self, callback):
         """Register a callback to be called when connection is established."""
         self._on_connected_callback = callback
-    
+
     def _check_connection_event(self):
         connected = self.is_connected()
         if connected and not self._was_connected:
@@ -67,9 +68,9 @@ class GT7Communication(Thread):
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
                 if self.playstation_ip == "255.255.255.255":
-                    s.setsockopt (socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                    s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-                s.bind(('0.0.0.0', self.receive_port))
+                s.bind(("0.0.0.0", self.receive_port))
                 self._send_hb(s)
                 s.settimeout(10)
                 previous_lap = -1
@@ -80,7 +81,11 @@ class GT7Communication(Thread):
                         data = s.recvfrom(4096)
                         package_nr = package_nr + 1
                         ddata = salsa20_dec(data)
-                        if len(ddata) > 0 and struct.unpack('i', ddata[0x70:0x70 + 4])[0] > package_id:
+                        if (
+                            len(ddata) > 0
+                            and struct.unpack("i", ddata[0x70 : 0x70 + 4])[0]
+                            > package_id
+                        ):
 
                             self.last_data = GT7Data(ddata)
                             self._last_time_data_received = time.time()
@@ -93,13 +98,18 @@ class GT7Communication(Thread):
                             if curlap == 0:
                                 self.session.special_packet_time = 0
 
-                            if curlap > 0 and (self.last_data.in_race or self.always_record_data):
+                            if curlap > 0 and (
+                                self.last_data.in_race or self.always_record_data
+                            ):
 
                                 if curlap != previous_lap:
                                     # New lap
                                     previous_lap = curlap
 
-                                    self.session.special_packet_time += lstlap - self.current_lap.lap_ticks * 1000.0 / 60.0
+                                    self.session.special_packet_time += (
+                                        lstlap
+                                        - self.current_lap.lap_ticks * 1000.0 / 60.0
+                                    )
                                     self.session.best_lap = bstlap
 
                                     self.finish_lap()
@@ -122,10 +132,12 @@ class GT7Communication(Thread):
                         # Handler for package exceptions
                         self._send_hb(s)
 
-
             except Exception as e:
                 # Handler for general socket exceptions
-                logger.error("Error while connecting to %s:%d: %s" % (self.playstation_ip, self.send_port, e))
+                logger.error(
+                    "Error while connecting to %s:%d: %s"
+                    % (self.playstation_ip, self.send_port, e)
+                )
                 s.close()
                 # Wait before reconnect
                 time.sleep(5)
@@ -135,15 +147,18 @@ class GT7Communication(Thread):
         self._shall_run = True
 
     def is_connected(self) -> bool:
-        return self._last_time_data_received > 0 and (time.time() - self._last_time_data_received) <= 1
+        return (
+            self._last_time_data_received > 0
+            and (time.time() - self._last_time_data_received) <= 1
+        )
 
     def set_on_heartbeat_callback(self, callback):
-            """Register a callback to be called when a heartbeat is sent."""
-            self._on_heartbeat_callback = callback
+        """Register a callback to be called when a heartbeat is sent."""
+        self._on_heartbeat_callback = callback
 
     def _send_hb(self, s):
-        send_data = 'A'
-        s.sendto(send_data.encode('utf-8'), (self.playstation_ip, self.send_port))
+        send_data = "A"
+        s.sendto(send_data.encode("utf-8"), (self.playstation_ip, self.send_port))
         # Raise the heartbeat event for consumers
         if self._on_heartbeat_callback:
             self._on_heartbeat_callback()
@@ -187,7 +202,12 @@ class GT7Communication(Thread):
 
         self.current_lap.lap_ticks += 1
 
-        if data.tyre_temp_FL > 100 or data.tyre_temp_FR > 100 or data.tyre_temp_RL > 100 or data.tyre_temp_RR > 100:
+        if (
+            data.tyre_temp_FL > 100
+            or data.tyre_temp_FR > 100
+            or data.tyre_temp_RL > 100
+            or data.tyre_temp_RR > 100
+        ):
             self.current_lap.tyres_overheated_ticks += 1
 
         self.current_lap.data_braking.append(data.brake)
@@ -226,19 +246,25 @@ class GT7Communication(Thread):
         ## Log Yaw Rate
 
         # This is the interval to collection yaw rate
-        interval = 1 * 60 # 1 second has 60 fps and 60 data ticks
+        interval = 1 * 60  # 1 second has 60 fps and 60 data ticks
         self.current_lap.data_rotation_yaw.append(data.rotation_yaw)
 
         # Collect yaw rate, skip first interval with all zeroes
         if len(self.current_lap.data_rotation_yaw) > interval:
-            yaw_rate_per_second = data.rotation_yaw - self.current_lap.data_rotation_yaw[-interval]
+            yaw_rate_per_second = (
+                data.rotation_yaw - self.current_lap.data_rotation_yaw[-interval]
+            )
         else:
             yaw_rate_per_second = 0
 
-        self.current_lap.data_absolute_yaw_rate_per_second.append(abs(yaw_rate_per_second))
+        self.current_lap.data_absolute_yaw_rate_per_second.append(
+            abs(yaw_rate_per_second)
+        )
 
         # Adapted from https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728/post-13810797
-        self.current_lap.lap_live_time = (self.current_lap.lap_ticks * 1. / 60.) - (self.session.special_packet_time / 1000.)
+        self.current_lap.lap_live_time = (self.current_lap.lap_ticks * 1.0 / 60.0) - (
+            self.session.special_packet_time / 1000.0
+        )
 
         self.current_lap.data_time.append(self.current_lap.lap_live_time)
 
@@ -263,12 +289,18 @@ class GT7Communication(Thread):
         self.current_lap.is_manual = manual
 
         self.current_lap.fuel_at_end = self.last_data.current_fuel
-        self.current_lap.fuel_consumed = self.current_lap.fuel_at_start - self.current_lap.fuel_at_end
+        self.current_lap.fuel_consumed = (
+            self.current_lap.fuel_at_start - self.current_lap.fuel_at_end
+        )
         self.current_lap.lap_finish_time = self.current_lap.lap_finish_time
         self.current_lap.total_laps = self.last_data.total_laps
-        self.current_lap.title = seconds_to_lap_time(self.current_lap.lap_finish_time / 1000)
+        self.current_lap.title = seconds_to_lap_time(
+            self.current_lap.lap_finish_time / 1000
+        )
         self.current_lap.car_id = self.last_data.car_id
-        self.current_lap.number = self.last_data.current_lap - 1  # Is not counting the same way as the in-game timetable
+        self.current_lap.number = (
+            self.last_data.current_lap - 1
+        )  # Is not counting the same way as the in-game timetable
         self.current_lap.EstimatedTopSpeed = self.last_data.estimated_top_speed
 
         self.current_lap.lap_end_timestamp = datetime.datetime.now()
@@ -276,18 +308,19 @@ class GT7Communication(Thread):
         # Race is not in 0th lap, which is before starting the race.
         # We will only persist those laps that have crossed the starting line at least once
         # And those laps which have data for speed logged. This will prevent empty laps.
-        if self.current_lap.lap_finish_time > 0 and len(self.current_lap.data_speed) > 0:
+        if (
+            self.current_lap.lap_finish_time > 0
+            and len(self.current_lap.data_speed) > 0
+        ):
             self.session.add_lap(self.current_lap)
 
             # Make a copy of this lap and call the callback function if set
             if self.lap_callback_function:
                 self.lap_callback_function(copy.deepcopy(self.current_lap))
 
-
         # Reset current lap with an empty one
         self.current_lap = Lap()
         self.current_lap.fuel_at_start = self.last_data.current_fuel
-
 
     def reset(self):
         """

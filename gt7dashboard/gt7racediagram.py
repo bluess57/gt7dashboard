@@ -7,6 +7,7 @@ from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR
 
+
 class RaceDiagram(object):
     def __init__(self, width=400):
         self.speed_lines = []
@@ -206,9 +207,15 @@ class RaceDiagram(object):
             line_alpha=1,
         )
 
-        self.source_last_lap = self.add_lap_to_race_diagram(LAST_LAP_COLOR, "Last Lap", True)
-        self.source_reference_lap = self.add_lap_to_race_diagram(REFERENCE_LAP_COLOR, "Reference Lap", True)
-        self.source_median_lap = self.add_lap_to_race_diagram(MEDIAN_LAP_COLOR, "Median Lap", False)
+        self.source_last_lap = self.add_lap_to_race_diagram(
+            LAST_LAP_COLOR, "Last Lap", True
+        )
+        self.source_reference_lap = self.add_lap_to_race_diagram(
+            REFERENCE_LAP_COLOR, "Reference Lap", True
+        )
+        self.source_median_lap = self.add_lap_to_race_diagram(
+            MEDIAN_LAP_COLOR, "Median Lap", False
+        )
 
         legend_click_policy = "hide"
 
@@ -236,12 +243,22 @@ class RaceDiagram(object):
         self.f_yaw_rate.min_border_left = min_border_left
 
         self.layout = layout(
-            self.f_time_diff, self.f_speed, self.f_speed_variance, self.f_throttle,
-            self.f_yaw_rate, self.f_braking, self.f_coasting, self.f_tyres,
-            self.f_gear, self.f_rpm, self.f_boost
+            self.f_time_diff,
+            self.f_speed,
+            self.f_speed_variance,
+            self.f_throttle,
+            self.f_yaw_rate,
+            self.f_braking,
+            self.f_coasting,
+            self.f_tyres,
+            self.f_gear,
+            self.f_rpm,
+            self.f_boost,
         )
 
-        self.source_speed_variance = ColumnDataSource(data={"distance": [], "speed_variance": []})
+        self.source_speed_variance = ColumnDataSource(
+            data={"distance": [], "speed_variance": []}
+        )
 
         self.f_speed_variance.line(
             x="distance",
@@ -250,10 +267,12 @@ class RaceDiagram(object):
             line_width=1,
             color="gray",
             line_alpha=1,
-            visible=True
+            visible=True,
         )
 
-    def add_additional_lap_to_race_diagram(self, color: str, lap: Lap, visible: bool = True):
+    def add_additional_lap_to_race_diagram(
+        self, color: str, lap: Lap, visible: bool = True
+    ):
         source = self.add_lap_to_race_diagram(color, lap.title, visible)
         source.data = lap.get_data_dict()
         self.sources_additional_laps.append(source)
@@ -267,104 +286,122 @@ class RaceDiagram(object):
         dummy_data = Lap().get_data_dict()
         source = ColumnDataSource(data=dummy_data)
 
-        self.speed_lines.append(self.f_speed.line(
-            x="distance",
-            y="speed",
-            source=source,
-            legend_label=legend,
-            line_width=1,
-            color=color,
-            line_alpha=1,
-            visible=visible
-        ))
+        self.speed_lines.append(
+            self.f_speed.line(
+                x="distance",
+                y="speed",
+                source=source,
+                legend_label=legend,
+                line_width=1,
+                color=color,
+                line_alpha=1,
+                visible=visible,
+            )
+        )
 
-        self.throttle_lines.append(self.f_throttle.line(
-            x="distance",
-            y="throttle",
-            source=source,
-            legend_label=legend,
-            line_width=1,
-            color=color,
-            line_alpha=1,
-            visible=visible
-        ))
+        self.throttle_lines.append(
+            self.f_throttle.line(
+                x="distance",
+                y="throttle",
+                source=source,
+                legend_label=legend,
+                line_width=1,
+                color=color,
+                line_alpha=1,
+                visible=visible,
+            )
+        )
 
-        self.braking_lines.append(self.f_braking.line(
-            x="distance",
-            y="brake",
-            source=source,
-            legend_label=legend,
-            line_width=1,
-            color=color,
-            line_alpha=1,
-            visible=visible
-        ))
+        self.braking_lines.append(
+            self.f_braking.line(
+                x="distance",
+                y="brake",
+                source=source,
+                legend_label=legend,
+                line_width=1,
+                color=color,
+                line_alpha=1,
+                visible=visible,
+            )
+        )
 
-        self.coasting_lines.append(self.f_coasting.line(
-            x="distance",
-            y="coast",
-            source=source,
-            legend_label=legend,
-            line_width=1,
-            color=color,
-            line_alpha=1,
-            visible=visible
-        ))
+        self.coasting_lines.append(
+            self.f_coasting.line(
+                x="distance",
+                y="coast",
+                source=source,
+                legend_label=legend,
+                line_width=1,
+                color=color,
+                line_alpha=1,
+                visible=visible,
+            )
+        )
 
-        self.tyres_lines.append(self.f_tyres.line(
-            x="distance",
-            y="tyres",
-            source=source,
-            legend_label=legend,
-            line_width=1,
-            color=color,
-            line_alpha=1,
-            visible=visible
-        ))
+        self.tyres_lines.append(
+            self.f_tyres.line(
+                x="distance",
+                y="tyres",
+                source=source,
+                legend_label=legend,
+                line_width=1,
+                color=color,
+                line_alpha=1,
+                visible=visible,
+            )
+        )
 
-        self.gears_lines.append(self.f_gear.line(
-            x="distance",
-            y="gear",
-            source=source,
-            legend_label=legend,
-            line_width=1,
-            color=color,
-            line_alpha=1,
-            visible=visible
-        ))
+        self.gears_lines.append(
+            self.f_gear.line(
+                x="distance",
+                y="gear",
+                source=source,
+                legend_label=legend,
+                line_width=1,
+                color=color,
+                line_alpha=1,
+                visible=visible,
+            )
+        )
 
-        self.rpm_lines.append(self.f_rpm.line(
-            x="distance",
-            y="rpm",
-            source=source,
-            legend_label=legend,
-            line_width=1,
-            color=color,
-            line_alpha=1,
-            visible=visible
-        ))
+        self.rpm_lines.append(
+            self.f_rpm.line(
+                x="distance",
+                y="rpm",
+                source=source,
+                legend_label=legend,
+                line_width=1,
+                color=color,
+                line_alpha=1,
+                visible=visible,
+            )
+        )
 
-        self.boost_lines.append(self.f_boost.line(
-            x="distance",
-            y="boost",
-            source=source,
-            legend_label=legend,
-            line_width=1,
-            color=color,
-            line_alpha=1,
-            visible=visible
-        ))
+        self.boost_lines.append(
+            self.f_boost.line(
+                x="distance",
+                y="boost",
+                source=source,
+                legend_label=legend,
+                line_width=1,
+                color=color,
+                line_alpha=1,
+                visible=visible,
+            )
+        )
 
-        self.yaw_rate_lines.append(self.f_yaw_rate.line(
-            x="distance",
-            y="yaw_rate",
-            source=source,
-            legend_label=legend,
-            line_width=1,
-            color=color,
-            line_alpha=1,
-            visible=visible
-        ))
+        self.yaw_rate_lines.append(
+            self.f_yaw_rate.line(
+                x="distance",
+                y="yaw_rate",
+                source=source,
+                legend_label=legend,
+                line_width=1,
+                color=color,
+                line_alpha=1,
+                visible=visible,
+            )
+        )
 
         return source
 

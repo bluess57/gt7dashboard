@@ -7,6 +7,7 @@ from .tabs.fuel_tab import FuelTab
 from .tabs.laptime_analysis_tab import LapTimeAnalysisTab
 from .tabs.racetime_datatable_tab import RaceTimeDataTableTab
 
+
 class TabManager:
     """Manages all tabs in the GT7 Dashboard"""
 

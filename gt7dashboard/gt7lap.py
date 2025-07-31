@@ -10,8 +10,9 @@ RACE_LINE_THROTTLE_MODE = "RACE_LINE_THROTTLE_MODE"
 RACE_LINE_COASTING_MODE = "RACE_LINE_COASTING_MODE"
 
 # Set up logging
-logger = logging.getLogger('gt7lap.py')
+logger = logging.getLogger("gt7lap.py")
 logger.setLevel(logging.DEBUG)
+
 
 class Lap:
     def __init__(self):
@@ -90,7 +91,9 @@ class Lap:
         milliseconds = int((self.data_time % 1) * 1000)
         return f"{minutes}:{seconds:02d}.{milliseconds:03d}"
 
-    def find_speed_peaks_and_valleys(self, width: int = 100) -> tuple[list[int], list[int]]:
+    def find_speed_peaks_and_valleys(
+        self, width: int = 100
+    ) -> tuple[list[int], list[int]]:
         inv_data_speed = [i * -1 for i in self.data_speed]
         peaks, whatisthis = find_peaks(self.data_speed, width=width)
         valleys, whatisthis = find_peaks(inv_data_speed, width=width)
@@ -196,9 +199,21 @@ class Lap:
             return list(range(len(self.data_speed)))
 
     def get_data_dict(self, distance_mode=True) -> dict[str, list]:
-        raceline_y_throttle, raceline_x_throttle, raceline_z_throttle = self.get_race_line_coordinates_when_mode_is_active(mode=RACE_LINE_THROTTLE_MODE)
-        raceline_y_braking, raceline_x_braking, raceline_z_braking = self.get_race_line_coordinates_when_mode_is_active(mode=RACE_LINE_BRAKING_MODE)
-        raceline_y_coasting, raceline_x_coasting, raceline_z_coasting = self.get_race_line_coordinates_when_mode_is_active( mode=RACE_LINE_COASTING_MODE)
+        raceline_y_throttle, raceline_x_throttle, raceline_z_throttle = (
+            self.get_race_line_coordinates_when_mode_is_active(
+                mode=RACE_LINE_THROTTLE_MODE
+            )
+        )
+        raceline_y_braking, raceline_x_braking, raceline_z_braking = (
+            self.get_race_line_coordinates_when_mode_is_active(
+                mode=RACE_LINE_BRAKING_MODE
+            )
+        )
+        raceline_y_coasting, raceline_x_coasting, raceline_z_coasting = (
+            self.get_race_line_coordinates_when_mode_is_active(
+                mode=RACE_LINE_COASTING_MODE
+            )
+        )
 
         if not self.data_throttle:
             distance = []
@@ -232,15 +247,14 @@ class Lap:
             "raceline_y_coasting": raceline_y_coasting,
             "raceline_x_coasting": raceline_x_coasting,
             "raceline_z_coasting": raceline_z_coasting,
-
-            "distance": distance
+            "distance": distance,
         }
 
         return data
-    
+
     @staticmethod
     def calculate_time_diff_by_distance(
-            reference_lap: "Lap", comparison_lap: "Lap"
+        reference_lap: "Lap", comparison_lap: "Lap"
     ) -> DataFrame:
         df1 = Lap.get_time_delta_dataframe_for_lap(reference_lap, "reference")
         df2 = Lap.get_time_delta_dataframe_for_lap(comparison_lap, "comparison")
@@ -272,7 +286,6 @@ class Lap:
 
         return x, y
 
-
     @staticmethod
     def get_time_delta_dataframe_for_lap(lap: "Lap", name: str) -> DataFrame:
         lap_distance = lap.get_x_axis_for_distance()
@@ -281,9 +294,7 @@ class Lap:
         # Multiply to match datatype which is nanoseconds?
         lap_time_ms = [lap.convert_seconds_to_milliseconds(item) for item in lap_time]
 
-        series = pd.Series(
-            lap_distance, index=pd.to_timedelta(lap_time_ms, unit="ms")
-        )
+        series = pd.Series(lap_distance, index=pd.to_timedelta(lap_time_ms, unit="ms"))
 
         upsample = series.resample("10ms").asfreq()
         interpolated_upsample = upsample.interpolate()
@@ -299,7 +310,7 @@ class Lap:
         df1 = DataFrame(data=s1)
         # returns a dataframe where index is distance travelled and first data field is time passed
         return df1
-    
+
     @staticmethod
     def convert_seconds_to_milliseconds(seconds: int):
         minutes = seconds // 60
