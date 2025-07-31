@@ -261,6 +261,18 @@ class Lap:
         df["timedelta"] = df["comparison"] - df["reference"]
         return df
 
+    def get_brake_points(self):
+        x = []
+        y = []
+        for i, b in enumerate(self.data_braking):
+            if i > 0:
+                if self.data_braking[i - 1] == 0 and self.data_braking[i] > 0:
+                    x.append(self.data_position_x[i])
+                    y.append(self.data_position_z[i])
+
+        return x, y
+
+
     @staticmethod
     def get_time_delta_dataframe_for_lap(lap: "Lap", name: str) -> DataFrame:
         lap_distance = lap.get_x_axis_for_distance()

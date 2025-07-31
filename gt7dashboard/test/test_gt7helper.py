@@ -3,14 +3,14 @@ import os
 from unittest.mock import patch
 
 from gt7dashboard.gt7helper import calculate_remaining_fuel, format_laps_to_table, \
-    get_n_fastest_laps_within_percent_threshold_ignoring_replays, get_fuel_on_consumption_by_relative_fuel_levels, load_laps_from_json, \
+    get_n_fastest_laps_within_percent_threshold_ignoring_replays, get_fuel_on_consumption_by_relative_fuel_levels, \
     seconds_to_lap_time, get_variance_for_laps, \
-    get_median_lap, get_last_reference_median_lap, filter_max_min_laps, get_brake_points, \
-    get_peaks_and_valleys_sorted_tuple_list, calculate_laps_left_on_fuel, \
-    save_laps_to_json, get_safe_filename
+    get_median_lap, get_last_reference_median_lap, filter_max_min_laps, \
+    get_peaks_and_valleys_sorted_tuple_list, calculate_laps_left_on_fuel
 
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7car import get_car_name_for_car_id
+from gt7dashboard.gt7lapstorage import get_safe_filename, save_laps_to_json, load_laps_from_json
 
 class TestHelper(unittest.TestCase):
     def test_calculate_remaining_fuel(self):
@@ -209,7 +209,7 @@ class TestLaps(unittest.TestCase):
 
     def test_list_eq(self):
         """Will fail"""
-        brake_points_x, brake_points_y = get_brake_points(self.Lap)
+        brake_points_x, brake_points_y = self.Lap.get_brake_points()
         # A break point will be the point after a zero for breaking
         self.assertListEqual(brake_points_x, [2, 18])
         self.assertListEqual(brake_points_y, [1, 8])

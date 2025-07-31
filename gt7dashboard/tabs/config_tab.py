@@ -7,6 +7,8 @@ import subprocess
 from ..gt7help import add_help_tooltip
 from ..tabs.base_tab import GT7Tab
 
+from gt7dashboard.gt7lapstorage import load_laps_from_json
+
 logger = logging.getLogger('config_tab')
 logger.setLevel(logging.DEBUG)
 

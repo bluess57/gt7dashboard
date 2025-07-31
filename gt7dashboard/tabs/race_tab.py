@@ -16,12 +16,7 @@ from bokeh.models.dom import HTML
 from gt7dashboard.gt7helper import (
     bokeh_tuple_for_list_of_laps,
     bokeh_tuple_for_list_of_lapfiles,
-    save_laps_to_json,
-    load_laps_from_json,
-    list_lap_files_from_path,
-    get_brake_points,
     get_last_reference_median_lap,
-    get_brake_points
     )
 
 from gt7dashboard.gt7lap import Lap
@@ -30,6 +25,13 @@ from gt7dashboard.gt7help import THROTTLE_DIAGRAM, SPEED_VARIANCE, RACE_LINE_MIN
 from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR, TABLE_ROW_COLORS
 from gt7dashboard.gt7racediagram import RaceDiagram
 from gt7dashboard.gt7car import car_name
+
+from gt7dashboard.gt7lapstorage import (
+    save_laps_to_json,
+    load_laps_from_json,
+    list_lap_files_from_path
+)
+
 
 # Use LAST_LAP_COLOR wherever needed
 
@@ -355,9 +357,7 @@ class RaceTab:
     
     def update_brake_points(self, lap, race_line, color):
         """Update brake points on race line"""
-        
-        
-        brake_points_x, brake_points_y = get_brake_points(lap)
+        brake_points_x, brake_points_y = lap.get_brake_points()
 
         for i, _ in enumerate(brake_points_x):
             race_line.scatter(
