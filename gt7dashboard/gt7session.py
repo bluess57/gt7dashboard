@@ -63,8 +63,7 @@ class GT7Session:
         self._on_load_laps_callback = callback
 
     def delete_lap(self, lap_number):
-        original_count = len(self.laps)
         self.laps = [
             lap for lap in self.laps if getattr(lap, "number", None) != lap_number
         ]
-        new_count = len(self.laps)
+        logger.info("gt7session delete lap %s", lap_number)

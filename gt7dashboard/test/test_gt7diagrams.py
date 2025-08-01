@@ -165,7 +165,7 @@ class TestHelper(unittest.TestCase):
         print("View file for reference at %s" % out_file)
 
     def test_race_table(self):
-        rt = RaceTimeDataTable()
+        rt = RaceTimeDataTable(self)
         rt.show_laps(self.test_laps)
 
         out_file = "test_out/test_race_table.html"

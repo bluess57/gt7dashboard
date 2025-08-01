@@ -10,19 +10,18 @@ logger.setLevel(logging.DEBUG)
 class RaceTimeDataTableTab:
     def __init__(self, app):
         self.app = app
-        self.race_time_table = RaceTimeDataTable()
+        self.race_time_datatable = RaceTimeDataTable(app)
         self.header = Div(text="<h2>Lap Times</h2>", css_classes=["header"])
         deleteLapButton = Button(label="Delete lap", width=100, button_type="danger")
         deleteLapButton.on_click(
-            lambda: self.race_time_table.delete_lap(
-                self.race_time_table.lap_times_source.selected.indices
-            )
+            lambda: self.race_time_datatable.delete_selected_laps()
         )
+
         self.layout = row(
             column(deleteLapButton),
             column(
                 self.header,
-                self.race_time_table.t_lap_times,
+                self.race_time_datatable.dt_lap_times,
                 sizing_mode="stretch_both",
             ),
         )
@@ -33,7 +32,7 @@ class RaceTimeDataTableTab:
         Display all laps data in the race time table.
         """
         logger.debug("Showing laps in RaceTimeDataTableTab")
-        self.race_time_table.show_laps(laps)
+        self.race_time_datatable.show_laps(laps)
 
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""

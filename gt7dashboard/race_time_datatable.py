@@ -3,13 +3,15 @@ from typing import List
 from bokeh.models import ColumnDataSource, TableColumn, DataTable, ImportedStyleSheet
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
+import numpy as np
 
 logger = logging.getLogger("RaceTimeDataTable")
 logger.setLevel(logging.DEBUG)
 
 
 class RaceTimeDataTable(object):
-    def __init__(self):
+    def __init__(self, app):
+        self.app = app
         self.columns = [
             TableColumn(field="number", title="#"),
             TableColumn(field="time", title="Time"),
@@ -30,7 +32,7 @@ class RaceTimeDataTable(object):
 
         dtstylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
 
-        self.t_lap_times = DataTable(
+        self.dt_lap_times = DataTable(
             source=self.lap_times_source,
             columns=self.columns,
             index_position=None,
@@ -43,6 +45,8 @@ class RaceTimeDataTable(object):
         logger.info("show_laps")
         best_lap = gt7helper.get_best_lap(laps)
         if best_lap is None:
+            empty_df = gt7helper.pd_data_frame_from_lap([], best_lap_time=0)
+            self.lap_times_source.data = ColumnDataSource.from_df(empty_df)
             return
 
         new_df = gt7helper.pd_data_frame_from_lap(
@@ -50,20 +54,28 @@ class RaceTimeDataTable(object):
         )
         self.lap_times_source.data = ColumnDataSource.from_df(new_df)
 
-    def delete_lap(self, lap_number):
+        self.dt_lap_times.source = self.lap_times_source
+
+    def delete_selected_laps(self):
         """
-        Delete a lap by its number from the loaded laps.
-        Updates all tabs that display lap data.
+        Delete any selected lap from the loaded laps.
+        Update table of display lap data.
         """
-        if lap_number < 0:
+        selected_indices = self.lap_times_source.selected.indices
+        if not selected_indices:
+            logger.info("No laps selected for deletion.")
             return
-        logger.info("Deleting lap number: %d", lap_number)
-        self.gt7comm.session.delete_lap(lap_number)
 
-        # Update time table tab and other relevant tabs
-        if hasattr(self.tab_manager, "time_table_tab"):
-            self.tab_manager.time_table_tab.show_laps(self.gt7comm.session.laps)
-        if hasattr(self.tab_manager, "race_tab"):
-            self.tab_manager.race_tab.update_lap_change()
+        data = dict(self.lap_times_source.data)
+        for idx in sorted(selected_indices, reverse=True):
+            lap_number = self.lap_times_source.data["number"][idx]
+            logger.info("Deleting lap number: %d", lap_number)
+            self.app.gt7comm.session.delete_lap(lap_number)
 
-        logger.info(f"Deleted lap {lap_number}.")
+            for key in data.keys():
+                data[key] = np.delete(data[key], idx)
+
+            logger.info(f"Deleted lap {lap_number}.")
+
+        self.lap_times_source.data = data
+        self.lap_times_source.selected.indices = []  # Clear selection
