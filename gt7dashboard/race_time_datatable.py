@@ -41,6 +41,22 @@ class RaceTimeDataTable(object):
             stylesheets=[dtstylesheet],
         )
 
+    def add_lap(self, lap):
+        """
+        Add a lap into the datatable.
+        """
+        # Convert lap to dict using gt7helper (assuming this helper exists)
+        lap_dict = self.lap_to_dict(lap)
+        data = self.lap_times_source.data
+
+        # Append each field value to the corresponding column
+        for key in data.keys():
+            data[key] = np.append(data[key], lap_dict.get(key, None))
+
+        self.lap_times_source.data = data
+        self.dt_lap_times.source = self.lap_times_source
+        logger.info("Lap added: %s", lap_dict)
+
     def show_laps(self, laps: List[Lap]):
         logger.info("show_laps")
         best_lap = gt7helper.get_best_lap(laps)
@@ -53,7 +69,6 @@ class RaceTimeDataTable(object):
             laps, best_lap_time=best_lap.lap_finish_time
         )
         self.lap_times_source.data = ColumnDataSource.from_df(new_df)
-
         self.dt_lap_times.source = self.lap_times_source
 
     def delete_selected_laps(self):

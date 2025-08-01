@@ -266,46 +266,80 @@ def filter_max_min_laps(laps: List[Lap], max_lap_time=-1, min_lap_time=-1) -> Li
     return laps
 
 
+def pct(lap, val):
+    lap_ticks = getattr(lap, "lap_ticks", 1) or 1
+    return "%d" % (getattr(lap, val, 0) / lap_ticks * 1000)
+
+
+def lap_to_dict(lap: Lap) -> dict:
+    """
+    Convert a Lap object to a dictionary suitable for the DataTable.
+    """
+    replay = "Y" if getattr(lap, "is_replay", False) else "N"
+
+    return {
+        "number": getattr(lap, "number", None),
+        "time": seconds_to_lap_time(getattr(lap, "lap_finish_time", 0) / 1000),
+        "diff": "",
+        "timestamp": (
+            getattr(lap, "lap_start_timestamp", "").strftime("%Y-%m-%d %H:%M:%S")
+            if getattr(lap, "lap_start_timestamp", None)
+            else ""
+        ),
+        "replay": replay,
+        "car_name": car_name(getattr(lap, "car_id", None)),
+        "fuelconsumed": "%d" % getattr(lap, "fuel_consumed", 0),
+        "fullthrottle": pct(lap, "full_throttle_ticks"),
+        "throttleandbrake": pct(lap, "throttle_and_brake_ticks"),
+        "fullbrake": pct(lap, "full_brake_ticks"),
+        "nothrottle": pct(lap, "no_throttle_and_no_brake_ticks"),
+        "tyrespinning": pct(lap, "tyres_spinning_ticks"),
+    }
+
+
 def pd_data_frame_from_lap(laps: List[Lap], best_lap_time: int) -> pd.DataFrame:
+    """
+    Convert a list of Lap objects to a pandas DataFrame for the DataTable.
+    """
+
     rows = []
-    for i, lap in enumerate(laps):
+    for lap in laps:
+        replay = "Y" if getattr(lap, "is_replay", False) else "N"
+
+        lap_finish_time = getattr(lap, "lap_finish_time", 0)
         time_diff = ""
-        replay = "N"
-
-        if lap.is_replay:
-            replay = "Y"
-
-        if best_lap_time == lap.lap_finish_time:
+        if best_lap_time == lap_finish_time:
             pass
-        elif lap.lap_finish_time < best_lap_time:
+        elif lap_finish_time < best_lap_time:
             time_diff = "-"
         elif best_lap_time > 0:
             time_diff = "+" + seconds_to_lap_time(
-                -1 * (best_lap_time / 1000 - lap.lap_finish_time / 1000)
+                -1 * (best_lap_time / 1000 - lap_finish_time / 1000)
             )
 
         rows.append(
             {
-                "number": lap.number,
-                "time": seconds_to_lap_time(lap.lap_finish_time / 1000),
+                "number": getattr(lap, "number", None),
+                "time": seconds_to_lap_time(lap_finish_time / 1000),
                 "diff": time_diff,
-                "timestamp": lap.lap_start_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "timestamp": (
+                    getattr(lap, "lap_start_timestamp", "").strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                    if getattr(lap, "lap_start_timestamp", None)
+                    else ""
+                ),
                 "replay": replay,
-                "car_name": car_name(lap.car_id),
-                "fuelconsumed": "%d" % lap.fuel_consumed,
-                "fullthrottle": "%d" % (lap.full_throttle_ticks / lap.lap_ticks * 1000),
-                "throttleandbreak": "%d"
-                % (lap.throttle_and_brake_ticks / lap.lap_ticks * 1000),
-                "fullbrake": "%d" % (lap.full_brake_ticks / lap.lap_ticks * 1000),
-                "nothrottle": "%d"
-                % (lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000),
-                "tyrespinning": "%d"
-                % (lap.tyres_spinning_ticks / lap.lap_ticks * 1000),
+                "car_name": car_name(getattr(lap, "car_id", None)),
+                "fuelconsumed": "%d" % getattr(lap, "fuel_consumed", 0),
+                "fullthrottle": pct(lap, "full_throttle_ticks"),
+                "throttleandbrake": pct(lap, "throttle_and_brake_ticks"),
+                "fullbrake": pct(lap, "full_brake_ticks"),
+                "nothrottle": pct(lap, "no_throttle_and_no_brake_ticks"),
+                "tyrespinning": pct(lap, "tyres_spinning_ticks"),
             }
         )
-
-    df = pd.DataFrame(rows)
-    return df
+    return pd.DataFrame(rows)
 
 
 def bokeh_tuple_for_list_of_lapfiles(lapfiles: List[LapFile]):

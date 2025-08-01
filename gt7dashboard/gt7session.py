@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 class GT7Session:
     def __init__(self):
         self._on_load_laps_callback = None
-
+        self._on_add_lap_callback = None
         # best lap overall
         self.special_packet_time = 0
         self.best_lap = -1
@@ -32,6 +32,8 @@ class GT7Session:
         # Optionally update max_speed or other stats here
         if hasattr(lap, "max_speed"):
             self.max_speed = max(self.max_speed, getattr(lap, "max_speed", 0))
+        if self._on_add_lap_callback:
+            self._on_add_lap_callback(lap)
 
     def get_laps(self) -> List[Lap]:
         return self.laps
@@ -57,6 +59,10 @@ class GT7Session:
 
         if self._on_load_laps_callback:
             self._on_load_laps_callback(laps)
+
+    def set_on_add_lap_callback(self, callback):
+        """Register a callback to be called when a lap is added."""
+        self._on_add_lap_callback = callback
 
     def set_on_load_laps_callback(self, callback):
         """Register a callback to be called when laps are loaded."""

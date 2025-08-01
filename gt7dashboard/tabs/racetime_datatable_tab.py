@@ -1,5 +1,5 @@
 import logging
-from bokeh.models import Panel, Tabs, Div, TabPanel, Button
+from bokeh.models import Div, TabPanel, Button
 from bokeh.layouts import column, row
 from gt7dashboard.race_time_datatable import RaceTimeDataTable
 
@@ -26,12 +26,20 @@ class RaceTimeDataTableTab:
             ),
         )
         self.app.gt7comm.session.set_on_load_laps_callback(self.show_laps)
+        self.app.gt7comm.session.set_on_add_lap_callback(self.lap_added)
+
+    def lap_added(self, lap):
+        """
+        A lap was added to session so add to the data table
+        """
+        logger.debug("Add a lap to RaceTimeDataTable")
+        self.race_time_datatable.add_lap(lap)
 
     def show_laps(self, laps):
         """
         Display all laps data in the race time table.
         """
-        logger.debug("Showing laps in RaceTimeDataTableTab")
+        logger.debug("Showing laps in RaceTimeDataTable")
         self.race_time_datatable.show_laps(laps)
 
     def get_tab_panel(self):
