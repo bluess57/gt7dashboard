@@ -4,6 +4,7 @@ import copy
 import time
 
 from typing import List
+from bokeh.plotting import curdoc
 from bokeh.plotting import figure
 from bokeh.layouts import layout, row, column
 from bokeh.models import (
@@ -16,6 +17,8 @@ from bokeh.models import (
     TabPanel,
     HelpButton,
     Tooltip,
+    ImportedStyleSheet,
+    PreText,
 )
 from bokeh.models.dom import HTML
 
@@ -48,12 +51,12 @@ from gt7dashboard.gt7lapstorage import (
     load_laps_from_json,
     list_lap_files_from_path,
 )
-
+from gt7dashboard.deviance_laps_datatable import deviance_laps_datatable
 
 # Use LAST_LAP_COLOR wherever needed
 
 logger = logging.getLogger("race_tab")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class RaceTab:
@@ -83,16 +86,13 @@ class RaceTab:
         self.s_race_line.toolbar.autohide = True
 
         # State variables
-        self.laps_stored = []
+        # self.laps_stored = []
         self.reference_lap_selected = None
         self.telemetry_update_needed = False
 
-        self.tyre_temp_display = self.create_tyre_temp_display()
+        # self.tyre_temp_display = self.create_tyre_temp_display()
 
         self.race_diagram = RaceDiagram(width=1000)
-
-        # Track session data
-        self.session_stored = None
 
         # Create components and layout
         self.create_components()
@@ -104,16 +104,19 @@ class RaceTab:
         )
         self.selectLoadLaps.options = stored_lap_files
 
-        # Connect race time table selection callback
-        # TODO:
-        # self.race_time_table.lap_times_source.selected.on_change('indices', self.table_row_selection_callback)
-
     def create_components(self):
         """Create all UI components for this tab"""
         # Create all static elements
-        # self.div_tuning_info = Div(width=200, height=100)
         self.div_speed_peak_valley_diagram = Div(width=200, height=125)
-        self.div_header_line = Div(width=400, height=30)
+
+        # Use a simple Div - we'll handle updates differently
+        self.div_header_line = Div(
+            text="Last Lap: None<br>Reference Lap: None",
+            width=1000,
+            height=60,
+            css_classes=["header-display-text"],
+            # stylesheets=[ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")],
+        )
 
         # Create buttons
         self.manual_log_button = Button(
@@ -130,6 +133,7 @@ class RaceTab:
         # Create selects
         self.selectLoadLapsTitle = Paragraph(text="Load Laps:")
         self.selectLoadLaps = Select(value="laps", options=[], width=150)
+        self.selectreferenceLapTitle = Paragraph(text="Reference Lap:")
         self.reference_lap_select = Select(value="-1", width=150)
 
         # Create checkbox for recording replays
@@ -144,6 +148,8 @@ class RaceTab:
         self.checkbox_group.on_change("active", self.always_record_checkbox_handler)
 
         self.app.gt7comm.set_lap_callback(self.on_lap_finished)
+
+        self.deviance_laps_datatable = deviance_laps_datatable()
 
         # Set up race line components if they haven't been created yet
         if self.s_race_line and not hasattr(self, "last_lap_race_line"):
@@ -166,6 +172,17 @@ class RaceTab:
                 source=ColumnDataSource(data={"raceline_x": [], "raceline_z": []}),
             )
 
+    def connect_callbacks(self):
+        """Connect callbacks after all tabs are initialized"""
+        if hasattr(self.app.tab_manager, "racetime_datatable_tab"):
+            self.app.tab_manager.racetime_datatable_tab.race_time_datatable.lap_times_source.selected.on_change(
+                "indices", self.table_row_selection_callback
+            )
+        else:
+            logger.warning(
+                "racetime_datatable_tab not available for callback connection"
+            )
+
     def finalize_layout(self):
         """Create the final layout after all diagrams are set"""
         if not self.race_diagram:
@@ -177,18 +194,16 @@ class RaceTab:
         # self.race_time_table_help = Div(text=f'<i class="fa fa-question-circle" title="{html.escape(TIME_TABLE)}"></i>', width=20)
 
         # Create and get diviance laps div
-        self.div_deviance_laps_on_display = Div(
-            width=200, height=self.race_diagram.f_speed_variance.height
-        )
+        self.div_deviance_laps_on_display = Div(width=200, text="3 Fastest Lap Times")
 
-        racelinemini_help_button = HelpButton(
-            tooltip=Tooltip(
-                content=HTML(RACE_LINE_MINI),
-                position="right",
-                css_classes=["custom-tooltip"],
-            ),
-            css_classes=["help-button"],
-        )
+        # racelinemini_help_button = HelpButton(
+        #     tooltip=Tooltip(
+        #         content=HTML(RACE_LINE_MINI),
+        #         position="right",
+        #         css_classes=["custom-tooltip"],
+        #     ),
+        #     css_classes=["help-button"],
+        # )
 
         left_column = column(
             [
@@ -198,9 +213,11 @@ class RaceTab:
                 self.checkbox_group,
                 self.selectLoadLapsTitle,
                 self.selectLoadLaps,
+                self.selectreferenceLapTitle,
                 self.reference_lap_select,
                 self.div_deviance_laps_on_display,
-                row(self.s_race_line, racelinemini_help_button),
+                self.deviance_laps_datatable.dt_lap_times,
+                row(self.s_race_line),
             ],
         )
 
@@ -230,6 +247,7 @@ class RaceTab:
         )
 
         main_diagrams_column = column(
+            row([self.div_header_line]),
             row([self.race_diagram.f_time_diff]),
             row([self.race_diagram.f_speed]),
             row([self.race_diagram.f_speed_variance, speedvar_help_button]),
@@ -240,7 +258,7 @@ class RaceTab:
             row([self.race_diagram.f_gear]),
             row([self.race_diagram.f_rpm]),
             row([self.race_diagram.f_boost]),
-            row([self.race_diagram.f_tyres, self.tyre_temp_display]),
+            row([self.race_diagram.f_tyres]),
             row([self.div_speed_peak_valley_diagram, speedpeaksandvalleys_help_button]),
         )
 
@@ -255,10 +273,35 @@ class RaceTab:
 
     def update_header_line(self, last_lap, reference_lap):
         """Update the header line with lap information"""
-        self.div_header_line.text = (
-            f"<p><b>Last Lap: {last_lap.title} ({car_name(last_lap.car_id)})<b></p>"
-            f"<p><b>Reference Lap: {reference_lap.title} ({car_name(reference_lap.car_id)})<b></p>"
-        )
+        if not last_lap:
+            new_text = "Last Lap: None<br>Reference Lap: None"
+        else:
+            last_lap_info = f"{last_lap.title} ({car_name(last_lap.car_id)})"
+
+            if reference_lap:
+                reference_lap_info = (
+                    f"{reference_lap.title} ({car_name(reference_lap.car_id)})"
+                )
+            else:
+                reference_lap_info = "None"
+
+            new_text = (
+                f"Last Lap: {last_lap_info}<br>Reference Lap: {reference_lap_info}"
+            )
+
+        # Force update by manipulating the DOM directly through Bokeh's mechanism
+        def _update_header():
+            # First clear the text
+            self.div_header_line.text = ""
+
+            # Then set new text in a separate callback
+            def _set_new_text():
+                self.div_header_line.text = new_text
+                logger.debug(f"Header line updated: {new_text}")
+
+            curdoc().add_next_tick_callback(_set_new_text)
+
+        curdoc().add_next_tick_callback(_update_header)
 
     # def update_tuning_info(self):
     #     """Update tuning information display"""
@@ -317,18 +360,12 @@ class RaceTab:
         # self.race_time_table.lap_times_source.selected.indices = []
 
         # Clear information displays
-        self.div_header_line.text = (
-            "<p><b>Last Lap: None</b></p><p><b>Reference Lap: None</b></p>"
-        )
+        self.header_source.data = dict(info=["Last Lap: None Reference Lap: None"])
         self.div_speed_peak_valley_diagram.text = ""
-        self.div_deviance_laps_on_display.text = ""
 
         # Reset reference lap selection
         self.reference_lap_selected = None
         self.reference_lap_select.value = "-1"  # Best Lap option
-
-        # Reset stored data
-        self.laps_stored = []
 
         # Clear GT7 communication data
         self.app.gt7comm.reset()
@@ -373,22 +410,29 @@ class RaceTab:
         self.app.gt7comm.session.load_laps(
             load_laps_from_json(new), replace_other_laps=True
         )
+        self.update_reference_lap_select(self.app.gt7comm.session.get_laps())
 
     def load_reference_lap_handler(self, attr, old, new):
         """Handle changing the reference lap"""
         if int(new) == -1:
             # Set no reference lap
             self.reference_lap_selected = None
+            logger.info("No reference lap selected new is -1")
         else:
-            self.reference_lap_selected = self.laps_stored[int(new)]
-            logger.info("Loading %s as reference" % self.laps_stored[int(new)].format())
+            self.reference_lap_selected = self.app.gt7comm.session.laps[int(new)]
+            logger.info(
+                "Loading %s as reference"
+                % self.app.gt7comm.session.laps[int(new)].format()
+            )
 
         self.telemetry_update_needed = True
         self.update_lap_change()
 
     def table_row_selection_callback(self, attrname, old, new):
         """Handle selecting rows in the lap times table"""
-        selectionIndex = self.race_time_table.lap_times_source.selected.indices
+        selectionIndex = (
+            self.app.tab_manager.racetime_datatable_tab.race_time_datatable.lap_times_source.selected.indices
+        )
         logger.info("You have selected the row nr " + str(selectionIndex))
 
         colors_index = (
@@ -402,9 +446,9 @@ class RaceTab:
 
             color = TABLE_ROW_COLORS[colors_index]
             colors_index += 1
-            lap_to_add = self.laps_stored[index]
+            lap_to_add = self.app.gt7comm.session.laps[index]
             new_lap_data_source = self.race_diagram.add_lap_to_race_diagram(
-                color, legend=self.laps_stored[index].title, visible=True
+                color, legend=self.app.gt7comm.session.laps[index].title, visible=True
             )
             new_lap_data_source.data = lap_to_add.get_data_dict()
 
@@ -436,11 +480,11 @@ class RaceTab:
 
         fastest_laps = self.race_diagram.update_fastest_laps_variance(laps)
         logger.info("Updating Speed Deviance with %d fastest laps" % len(fastest_laps))
-        self.div_deviance_laps_on_display.text = "3 Fastest Lap Times<br>"
-        for fastest_lap in fastest_laps:
-            self.div_deviance_laps_on_display.text += (
-                f"<b>Lap {fastest_lap.number}:</b> {fastest_lap.title}<br>"
-            )
+
+        self.deviance_laps_datatable.lap_times_source.data = {
+            "number": [lap.number for lap in fastest_laps],
+            "title": [lap.title for lap in fastest_laps],
+        }
 
         # Update brakepoints
         brake_points_enabled = os.environ.get("GT7_ADD_BRAKEPOINTS") == "true"
@@ -466,74 +510,48 @@ class RaceTab:
                 fill_color=color,
             )
 
-    def update_lap_change(self, step=None):
+    def update_lap_change(self):
         """Update the display when laps change"""
 
         update_start_time = time.time()
-
         laps = self.app.gt7comm.session.get_laps()
 
-        # Check for session change
-        if (
-            hasattr(self, "session_stored")
-            and self.app.gt7comm.session != self.session_stored
-        ):
-            self.session_stored = copy.copy(self.app.gt7comm.session)
-
-        # This saves on cpu time, 99.9% of the time this is true
-        if laps == self.laps_stored and not self.telemetry_update_needed:
+        if not self.telemetry_update_needed:
             return
 
-        logger.debug("update_lap_change laps")
-
-        reference_lap = Lap()
+        logger.info("update_lap_change laps")
 
         if laps is not None and len(laps) > 0:
-            last_lap = laps[0]
+            # Get all three laps (last, reference, median) at once
+            last_lap, reference_lap, median_lap = get_last_reference_median_lap(
+                laps, reference_lap_selected=self.reference_lap_selected
+            )
 
-            if len(laps) > 1:
-                reference_lap = get_last_reference_median_lap(
-                    laps, reference_lap_selected=self.reference_lap_selected
-                )[1]
+            self.update_header_line(last_lap, reference_lap)
 
+            if len(laps) > 1 and reference_lap:
                 self.div_speed_peak_valley_diagram.text = (
                     get_speed_peak_and_valley_diagram(last_lap, reference_lap)
                 )
 
-            self.update_header_line(last_lap, reference_lap)
-
-            logger.debug("Updating of %d laps" % len(laps))
+            logger.info("Updating of %d laps" % len(laps))
 
             start_time = time.time()
-            # self.race_time_table.show_laps(laps)
-            if hasattr(self.app, "racetime_datatable_tab"):
-                self.app.racetime_datatable_tab.show_laps(laps)
-                logger.debug(
-                    "Updating time table took %dms"
-                    % ((time.time() - start_time) * 1000)
-                )
+            self.update_speed_velocity_graph(laps)
+            logger.debug(
+                "Updating speed velocity graph took %dms"
+                % ((time.time() - start_time) * 1000)
+            )
 
-                start_time = time.time()
-                self.update_reference_lap_select(laps)
-                logger.debug(
-                    "Updating reference lap select took %dms"
-                    % ((time.time() - start_time) * 1000)
-                )
+            logger.debug(
+                "End of updating laps, whole Update took %dms"
+                % ((time.time() - update_start_time) * 1000)
+            )
 
-                start_time = time.time()
-                self.update_speed_velocity_graph(laps)
-                logger.debug(
-                    "Updating speed velocity graph took %dms"
-                    % ((time.time() - start_time) * 1000)
-                )
-
-                logger.debug(
-                    "End of updating laps, whole Update took %dms"
-                    % ((time.time() - update_start_time) * 1000)
-                )
-
-                self.laps_stored = laps.copy()
-                self.telemetry_update_needed = False
+            self.telemetry_update_needed = False
+        else:
+            # Handle case when no laps exist
+            self.update_header_line(None, None)
 
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""
@@ -561,6 +579,5 @@ class RaceTab:
         self.tyre_temp_RL.text = f"RL: {getattr(lap, 'tyre_temp_RL', '--'):.1f} °C"
         self.tyre_temp_RR.text = f"RR: {getattr(lap, 'tyre_temp_RR', '--'):.1f} °C"
 
-    # In your lap finish callback (e.g., in RaceTab or wherever you handle lap completion):
     def on_lap_finished(self, lap):
         self.update_tyre_temp_display(lap)

@@ -326,7 +326,7 @@ class GT7Communication(Thread):
         Resets the current lap, all stored laps and the current session.
         """
         self.current_lap = Lap()
-        self.session = GT7Session()
+        self.session.reset()
         self.last_data = GT7Data(None)
         if self._on_reset_callback:
             self._on_reset_callback

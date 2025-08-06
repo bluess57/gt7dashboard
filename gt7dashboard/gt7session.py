@@ -26,6 +26,14 @@ class GT7Session:
             and self.max_speed == other.max_speed
         )
 
+    def reset(self):
+        """Reset the session data."""
+        self.special_packet_time = 0
+        self.best_lap = -1
+        self.min_body_height = 1000000
+        self.max_speed = 0
+        self.laps = []
+
     def add_lap(self, lap: Lap):
         """Add a single lap to the session."""
         self.laps.append(lap)
