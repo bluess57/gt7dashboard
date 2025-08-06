@@ -32,6 +32,10 @@ class TabManager:
             self.fuel_tab.get_tab_panel(),
             self.config_tab.get_tab_panel(),
         ]
+
+        if hasattr(self, "race_tab"):
+            self.race_tab.connect_callbacks()
+
         return Tabs(tabs=tabs)
 
     def update_all(self):
