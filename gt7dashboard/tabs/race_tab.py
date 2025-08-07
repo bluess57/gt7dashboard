@@ -40,7 +40,7 @@ from gt7dashboard.colors import (
     MEDIAN_LAP_COLOR,
     TABLE_ROW_COLORS,
 )
-from .base_tab import GT7Tab
+from .GT7Tab import GT7Tab
 from gt7dashboard.gt7racediagram import RaceDiagram
 from gt7dashboard.gt7car import car_name
 
@@ -51,7 +51,8 @@ from gt7dashboard.gt7lapstorage import (
 )
 from gt7dashboard.datatable.deviance_laps import deviance_laps_datatable
 from gt7dashboard.datatable.speed_peak_valley import SpeedPeakValleyDataTable
-from .base_tab import GT7Tab
+from .GT7Tab import GT7Tab
+from gt7dashboard.gt7help import get_help_div
 
 # Use LAST_LAP_COLOR wherever needed
 
@@ -64,7 +65,7 @@ class RaceTab(GT7Tab):
 
     def __init__(self, app_instance):
         """Initialize the race telemetry tab"""
-        super().__init__("Race")
+        super().__init__("Get Faster")
         self.app = app_instance
 
         # Create race line figure
@@ -223,22 +224,9 @@ class RaceTab(GT7Tab):
             ],
         )
 
-        throttle_help_button = HelpButton(
-            css_classes=["info-icon-button"],
-            tooltip=Tooltip(
-                content=HTML(THROTTLE_DIAGRAM),
-                position="right",
-                css_classes=["custom-tooltip"],
-            ),
-        )
-        speedvar_help_button = HelpButton(
-            css_classes=["info-icon-button"],
-            tooltip=Tooltip(
-                content=HTML(SPEED_VARIANCE),
-                position="right",
-                css_classes=["custom-tooltip"],
-            ),
-        )
+        throttle_help_button = get_help_div(THROTTLE_DIAGRAM)
+        speedvar_help_button = get_help_div(SPEED_VARIANCE)
+
         speedpeaksandvalleys_help_button = HelpButton(
             css_classes=["info-icon-button"],
             tooltip=Tooltip(
@@ -552,10 +540,6 @@ class RaceTab(GT7Tab):
             # Handle case when no laps exist
             self.update_header_line(None, None)
             self.speed_peak_valley_datatable.update_speed_peak_valley_data(None, None)
-
-    def get_tab_panel(self):
-        """Create a TabPanel for this tab"""
-        return TabPanel(child=self.layout, title="Get Faster")
 
     def create_tyre_temp_display(self):
         """Create a display for tyre temperatures."""

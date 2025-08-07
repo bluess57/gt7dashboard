@@ -2,7 +2,7 @@ import logging
 from bokeh.layouts import layout
 from bokeh.models import Div, TabPanel
 from bokeh.driving import linear
-from ..tabs.base_tab import GT7Tab
+from .GT7Tab import GT7Tab
 from gt7dashboard import gt7diagrams
 
 logger = logging.getLogger("fuel_tab")
@@ -66,7 +66,3 @@ class FuelTab(GT7Tab):
             self.stored_fuel_map = last_lap
 
         self.div_fuel_map.text = gt7diagrams.get_fuel_map_html_table(last_lap)
-
-    def get_tab_panel(self):
-        """Create a TabPanel for this tab"""
-        return TabPanel(child=self.layout, title="Fuel")

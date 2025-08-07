@@ -19,7 +19,7 @@ from bokeh.models import (
 
 from ..gt7help import TIME_TABLE
 from ..gt7lap import Lap
-from .base_tab import GT7Tab
+from .GT7Tab import GT7Tab
 
 logger = logging.getLogger("laptime_analysis_tab")
 logger.setLevel(logging.DEBUG)
@@ -449,7 +449,3 @@ class LapTimeAnalysisTab(GT7Tab):
         """Periodic update of lap data"""
         laps = self.app.gt7comm.session.get_laps()
         self.show_laps(laps)
-
-    def get_tab_panel(self):
-        """Create a TabPanel for this tab"""
-        return TabPanel(child=self.layout, title="Analyze Lap Times")

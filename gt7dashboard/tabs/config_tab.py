@@ -5,7 +5,7 @@ import re
 from bokeh.layouts import layout, column
 from bokeh.models import Div, Button, TextInput, TabPanel, CheckboxGroup
 import subprocess
-from ..tabs.base_tab import GT7Tab
+from .GT7Tab import GT7Tab
 
 from gt7dashboard.gt7lapstorage import (
     load_laps_from_pickle,
@@ -23,7 +23,7 @@ class ConfigTab(GT7Tab):
     """Configuration tab for GT7 Dashboard"""
 
     def __init__(self, app_instance):
-        super().__init__("config")
+        super().__init__("Configuration")
         self.app = app_instance
 
         # Checkbox for GT7_ADD_BRAKEPOINTS
@@ -269,7 +269,3 @@ class ConfigTab(GT7Tab):
     def on_brakepoints_checkbox_change(self, attr, old, new):
         # Set the environment variable (note: this only affects the current process)
         os.environ["GT7_ADD_BRAKEPOINTS"] = "true" if 0 in new else "false"
-
-    def get_tab_panel(self):
-        """Create a TabPanel for this tab"""
-        return TabPanel(child=self.layout, title="Configuration")

@@ -2,7 +2,7 @@ import logging
 from bokeh.models import Div, TabPanel, Button
 from bokeh.layouts import column, row
 from gt7dashboard.datatable.race_time import RaceTimeDataTable
-from .base_tab import GT7Tab
+from .GT7Tab import GT7Tab
 
 logger = logging.getLogger("racetime_datatable_tab")
 logger.setLevel(logging.DEBUG)
@@ -10,7 +10,7 @@ logger.setLevel(logging.DEBUG)
 
 class RaceTimeDataTableTab(GT7Tab):
     def __init__(self, app):
-        super().__init__("Race Time Table")
+        super().__init__("Lap Times Table")
         self.app = app
         self.race_time_datatable = RaceTimeDataTable(app)
         self.header = Div(text="<h2>Lap Times</h2>", css_classes=["header"])
@@ -43,7 +43,3 @@ class RaceTimeDataTableTab(GT7Tab):
         """
         logger.debug("Showing laps in RaceTimeDataTable")
         self.race_time_datatable.show_laps(laps)
-
-    def get_tab_panel(self):
-        """Create a TabPanel for this tab"""
-        return TabPanel(child=self.layout, title="Lap Times Table")
