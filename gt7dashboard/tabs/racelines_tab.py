@@ -330,31 +330,31 @@ class RaceLinesTab(GT7Tab):
 
     def clear_lines_handler(self, event):
         """Handler for clearing all race lines"""
-        # Remove all renderers from each figure
-        for figure_index, figure_data in enumerate(self.race_lines_data):
+        # Clear each figure completely and recreate
+        for figure_index in range(len(self.race_lines)):
             figure = self.race_lines[figure_index]
 
-            # Remove all renderers associated with race lines
-            for line_data in figure_data:
-                # Remove the line renderers from the figure
-                if line_data["throttle_line"] in figure.renderers:
-                    figure.renderers.remove(line_data["throttle_line"])
-                if line_data["braking_line"] in figure.renderers:
-                    figure.renderers.remove(line_data["braking_line"])
-                if line_data["coasting_line"] in figure.renderers:
-                    figure.renderers.remove(line_data["coasting_line"])
+            # Store original figure properties
+            original_title = "Race Line"
+            original_width = figure.width
+            original_height = figure.height
+            original_x_label = figure.xaxis.axis_label
+            original_y_label = figure.yaxis.axis_label
 
-            # Clear the legend
+            # Remove all renderers
+            figure.renderers = []
+
+            # Clear legend
             figure.legend.items = []
 
-            # Reset figure title
-            figure.title.text = "Race Line"
+            # Reset title
+            figure.title.text = original_title
 
         # Clear data structures
         self.race_lines_data = [[] for _ in range(len(self.race_lines))]
         self.selected_laps = []
 
-        logger.info("All race lines and legends cleared")
+        logger.info("All race lines, renderers, and legends cleared")
 
     def display_options_handler(self, attr, old, new):
         """Handler for display options changes"""
