@@ -1,12 +1,10 @@
 import os
 import logging
-import copy
 import time
 
-from typing import List
 from bokeh.plotting import curdoc
 from bokeh.plotting import figure
-from bokeh.layouts import layout, row, column
+from bokeh.layouts import row, column
 from bokeh.models import (
     Div,
     Button,
@@ -17,11 +15,12 @@ from bokeh.models import (
     TabPanel,
     HelpButton,
     Tooltip,
+    DataTable,
+    TableColumn,
     ImportedStyleSheet,
-    PreText,
 )
-from bokeh.models.dom import HTML
 
+from bokeh.models.dom import HTML
 
 from gt7dashboard.gt7helper import (
     bokeh_tuple_for_list_of_laps,
@@ -52,6 +51,7 @@ from gt7dashboard.gt7lapstorage import (
     list_lap_files_from_path,
 )
 from gt7dashboard.deviance_laps_datatable import deviance_laps_datatable
+from gt7dashboard.speed_peak_valley_datatable import SpeedPeakValleyDataTable
 
 # Use LAST_LAP_COLOR wherever needed
 
@@ -106,17 +106,12 @@ class RaceTab:
 
     def create_components(self):
         """Create all UI components for this tab"""
-        # Create all static elements
-        self.div_speed_peak_valley_diagram = Div(width=200, height=125)
 
-        # Use a simple Div - we'll handle updates differently
-        self.div_header_line = Div(
-            text="Last Lap: None<br>Reference Lap: None",
-            width=1000,
-            height=60,
-            css_classes=["header-display-text"],
-            # stylesheets=[ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")],
-        )
+        dtstylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
+
+        # Create all static elements
+        # self.div_speed_peak_valley_diagram = Div(width=200, height=125)
+        self.speed_peak_valley_datatable = SpeedPeakValleyDataTable(self.app)
 
         # Create buttons
         self.manual_log_button = Button(
@@ -127,6 +122,13 @@ class RaceTab:
                 "title": "Immediately add the lap data to the list of laps"
             },
         )
+
+        self.header_line = Paragraph(
+            text="Last Lap: None<br>Reference Lap: None",
+            width=400,
+            height=50,
+        )
+
         self.save_button = Button(label="Save Laps", width=150, button_type="success")
         self.reset_button = Button(label="Reset Laps", width=150, button_type="danger")
 
@@ -217,7 +219,8 @@ class RaceTab:
                 self.reference_lap_select,
                 self.div_deviance_laps_on_display,
                 self.deviance_laps_datatable.dt_lap_times,
-                row(self.s_race_line),
+                self.speed_peak_valley_datatable.datatable,
+                self.s_race_line,
             ],
         )
 
@@ -247,7 +250,7 @@ class RaceTab:
         )
 
         main_diagrams_column = column(
-            row([self.div_header_line]),
+            row([self.header_line]),
             row([self.race_diagram.f_time_diff]),
             row([self.race_diagram.f_speed]),
             row([self.race_diagram.f_speed_variance, speedvar_help_button]),
@@ -259,7 +262,6 @@ class RaceTab:
             row([self.race_diagram.f_rpm]),
             row([self.race_diagram.f_boost]),
             row([self.race_diagram.f_tyres]),
-            row([self.div_speed_peak_valley_diagram, speedpeaksandvalleys_help_button]),
         )
 
         self.layout = row(left_column, main_diagrams_column)
@@ -289,19 +291,12 @@ class RaceTab:
                 f"Last Lap: {last_lap_info}<br>Reference Lap: {reference_lap_info}"
             )
 
-        # Force update by manipulating the DOM directly through Bokeh's mechanism
-        def _update_header():
-            # First clear the text
-            self.div_header_line.text = ""
+        # Use callback to ensure update happens in correct context
+        def _update_text():
+            self.header_line.text = new_text
+            logger.debug(f"Header line updated via callback: [{new_text}]")
 
-            # Then set new text in a separate callback
-            def _set_new_text():
-                self.div_header_line.text = new_text
-                logger.debug(f"Header line updated: {new_text}")
-
-            curdoc().add_next_tick_callback(_set_new_text)
-
-        curdoc().add_next_tick_callback(_update_header)
+        curdoc().add_next_tick_callback(_update_text)
 
     # def update_tuning_info(self):
     #     """Update tuning information display"""
@@ -360,18 +355,21 @@ class RaceTab:
         # self.race_time_table.lap_times_source.selected.indices = []
 
         # Clear information displays
-        self.header_source.data = dict(info=["Last Lap: None Reference Lap: None"])
+        self.update_header_line(None, None)
         self.div_speed_peak_valley_diagram.text = ""
 
         # Reset reference lap selection
         self.reference_lap_selected = None
         self.reference_lap_select.value = "-1"  # Best Lap option
+        self.reference_lap_select.options = []
 
         # Clear GT7 communication data
         self.app.gt7comm.reset()
 
         # Force full UI update
         self.telemetry_update_needed = True
+
+        self.speed_peak_valley_datatable.update_speed_peak_valley_data(None, None)
 
         logger.info("Reset complete - all graphs and data cleared")
 
@@ -527,11 +525,13 @@ class RaceTab:
                 laps, reference_lap_selected=self.reference_lap_selected
             )
 
-            self.update_header_line(last_lap, reference_lap)
-
             if len(laps) > 1 and reference_lap:
-                self.div_speed_peak_valley_diagram.text = (
-                    get_speed_peak_and_valley_diagram(last_lap, reference_lap)
+                self.speed_peak_valley_datatable.update_speed_peak_valley_data(
+                    last_lap, reference_lap
+                )
+            else:
+                self.speed_peak_valley_datatable.update_speed_peak_valley_data(
+                    last_lap, None
                 )
 
             logger.info("Updating of %d laps" % len(laps))
@@ -547,11 +547,12 @@ class RaceTab:
                 "End of updating laps, whole Update took %dms"
                 % ((time.time() - update_start_time) * 1000)
             )
-
+            self.update_header_line(last_lap, reference_lap)
             self.telemetry_update_needed = False
         else:
             # Handle case when no laps exist
             self.update_header_line(None, None)
+            self.speed_peak_valley_datatable.update_speed_peak_valley_data(None, None)
 
     def get_tab_panel(self):
         """Create a TabPanel for this tab"""

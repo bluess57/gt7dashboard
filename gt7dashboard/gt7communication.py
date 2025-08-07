@@ -57,6 +57,9 @@ class GT7Communication(Thread):
 
     def stop(self):
         self._shall_run = False
+        # Give the thread time to clean up
+        if self.is_alive():
+            self.join(timeout=2)
 
     def run(self):
         while self._shall_run:
@@ -64,6 +67,8 @@ class GT7Communication(Thread):
             try:
                 self._shall_restart = False
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                # Add socket reuse option
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
                 if self.playstation_ip == "255.255.255.255":
                     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -140,6 +145,13 @@ class GT7Communication(Thread):
                 s.close()
                 # Wait before reconnect
                 time.sleep(5)
+
+            finally:
+                if s:
+                    try:
+                        s.close()
+                    except:
+                        pass
 
     def restart(self):
         self._shall_restart = True

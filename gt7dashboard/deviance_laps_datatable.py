@@ -17,6 +17,7 @@ class deviance_laps_datatable:
             columns=self.columns,
             index_position=None,
             width=200,
+            height=100,
             autosize_mode="fit_columns",
             stylesheets=[dtstylesheet],
             selectable=False,

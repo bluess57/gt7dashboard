@@ -8,7 +8,7 @@ from gt7dashboard.gt7lap import Lap
 from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR
 
 
-class RaceDiagram(object):
+class RaceDiagram:
     def __init__(self, width=400):
         self.speed_lines = []
         self.braking_lines = []
