@@ -15,11 +15,13 @@ from bokeh.models import (
     NumberFormatter,
     HTMLTemplateFormatter,
     HoverTool,
+    ImportedStyleSheet,
 )
 
 from ..gt7help import TIME_TABLE
 from ..gt7lap import Lap
 from .GT7Tab import GT7Tab
+from gt7dashboard.gt7help import get_help_div
 
 logger = logging.getLogger("laptime_analysis_tab")
 logger.setLevel(logging.DEBUG)
@@ -47,10 +49,10 @@ class LapTimeAnalysisTab(GT7Tab):
             width=600,
         )
 
-        # Create help tooltip - use a div with HTML title attribute instead
-        self.help_div = Div(
-            text=f'<div style="width:20px; height:20px; border-radius:50%; background:#f5f5f5; border:1px solid #ddd; text-align:center; line-height:20px;" title="{html.escape(TIME_TABLE)}">?</div>',
-            width=20,
+        self.help_div = get_help_div(TIME_TABLE)
+
+        self.load_session_button = Button(
+            label="Load Session Laps", button_type="primary", width=200
         )
 
         # Create control buttons
@@ -76,6 +78,8 @@ class LapTimeAnalysisTab(GT7Tab):
         self.lap_times_source.selected.on_change(
             "indices", self.table_row_selection_callback
         )
+
+        self.load_session_button.on_click(self.load_session_data)
 
     def create_lap_times_table(self):
         """Create the lap times data table"""
@@ -120,6 +124,8 @@ class LapTimeAnalysisTab(GT7Tab):
             TableColumn(field="sector3", title="S3", width=60),
         ]
 
+        dtstylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
+
         # Create the data table
         self.lap_times_table = DataTable(
             source=self.lap_times_source,
@@ -129,6 +135,7 @@ class LapTimeAnalysisTab(GT7Tab):
             sortable=True,
             selectable=True,
             index_position=None,
+            stylesheets=[dtstylesheet],
         )
 
     def create_layout(self):
@@ -143,7 +150,10 @@ class LapTimeAnalysisTab(GT7Tab):
 
         # Button row
         button_row = row(
-            self.export_button, self.clear_selection_button, sizing_mode="stretch_width"
+            self.load_session_button,
+            self.export_button,
+            self.clear_selection_button,
+            sizing_mode="stretch_width",
         )
 
         # Create the layout
@@ -340,9 +350,9 @@ class LapTimeAnalysisTab(GT7Tab):
         valid_lap_times = []
         for lap in laps:
             try:
-                lap_time = getattr(lap, "lap_time", None)
+                lap_time = getattr(lap, "lap_finish_time", None)
                 if lap_time is None:
-                    lap_time = getattr(lap, "time", 0)
+                    lap_time = getattr(lap, "title", 0)
 
                 # Handle list case
                 if isinstance(lap_time, list):
@@ -440,12 +450,33 @@ class LapTimeAnalysisTab(GT7Tab):
 
         # Notify the race tab to highlight selected laps
         # This will require integration with the main app
-        if hasattr(self.app, "tab_manager") and hasattr(
-            self.app.tab_manager, "race_tab"
-        ):
-            self.app.tab_manager.race_tab.highlight_selected_laps(selection_indices)
+        # if hasattr(self.app, "tab_manager") and hasattr(
+        #     self.app.tab_manager, "race_tab"
+        # ):
+        #     self.app.tab_manager.race_tab.highlight_selected_laps(selection_indices)
 
     def update_lap_data(self, step=None):
         """Periodic update of lap data"""
         laps = self.app.gt7comm.session.get_laps()
         self.show_laps(laps)
+
+    def load_session_data(self):
+        """Load laps from the current session"""
+        laps = self.app.gt7comm.session.get_laps()
+        if laps:
+            self.show_laps(laps)
+        else:
+            logger.warning("No laps found in the current session.")
+            self.lap_times_source.data = {
+                "index": [],
+                "car": [],
+                "time": [],
+                "number": [],
+                "title": [],
+                "diff_to_best": [],
+                "diff_to_prev": [],
+                "sector1": [],
+                "sector2": [],
+                "sector3": [],
+            }
+            self._update_statistics([])  # Clear statistics
