@@ -334,13 +334,6 @@ class RaceLinesTab(GT7Tab):
         for figure_index in range(len(self.race_lines)):
             figure = self.race_lines[figure_index]
 
-            # Store original figure properties
-            original_title = "Race Line"
-            original_width = figure.width
-            original_height = figure.height
-            original_x_label = figure.xaxis.axis_label
-            original_y_label = figure.yaxis.axis_label
-
             # Remove all renderers
             figure.renderers = []
 
@@ -348,7 +341,7 @@ class RaceLinesTab(GT7Tab):
             figure.legend.items = []
 
             # Reset title
-            figure.title.text = original_title
+            figure.title.text = "Race Line"
 
         # Clear data structures
         self.race_lines_data = [[] for _ in range(len(self.race_lines))]
