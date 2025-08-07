@@ -50,8 +50,8 @@ from gt7dashboard.gt7lapstorage import (
     load_laps_from_json,
     list_lap_files_from_path,
 )
-from gt7dashboard.deviance_laps_datatable import deviance_laps_datatable
-from gt7dashboard.speed_peak_valley_datatable import SpeedPeakValleyDataTable
+from gt7dashboard.datatable.deviance_laps import deviance_laps_datatable
+from gt7dashboard.datatable.speed_peak_valley import SpeedPeakValleyDataTable
 
 # Use LAST_LAP_COLOR wherever needed
 

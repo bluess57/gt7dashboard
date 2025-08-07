@@ -12,7 +12,7 @@ from gt7dashboard.gt7diagrams import (
 )
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7racediagram import RaceDiagram
-from gt7dashboard.race_time_datatable import RaceTimeDataTable
+from gt7dashboard.datatable.race_time import RaceTimeDataTable
 from gt7dashboard.gt7lapstorage import load_laps_from_json
 
 

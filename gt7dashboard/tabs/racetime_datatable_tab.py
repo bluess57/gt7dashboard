@@ -1,7 +1,7 @@
 import logging
 from bokeh.models import Div, TabPanel, Button
 from bokeh.layouts import column, row
-from gt7dashboard.race_time_datatable import RaceTimeDataTable
+from gt7dashboard.datatable.race_time import RaceTimeDataTable
 
 logger = logging.getLogger("racetime_datatable_tab")
 logger.setLevel(logging.DEBUG)
