@@ -15,8 +15,6 @@ from bokeh.models import (
     TabPanel,
     HelpButton,
     Tooltip,
-    DataTable,
-    TableColumn,
     ImportedStyleSheet,
 )
 
@@ -583,3 +581,5 @@ class RaceTab(GT7Tab):
 
     def on_lap_finished(self, lap):
         self.update_tyre_temp_display(lap)
+        self.update_lap_change(lap)
+        self.update_reference_lap_select(self.app.gt7comm.session.get_laps())

@@ -240,9 +240,9 @@ class ConfigTab(GT7Tab):
                 if (
                     laps
                     and hasattr(self.app, "tab_manager")
-                    and hasattr(self.app.tab_manager, "laptime_table_tab")
+                    and hasattr(self.app.tab_manager, "racetime_datatable_tab")
                 ):
-                    self.app.tab_manager.laptime_table_tab.show_laps(laps)
+                    self.app.tab_manager.racetime_datatable_tab.show_laps(laps)
                     logger.info(f"Updated time table tab with {len(laps)} laps")
 
         except Exception as e:
