@@ -330,37 +330,31 @@ class RaceLinesTab(GT7Tab):
 
     def clear_lines_handler(self, event):
         """Handler for clearing all race lines"""
-        # Clear all race lines data
+        # Remove all renderers from each figure
         for figure_index, figure_data in enumerate(self.race_lines_data):
+            figure = self.race_lines[figure_index]
+
+            # Remove all renderers associated with race lines
             for line_data in figure_data:
-                line_data["throttle_source"].data = {
-                    "raceline_x_throttle": [],
-                    "raceline_z_throttle": [],
-                    "lap_name": [],
-                    "section": [],
-                    "speed": [],
-                }
-                line_data["braking_source"].data = {
-                    "raceline_x_braking": [],
-                    "raceline_z_braking": [],
-                    "lap_name": [],
-                    "section": [],
-                    "speed": [],
-                }
-                line_data["coasting_source"].data = {
-                    "raceline_x_coasting": [],
-                    "raceline_z_coasting": [],
-                    "lap_name": [],
-                    "section": [],
-                    "speed": [],
-                }
+                # Remove the line renderers from the figure
+                if line_data["throttle_line"] in figure.renderers:
+                    figure.renderers.remove(line_data["throttle_line"])
+                if line_data["braking_line"] in figure.renderers:
+                    figure.renderers.remove(line_data["braking_line"])
+                if line_data["coasting_line"] in figure.renderers:
+                    figure.renderers.remove(line_data["coasting_line"])
+
+            # Clear the legend
+            figure.legend.items = []
 
             # Reset figure title
-            self.race_lines[figure_index].title.text = "Race Line"
+            figure.title.text = "Race Line"
 
-        # Clear selected laps
+        # Clear data structures
         self.race_lines_data = [[] for _ in range(len(self.race_lines))]
         self.selected_laps = []
+
+        logger.info("All race lines and legends cleared")
 
     def display_options_handler(self, attr, old, new):
         """Handler for display options changes"""
@@ -379,7 +373,6 @@ class RaceLinesTab(GT7Tab):
         """Create layout for this tab"""
         controls = column(
             self.lap_select_title,
-            self.help,
             self.lap_select,
             self.add_lap_button,
             self.clear_button,
@@ -390,7 +383,11 @@ class RaceLinesTab(GT7Tab):
 
         main_content = column(
             self.div_title,
-            row(controls, self.race_lines[0]),
+            row(
+                controls,
+                self.race_lines[0],
+                self.help,
+            ),
         )
 
         return layout(
