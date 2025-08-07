@@ -13,7 +13,6 @@ from bokeh.models import (
     ColumnDataSource,
     Paragraph,
     TabPanel,
-    HelpButton,
     Tooltip,
     ImportedStyleSheet,
 )
@@ -33,6 +32,12 @@ from gt7dashboard.gt7help import (
     SPEED_VARIANCE,
     RACE_LINE_MINI,
     SPEED_PEAKS_AND_VALLEYS,
+    SPEED_DIAGRAM,
+    TIME_DIFF,
+    BRAKING_DIAGRAM,
+    YAW_RATE_DIAGRAM,
+    COASTING_DIAGRAM,
+    TIRE_DIAGRAM,
 )
 from gt7dashboard.colors import (
     LAST_LAP_COLOR,
@@ -191,21 +196,9 @@ class RaceTab(GT7Tab):
             logger.error("Can't finalize layout - diagrams not set")
             return
 
-        # Create help tooltip for race time table
-        # from ..gt7help import TIME_TABLE
-        # self.race_time_table_help = Div(text=f'<i class="fa fa-question-circle" title="{html.escape(TIME_TABLE)}"></i>', width=20)
-
         # Create and get diviance laps div
         self.div_deviance_laps_on_display = Div(width=200, text="3 Fastest Lap Times")
-
-        # racelinemini_help_button = HelpButton(
-        #     tooltip=Tooltip(
-        #         content=HTML(RACE_LINE_MINI),
-        #         position="right",
-        #         css_classes=["custom-tooltip"],
-        #     ),
-        #     css_classes=["help-button"],
-        # )
+        speedpeaksandvalleys_help_button = get_help_div(SPEED_PEAKS_AND_VALLEYS)
 
         left_column = column(
             [
@@ -219,36 +212,33 @@ class RaceTab(GT7Tab):
                 self.reference_lap_select,
                 self.div_deviance_laps_on_display,
                 self.deviance_laps_datatable.dt_lap_times,
+                speedpeaksandvalleys_help_button,
                 self.speed_peak_valley_datatable.datatable,
                 self.s_race_line,
             ],
         )
-
-        throttle_help_button = get_help_div(THROTTLE_DIAGRAM)
-        speedvar_help_button = get_help_div(SPEED_VARIANCE)
-
-        speedpeaksandvalleys_help_button = HelpButton(
-            css_classes=["info-icon-button"],
-            tooltip=Tooltip(
-                content=HTML(SPEED_PEAKS_AND_VALLEYS),
-                position="right",
-                css_classes=["custom-tooltip"],
-            ),
-        )
+        speed_help = get_help_div(SPEED_DIAGRAM)
+        throttle_help = get_help_div(THROTTLE_DIAGRAM)
+        speedvar_help = get_help_div(SPEED_VARIANCE)
+        timediff_help = get_help_div(TIME_DIFF)
+        braking_help = get_help_div(BRAKING_DIAGRAM)
+        yawrate_help = get_help_div(YAW_RATE_DIAGRAM)
+        coasting_help = get_help_div(COASTING_DIAGRAM)
+        tyre_help = get_help_div(TIRE_DIAGRAM)
 
         main_diagrams_column = column(
             row([self.header_line]),
-            row([self.race_diagram.f_time_diff]),
-            row([self.race_diagram.f_speed]),
-            row([self.race_diagram.f_speed_variance, speedvar_help_button]),
-            row([self.race_diagram.f_throttle, throttle_help_button]),
-            row([self.race_diagram.f_braking]),
-            row([self.race_diagram.f_yaw_rate]),
-            row([self.race_diagram.f_coasting]),
+            row([self.race_diagram.f_time_diff, timediff_help]),
+            row([self.race_diagram.f_speed, speed_help]),
+            row([self.race_diagram.f_speed_variance, speedvar_help]),
+            row([self.race_diagram.f_throttle, throttle_help]),
+            row([self.race_diagram.f_braking, braking_help]),
+            row([self.race_diagram.f_yaw_rate, yawrate_help]),
+            row([self.race_diagram.f_coasting, coasting_help]),
             row([self.race_diagram.f_gear]),
             row([self.race_diagram.f_rpm]),
             row([self.race_diagram.f_boost]),
-            row([self.race_diagram.f_tyres]),
+            row([self.race_diagram.f_tyres, tyre_help]),
         )
 
         self.layout = row(left_column, main_diagrams_column)
