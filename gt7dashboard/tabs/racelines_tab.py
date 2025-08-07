@@ -92,6 +92,8 @@ class RaceLinesTab(GT7Tab):
         self.clear_button.on_click(self.clear_lines_handler)
         self.display_options.on_change("active", self.display_options_handler)
 
+        self.app.gt7comm.session.set_on_load_laps_callback(self.update_lap_options)
+
     def create_race_line_figures(self, number_of_figures=1):
         """Create figures for displaying race lines"""
         self.race_lines = []
@@ -218,7 +220,7 @@ class RaceLinesTab(GT7Tab):
 
     def update_race_line_data(self, lap: Lap, figure_index: int, line_index: int):
         """Update race line data for the given lap"""
-        if not lap.has_data():
+        if lap.lap_ticks == 1:
             logger.warning(f"Lap {lap.title} has no data")
             return
 
@@ -289,9 +291,11 @@ class RaceLinesTab(GT7Tab):
             "speed": speed_coasting,
         }
 
-    def update_lap_options(self):
+    def update_lap_options(self, laps=None):
         """Update available laps in the dropdown"""
-        laps = self.app.gt7comm.session.get_laps()
+        if laps is None:
+            laps = self.app.gt7comm.session.get_laps()
+
         options = [
             (str(i), f"{lap.title} - {car_name(lap.car_id)}")
             for i, lap in enumerate(laps)
