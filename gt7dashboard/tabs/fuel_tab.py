@@ -2,18 +2,19 @@ import logging
 from bokeh.layouts import layout
 from bokeh.models import Div, TabPanel
 from bokeh.driving import linear
-
+from ..tabs.base_tab import GT7Tab
 from gt7dashboard import gt7diagrams
 
 logger = logging.getLogger("fuel_tab")
 logger.setLevel(logging.DEBUG)
 
 
-class FuelTab:
+class FuelTab(GT7Tab):
     """Fuel consumption tab for GT7 Dashboard"""
 
     def __init__(self, app_instance):
         """Initialize the fuel tab"""
+        super().__init__("Fuel")
         self.app = app_instance
         self.stored_fuel_map = None
         self.create_components()

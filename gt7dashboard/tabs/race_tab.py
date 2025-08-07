@@ -42,6 +42,7 @@ from gt7dashboard.colors import (
     MEDIAN_LAP_COLOR,
     TABLE_ROW_COLORS,
 )
+from .base_tab import GT7Tab
 from gt7dashboard.gt7racediagram import RaceDiagram
 from gt7dashboard.gt7car import car_name
 
@@ -52,6 +53,7 @@ from gt7dashboard.gt7lapstorage import (
 )
 from gt7dashboard.datatable.deviance_laps import deviance_laps_datatable
 from gt7dashboard.datatable.speed_peak_valley import SpeedPeakValleyDataTable
+from .base_tab import GT7Tab
 
 # Use LAST_LAP_COLOR wherever needed
 
@@ -59,11 +61,12 @@ logger = logging.getLogger("race_tab")
 logger.setLevel(logging.DEBUG)
 
 
-class RaceTab:
+class RaceTab(GT7Tab):
     """Main telemetry tab (Get Faster) for GT7 Dashboard"""
 
     def __init__(self, app_instance):
         """Initialize the race telemetry tab"""
+        super().__init__("Race")
         self.app = app_instance
 
         # Create race line figure
@@ -109,8 +112,6 @@ class RaceTab:
 
         dtstylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
 
-        # Create all static elements
-        # self.div_speed_peak_valley_diagram = Div(width=200, height=125)
         self.speed_peak_valley_datatable = SpeedPeakValleyDataTable(self.app)
 
         # Create buttons
@@ -123,7 +124,7 @@ class RaceTab:
             },
         )
 
-        self.header_line = Paragraph(
+        self.header_line = Div(
             text="Last Lap: None<br>Reference Lap: None",
             width=400,
             height=50,

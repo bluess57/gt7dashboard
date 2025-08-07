@@ -20,6 +20,7 @@ from bokeh.plotting import figure
 from gt7dashboard.gt7lap import Lap
 from .base_tab import GT7Tab
 from gt7dashboard.gt7helper import car_name
+from gt7dashboard.gt7help import get_help_div
 
 logger = logging.getLogger("racelines_tab")
 logger.setLevel(logging.DEBUG)
@@ -63,17 +64,14 @@ class RaceLinesTab(GT7Tab):
             label="Clear All Lines", button_type="warning", width=200
         )
 
-        help_tooltip = Tooltip(
-            content="""
+        self.help = get_help_div(
+            """
             This diagram shows the racing line on the track.
             Green segments indicate throttle application.
             Red segments indicate braking.
             Cyan segments indicate coasting (neither throttle nor brake).
-            """,
-            position="right",
-            css_classes=["custom-tooltip"],
+            """
         )
-        self.help = HelpButton(label="?", tooltip=help_tooltip)
 
         # Display options
         self.display_options_title = Div(text="<b>Display Options:</b>", width=200)
@@ -377,12 +375,12 @@ class RaceLinesTab(GT7Tab):
         """Create layout for this tab"""
         controls = column(
             self.lap_select_title,
+            self.help,
             self.lap_select,
             self.add_lap_button,
             self.clear_button,
             self.display_options_title,
             self.display_options,
-            self.help,
             width=250,
         )
 

@@ -73,12 +73,12 @@ YAW_RATE_DIAGRAM = """This is the yaw rate per second of your car. Use this to d
 
 
 def get_help_div(help_text_resource):
-    return Div(text=get_help_text_resource(help_text_resource), width=7, height=5)
+    return Div(text=get_help_text_resource(help_text_resource), width=8, height=5)
 
 
 def get_help_text_resource(help_text_resource):
     return f"""
-    <div title="{help_text_resource}">?⃝</div>
+    <div title="{help_text_resource}" style="cursor: pointer;">ℹ️</div>
     """
 
 
