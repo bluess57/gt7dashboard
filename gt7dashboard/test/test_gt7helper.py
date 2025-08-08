@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from gt7dashboard.gt7helper import (
     calculate_remaining_fuel,
-    format_laps_to_table,
+    # format_laps_to_table,
     get_n_fastest_laps_within_percent_threshold_ignoring_replays,
     get_fuel_on_consumption_by_relative_fuel_levels,
     seconds_to_lap_time,
@@ -59,48 +59,48 @@ class TestHelper(unittest.TestCase):
         for fuel_map in fuel_maps:
             print(fuel_map)
 
-    def test_format_laps_to_table(self):
-        lap1 = Lap()
-        lap1.number = 1
-        lap1.lap_finish_time = 11311000 / 1000
-        lap1.fuel_at_end = 90
-        lap1.full_throttle_ticks = 10000
-        lap1.throttle_and_brake_ticks = 500
-        lap1.full_brake_ticks = 10000
-        lap1.no_throttle_and_no_brake_ticks = 50
-        lap1.lap_ticks = 33333
-        lap1.tyres_spinning_ticks = 260
+    # def test_format_laps_to_table(self):
+    #     lap1 = Lap()
+    #     lap1.number = 1
+    #     lap1.lap_finish_time = 11311000 / 1000
+    #     lap1.fuel_at_end = 90
+    #     lap1.full_throttle_ticks = 10000
+    #     lap1.throttle_and_brake_ticks = 500
+    #     lap1.full_brake_ticks = 10000
+    #     lap1.no_throttle_and_no_brake_ticks = 50
+    #     lap1.lap_ticks = 33333
+    #     lap1.tyres_spinning_ticks = 260
 
-        lap2 = Lap()
-        lap2.number = 2
-        lap2.lap_finish_time = 11110000 / 1000
-        lap2.fuel_at_end = 44
-        lap2.full_throttle_ticks = 100
-        lap2.throttle_and_brake_ticks = 750
-        lap2.full_brake_ticks = 1000
-        lap2.no_throttle_and_no_brake_ticks = 40
-        lap2.lap_ticks = 33333
-        lap2.tyres_spinning_ticks = 240
+    #     lap2 = Lap()
+    #     lap2.number = 2
+    #     lap2.lap_finish_time = 11110000 / 1000
+    #     lap2.fuel_at_end = 44
+    #     lap2.full_throttle_ticks = 100
+    #     lap2.throttle_and_brake_ticks = 750
+    #     lap2.full_brake_ticks = 1000
+    #     lap2.no_throttle_and_no_brake_ticks = 40
+    #     lap2.lap_ticks = 33333
+    #     lap2.tyres_spinning_ticks = 240
 
-        lap3 = Lap()
-        lap3.number = 3
-        lap3.lap_finish_time = 12114000 / 1000
-        lap3.fuel_at_end = 34
-        lap3.full_throttle_ticks = 100
-        lap3.throttle_and_brake_ticks = 10
-        lap3.full_brake_ticks = 1000
-        lap3.no_throttle_and_no_brake_ticks = 100
-        lap3.lap_ticks = 33333
-        lap3.tyres_spinning_ticks = 120
+    #     lap3 = Lap()
+    #     lap3.number = 3
+    #     lap3.lap_finish_time = 12114000 / 1000
+    #     lap3.fuel_at_end = 34
+    #     lap3.full_throttle_ticks = 100
+    #     lap3.throttle_and_brake_ticks = 10
+    #     lap3.full_brake_ticks = 1000
+    #     lap3.no_throttle_and_no_brake_ticks = 100
+    #     lap3.lap_ticks = 33333
+    #     lap3.tyres_spinning_ticks = 120
 
-        laps = [lap3, lap2, lap1]
+    #     laps = [lap3, lap2, lap1]
 
-        result = format_laps_to_table(laps, 11110000 / 1000)
-        print("\n")
-        print(result)
-        self.assertEqual(
-            len(result.split("\n")), len(laps) + 2
-        )  # +2 for header and last line
+    #     result = format_laps_to_table(laps, 11110000 / 1000)
+    #     print("\n")
+    #     print(result)
+    #     self.assertEqual(
+    #         len(result.split("\n")), len(laps) + 2
+    #     )  # +2 for header and last line
 
     def test_calculate_time_diff_by_distance_from_pickle(self):
         path = os.path.join(

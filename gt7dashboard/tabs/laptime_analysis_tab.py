@@ -1,20 +1,21 @@
+# Work in progress
+# Not ready for production use
+# Was looking for a way to analyze lap times in GT7, with regards to sectors, best lap, etc.
+# This is a tab for the GT7 dashboard application
+
 import csv
 import os
 import logging
-import html
 from typing import List, Dict
 
 from bokeh.layouts import layout, column, row
 from bokeh.models import (
     Div,
     Button,
-    TabPanel,
     ColumnDataSource,
     DataTable,
     TableColumn,
-    NumberFormatter,
     HTMLTemplateFormatter,
-    HoverTool,
     ImportedStyleSheet,
 )
 

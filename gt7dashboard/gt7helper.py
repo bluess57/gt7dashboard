@@ -8,7 +8,6 @@ from typing import Tuple, List
 
 import pandas as pd
 from pandas import DataFrame
-from tabulate import tabulate
 
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7lapfile import LapFile
@@ -54,88 +53,88 @@ def mark_if_matches_highest_or_lowest(
     return "%0.f" % value
 
 
-def format_laps_to_table(laps: List[Lap], best_lap: float) -> str:
-    highest = [0, 0, 0, 0, 0]
-    lowest = [999999, 999999, 999999, 999999, 999999]
+# def format_laps_to_table(laps: List[Lap], best_lap: float) -> str:
+#     highest = [0, 0, 0, 0, 0]
+#     lowest = [999999, 999999, 999999, 999999, 999999]
 
-    # Display lap times
-    table = []
-    for idx, lap in enumerate(laps):
-        lap_color = 39  # normal color
-        time_diff = ""
+#     # Display lap times
+#     table = []
+#     for idx, lap in enumerate(laps):
+#         lap_color = 39  # normal color
+#         time_diff = ""
 
-        if best_lap == lap.lap_finish_time:
-            lap_color = 35  # magenta
-        elif lap.lap_finish_time < best_lap:
-            # lap_finish_time cannot be smaller than last_lap, last_lap is always the smallest.
-            # This can only mean that lap.lap_finish_time is from an earlier race on a different track
-            time_diff = "-"
-        elif best_lap > 0:
-            time_diff = seconds_to_lap_time(
-                -1 * (best_lap / 1000 - lap.lap_finish_time / 1000)
-            )
+#         if best_lap == lap.lap_finish_time:
+#             lap_color = 35  # magenta
+#         elif lap.lap_finish_time < best_lap:
+#             # lap_finish_time cannot be smaller than last_lap, last_lap is always the smallest.
+#             # This can only mean that lap.lap_finish_time is from an earlier race on a different track
+#             time_diff = "-"
+#         elif best_lap > 0:
+#             time_diff = seconds_to_lap_time(
+#                 -1 * (best_lap / 1000 - lap.lap_finish_time / 1000)
+#             )
 
-        ft_ticks = lap.full_throttle_ticks / lap.lap_ticks * 1000
-        tb_ticks = lap.throttle_and_brake_ticks / lap.lap_ticks * 1000
-        fb_ticks = lap.full_brake_ticks / lap.lap_ticks * 1000
-        nt_ticks = lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000
-        ti_ticks = lap.tyres_spinning_ticks / lap.lap_ticks * 1000
+#         ft_ticks = lap.full_throttle_ticks / lap.lap_ticks * 1000
+#         tb_ticks = lap.throttle_and_brake_ticks / lap.lap_ticks * 1000
+#         fb_ticks = lap.full_brake_ticks / lap.lap_ticks * 1000
+#         nt_ticks = lap.no_throttle_and_no_brake_ticks / lap.lap_ticks * 1000
+#         ti_ticks = lap.tyres_spinning_ticks / lap.lap_ticks * 1000
 
-        list_of_ticks = [ft_ticks, tb_ticks, fb_ticks, nt_ticks, ti_ticks]
+#         list_of_ticks = [ft_ticks, tb_ticks, fb_ticks, nt_ticks, ti_ticks]
 
-        for i, value in enumerate(list_of_ticks):
-            if list_of_ticks[i] > highest[i]:
-                highest[i] = list_of_ticks[i]
+#         for i, value in enumerate(list_of_ticks):
+#             if list_of_ticks[i] > highest[i]:
+#                 highest[i] = list_of_ticks[i]
 
-            if list_of_ticks[i] <= lowest[i]:
-                lowest[i] = list_of_ticks[i]
+#             if list_of_ticks[i] <= lowest[i]:
+#                 lowest[i] = list_of_ticks[i]
 
-        table.append(
-            [
-                # number
-                "\x1b[1;%dm%d" % (lap_color, lap.number),
-                # Timing
-                seconds_to_lap_time(lap.lap_finish_time / 1000),
-                time_diff,
-                lap.fuel_at_end,
-                lap.fuel_consumed,
-                # Ticks
-                ft_ticks,
-                tb_ticks,
-                fb_ticks,
-                nt_ticks,
-                ti_ticks,
-            ]
-        )
+#         table.append(
+#             [
+#                 # number
+#                 "\x1b[1;%dm%d" % (lap_color, lap.number),
+#                 # Timing
+#                 seconds_to_lap_time(lap.lap_finish_time / 1000),
+#                 time_diff,
+#                 lap.fuel_at_end,
+#                 lap.fuel_consumed,
+#                 # Ticks
+#                 ft_ticks,
+#                 tb_ticks,
+#                 fb_ticks,
+#                 nt_ticks,
+#                 ti_ticks,
+#             ]
+#         )
 
-    for i, entry in enumerate(table):
-        for k, val in enumerate(table[i]):
-            if k == 5:
-                table[i][k] = mark_if_matches_highest_or_lowest(
-                    table[i][k], highest, lowest, 0, high_is_best=True
-                )
-            elif k == 6:
-                table[i][k] = mark_if_matches_highest_or_lowest(
-                    table[i][k], highest, lowest, 1, high_is_best=False
-                )
-            elif k == 7:
-                table[i][k] = mark_if_matches_highest_or_lowest(
-                    table[i][k], highest, lowest, 2, high_is_best=True
-                )
-            elif k == 8:
-                table[i][k] = mark_if_matches_highest_or_lowest(
-                    table[i][k], highest, lowest, 3, high_is_best=False
-                )
-            elif k == 9:
-                table[i][k] = mark_if_matches_highest_or_lowest(
-                    table[i][k], highest, lowest, 4, high_is_best=False
-                )
+#     for i, entry in enumerate(table):
+#         for k, val in enumerate(table[i]):
+#             if k == 5:
+#                 table[i][k] = mark_if_matches_highest_or_lowest(
+#                     table[i][k], highest, lowest, 0, high_is_best=True
+#                 )
+#             elif k == 6:
+#                 table[i][k] = mark_if_matches_highest_or_lowest(
+#                     table[i][k], highest, lowest, 1, high_is_best=False
+#                 )
+#             elif k == 7:
+#                 table[i][k] = mark_if_matches_highest_or_lowest(
+#                     table[i][k], highest, lowest, 2, high_is_best=True
+#                 )
+#             elif k == 8:
+#                 table[i][k] = mark_if_matches_highest_or_lowest(
+#                     table[i][k], highest, lowest, 3, high_is_best=False
+#                 )
+#             elif k == 9:
+#                 table[i][k] = mark_if_matches_highest_or_lowest(
+#                     table[i][k], highest, lowest, 4, high_is_best=False
+#                 )
 
-    return tabulate(
-        table,
-        headers=["#", "Time", "Diff", "Fuel", "FuCo", "fT", "T+B", "fB", "0T", "Spin"],
-        floatfmt=".0f",
-    )
+#     return tabulate(
+#         table,
+#         headers=["#", "Time", "Diff", "Fuel", "FuCo", "fT", "T+B", "fB", "0T", "Spin"],
+#         floatfmt=".0f",
+#     )
 
 
 def seconds_to_lap_time(seconds):

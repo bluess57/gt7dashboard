@@ -19,7 +19,7 @@ class TabManager:
         self.race_tab = RaceTab(app_instance)
         self.config_tab = ConfigTab(app_instance)
         self.fuel_tab = FuelTab(app_instance)
-        self.laptime_table_tab = LapTimeAnalysisTab(app_instance)
+        # TODO: some time in future self.laptime_table_tab = LapTimeAnalysisTab(app_instance)
         self.racetime_datatable_tab = RaceTimeDataTableTab(app_instance)
 
     def create_tabs(self):
@@ -28,7 +28,7 @@ class TabManager:
             self.race_tab.get_tab_panel(),
             self.race_lines_tab.get_tab_panel(),
             self.racetime_datatable_tab.get_tab_panel(),
-            self.laptime_table_tab.get_tab_panel(),
+            # TODO:some time in future self.laptime_table_tab.get_tab_panel(),
             self.fuel_tab.get_tab_panel(),
             self.config_tab.get_tab_panel(),
         ]

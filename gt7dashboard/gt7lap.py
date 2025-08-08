@@ -1,9 +1,11 @@
+import math
 import logging
 import pandas as pd
 from scipy.signal import find_peaks
 from datetime import datetime
 from typing import List
 from pandas import DataFrame
+import numpy as np
 
 RACE_LINE_BRAKING_MODE = "RACE_LINE_BRAKING_MODE"
 RACE_LINE_THROTTLE_MODE = "RACE_LINE_THROTTLE_MODE"
@@ -251,6 +253,63 @@ class Lap:
         }
 
         return data
+
+    def calculate_total_distance_traveled(self) -> float:
+        """Calculate cumulative distance between 3D positions"""
+        if len(self.data_position_x) < 2:
+            return 0.0
+
+        total_distance = 0.0
+
+        # Cache references to avoid attribute lookups
+        pos_x = self.data_position_x
+        pos_y = self.data_position_y
+        pos_z = self.data_position_z
+
+        # Vectorized approach using list comprehension and zip
+        for i in range(1, len(pos_x)):
+            # Skip if any coordinate is None
+            if None in (
+                pos_x[i],
+                pos_y[i],
+                pos_z[i],
+                pos_x[i - 1],
+                pos_y[i - 1],
+                pos_z[i - 1],
+            ):
+                continue
+
+            dx = pos_x[i] - pos_x[i - 1]
+            dy = pos_y[i] - pos_y[i - 1]
+            dz = pos_z[i] - pos_z[i - 1]
+
+            total_distance += math.sqrt(dx * dx + dy * dy + dz * dz)
+
+        return total_distance
+
+    def calculate_total_distance_traveled_numpy(self) -> float:
+        """Calculate cumulative distance using NumPy for maximum performance"""
+        if len(self.data_position_x) < 2:
+            return 0.0
+
+        # Convert to numpy arrays (handles None values automatically)
+        try:
+            pos_x = np.array(self.data_position_x, dtype=float)
+            pos_y = np.array(self.data_position_y, dtype=float)
+            pos_z = np.array(self.data_position_z, dtype=float)
+
+            # Calculate differences
+            dx = np.diff(pos_x)
+            dy = np.diff(pos_y)
+            dz = np.diff(pos_z)
+
+            # Calculate distances and sum (ignoring NaN values)
+            distances = np.sqrt(dx * dx + dy * dy + dz * dz)
+            return float(np.nansum(distances))
+
+        except (ValueError, TypeError):
+            # Fallback to optimized pure Python version
+            return self.calculate_total_distance_traveled()
 
     @staticmethod
     def calculate_time_diff_by_distance(

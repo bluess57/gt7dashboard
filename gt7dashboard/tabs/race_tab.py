@@ -12,8 +12,6 @@ from bokeh.models import (
     CheckboxGroup,
     ColumnDataSource,
     Paragraph,
-    TabPanel,
-    Tooltip,
     ImportedStyleSheet,
 )
 
@@ -120,12 +118,7 @@ class RaceTab(GT7Tab):
 
         # Create buttons
         self.manual_log_button = Button(
-            label="Log Lap Now",
-            width=150,
-            button_type="primary",
-            html_attributes={
-                "title": "Immediately add the lap data to the list of laps"
-            },
+            label="Log Lap Now", width=150, button_type="primary"
         )
 
         self.header_line = Div(
@@ -530,6 +523,8 @@ class RaceTab(GT7Tab):
             # Handle case when no laps exist
             self.update_header_line(None, None)
             self.speed_peak_valley_datatable.update_speed_peak_valley_data(None, None)
+
+        self.app.tab_manager.race_lines_tab.update_race_lines(laps, reference_lap)
 
     def create_tyre_temp_display(self):
         """Create a display for tyre temperatures."""
