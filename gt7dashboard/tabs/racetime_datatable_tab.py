@@ -35,7 +35,7 @@ class RaceTimeDataTableTab(GT7Tab):
         A lap was added to session so add to the data table
         """
         logger.debug("Add a lap to RaceTimeDataTable")
-        self.race_time_datatable.add_lap(lap)
+        self.race_time_datatable.add_lap(lap.lap_to_dict())
 
     def show_laps(self, laps):
         """

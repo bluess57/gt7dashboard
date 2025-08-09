@@ -14,6 +14,7 @@ from gt7dashboard.gt7lapstorage import (
 )
 
 from gt7dashboard.gt7helper import bokeh_tuple_for_list_of_lapfiles
+from gt7dashboard.gt7communication import GT7Communication
 
 logger = logging.getLogger("config_tab")
 logger.setLevel(logging.DEBUG)
@@ -184,8 +185,8 @@ class ConfigTab(GT7Tab):
 
         # Update connection with new IP
         self.app.gt7comm.stop()
-        self.app.gt7comm.playstation_ip = new_ip
-        self.app.gt7comm.restart()
+        self.app.gt7comm = GT7Communication(new_ip)
+        self.app.gt7comm.start()
 
     def load_path_button_handler(self, event):
         """Handle loading laps from specified path"""

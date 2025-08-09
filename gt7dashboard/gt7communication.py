@@ -5,6 +5,7 @@ import struct
 import time
 import copy
 from threading import Thread
+from bokeh.io import curdoc
 
 from gt7dashboard.gt7helper import seconds_to_lap_time
 from gt7dashboard.gt7lap import Lap
@@ -49,10 +50,11 @@ class GT7Communication(Thread):
         self._on_connected_callback = callback
 
     def _check_connection_event(self):
+        logger.debug("Checking connection event")
         connected = self.is_connected()
         if connected and not self._was_connected:
             if self._on_connected_callback:
-                self._on_connected_callback()
+                curdoc().add_next_tick_callback(self._on_connected_callback)
         self._was_connected = connected
 
     def stop(self):
@@ -125,6 +127,11 @@ class GT7Communication(Thread):
                             self._log_data(self.last_data)
 
                             if package_nr > 100:
+                                logger.debug(
+                                "Received data from %s:%d, package_id=%d, package_nr=%d"
+                                % (address[0], address[1], package_id, package_nr)
+                                )
+
                                 self._send_hb(s)
                                 package_nr = 0
                                 self._check_connection_event()
@@ -168,11 +175,12 @@ class GT7Communication(Thread):
         self._on_heartbeat_callback = callback
 
     def _send_hb(self, s):
+        logger.debug("Sending heartbeat to %s:%d", self.playstation_ip, self.send_port)
         send_data = "A"
         s.sendto(send_data.encode("utf-8"), (self.playstation_ip, self.send_port))
         # Raise the heartbeat event for consumers
         if self._on_heartbeat_callback:
-            self._on_heartbeat_callback()
+           curdoc().add_next_tick_callback(self._on_heartbeat_callback)
 
     def get_last_data(self) -> GT7Data:
         timeout = time.time() + 5  # 5 seconds timeout
@@ -285,6 +293,7 @@ class GT7Communication(Thread):
         """
         Finishes a lap with info we only know after crossing the line after each lap
         """
+        logger.debug("Finishing lap %d with manual=%s", self.last_data.current_lap, manual)
 
         if manual:
             # Manual laps have no time assigned, so take current live time as lap finish time.
@@ -327,7 +336,7 @@ class GT7Communication(Thread):
 
             # Make a copy of this lap and call the callback function if set
             if self.lap_callback_function:
-                self.lap_callback_function(copy.deepcopy(self.current_lap))
+               curdoc().add_next_tick_callback(self.lap_callback_function(copy.deepcopy(self.current_lap)))
 
         # Reset current lap with an empty one
         self.current_lap = Lap()
@@ -341,7 +350,7 @@ class GT7Communication(Thread):
         self.session.reset()
         self.last_data = GT7Data(None)
         if self._on_reset_callback:
-            self._on_reset_callback
+           curdoc().add_next_tick_callback(self._on_reset_callback)
 
     def set_reset_callback(self, new_reset_callback):
         self._on_reset_callback = new_reset_callback
