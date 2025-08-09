@@ -5,7 +5,6 @@ import struct
 import time
 import copy
 from threading import Thread
-from bokeh.io import curdoc
 
 from gt7dashboard.gt7helper import seconds_to_lap_time
 from gt7dashboard.gt7lap import Lap
@@ -140,7 +139,7 @@ class GT7Communication(Thread):
             except Exception as e:
                 # Handler for general socket exceptions
                 logger.error(
-                    "Error while connecting to %s:%d: %s"
+                    "GT7Communication Error while connecting to %s:%d: %s"
                     % (self.playstation_ip, self.send_port, e)
                 )
                 s.close()
@@ -279,7 +278,6 @@ class GT7Communication(Thread):
         )
 
         self.current_lap.data_time.append(self.current_lap.lap_live_time)
-
         self.current_lap.car_id = data.car_id
 
     def finish_lap(self, manual=False):
@@ -329,11 +327,12 @@ class GT7Communication(Thread):
 
             # Make a copy of this lap and call the callback function if set
             if self.lap_callback_function:
-               curdoc().add_next_tick_callback(self.lap_callback_function(copy.deepcopy(self.current_lap)))
+               self.lap_callback_function(copy.deepcopy(self.current_lap))
 
         # Reset current lap with an empty one
         self.current_lap = Lap()
         self.current_lap.fuel_at_start = self.last_data.current_fuel
+        logger.debug("Lap finished")
 
     def reset(self):
         """
@@ -343,7 +342,7 @@ class GT7Communication(Thread):
         self.session.reset()
         self.last_data = GT7Data(None)
         if self._on_reset_callback:
-           curdoc().add_next_tick_callback(self._on_reset_callback)
+           self._on_reset_callback()
 
     def set_reset_callback(self, new_reset_callback):
         self._on_reset_callback = new_reset_callback

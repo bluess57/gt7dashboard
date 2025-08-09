@@ -25,6 +25,7 @@ class GT7Application:
         self.tabs = self.tab_manager.create_tabs()
 
     def setup_document(self, doc):
+        self.doc = doc
         doc.theme = "carbon"
 
         css_path = "gt7dashboard/static/css/styles.css"

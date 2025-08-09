@@ -526,29 +526,35 @@ class RaceTab(GT7Tab):
 
         self.app.tab_manager.race_lines_tab.update_race_lines(laps, reference_lap)
 
-    def create_tyre_temp_display(self):
-        """Create a display for tyre temperatures."""
-        self.tyre_temp_FL = Div(text="FL: -- °C", width=80)
-        self.tyre_temp_FR = Div(text="FR: -- °C", width=80)
-        self.tyre_temp_RL = Div(text="RL: -- °C", width=80)
-        self.tyre_temp_RR = Div(text="RR: -- °C", width=80)
-        return row(
-            Div(text="<b>Tyre Temps:</b>", width=100),
-            self.tyre_temp_FL,
-            self.tyre_temp_FR,
-            self.tyre_temp_RL,
-            self.tyre_temp_RR,
-            css_classes=["tyre-temp-row"],
-        )
+    # TODO: Uncomment and implement tyre temperature display 
+    # def create_tyre_temp_display(self):
+    #     """Create a display for tyre temperatures."""
+    #     self.tyre_temp_FL = Div(text="FL: -- °C", width=80)
+    #     self.tyre_temp_FR = Div(text="FR: -- °C", width=80)
+    #     self.tyre_temp_RL = Div(text="RL: -- °C", width=80)
+    #     self.tyre_temp_RR = Div(text="RR: -- °C", width=80)
+    #     return row(
+    #         Div(text="<b>Tyre Temps:</b>", width=100),
+    #         self.tyre_temp_FL,
+    #         self.tyre_temp_FR,
+    #         self.tyre_temp_RL,
+    #         self.tyre_temp_RR,
+    #         css_classes=["tyre-temp-row"],
+    #     )
 
-    def update_tyre_temp_display(self, lap):
-        """Update the tyre temperature display with values from the finished lap."""
-        self.tyre_temp_FL.text = f"FL: {getattr(lap, 'tyre_temp_FL', '--'):.1f} °C"
-        self.tyre_temp_FR.text = f"FR: {getattr(lap, 'tyre_temp_FR', '--'):.1f} °C"
-        self.tyre_temp_RL.text = f"RL: {getattr(lap, 'tyre_temp_RL', '--'):.1f} °C"
-        self.tyre_temp_RR.text = f"RR: {getattr(lap, 'tyre_temp_RR', '--'):.1f} °C"
+    # def update_tyre_temp_display(self, lap):
+    #     """Update the tyre temperature display with values from the finished lap."""
+    #     self.tyre_temp_FL.text = f"FL: {getattr(lap, 'tyre_temp_FL', '--'):.1f} °C"
+    #     self.tyre_temp_FR.text = f"FR: {getattr(lap, 'tyre_temp_FR', '--'):.1f} °C"
+    #     self.tyre_temp_RL.text = f"RL: {getattr(lap, 'tyre_temp_RL', '--'):.1f} °C"
+    #     self.tyre_temp_RR.text = f"RR: {getattr(lap, 'tyre_temp_RR', '--'):.1f} °C"
 
-    def on_lap_finished(self, lap):
-        self.update_tyre_temp_display(lap)
-        self.update_lap_change(lap)
-        self.update_reference_lap_select(self.app.gt7comm.session.get_laps())
+    def on_lap_finished(self, lap):        
+        logger.debug("RaceTab Lap finished: %s" % lap.format())
+        def update_ui():
+            """Update the UI after a lap is finished"""
+            self.update_lap_change()
+            self.update_reference_lap_select(self.app.gt7comm.session.get_laps())
+
+        # Update the speed peak and valley diagram
+        self.app.doc.add_next_tick_callback(update_ui)

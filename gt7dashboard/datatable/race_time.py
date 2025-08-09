@@ -41,21 +41,22 @@ class RaceTimeDataTable(object):
             stylesheets=[dtstylesheet],
         )
 
-    def add_lap(self, lap):
-        """
-        Add a lap into the datatable.
-        """
-        # Convert lap to dict using gt7helper (assuming this helper exists)
-        lap_dict = lap.lap_to_dict()
-        data = self.lap_times_source.data
+    def add_lap(self, lap, doc=None):
+        def do_add():
+            logger.debug("RaceTimeDataTable Adding lap: %s", lap)
+            lap_dict = lap.lap_to_dict()
+            data = self.lap_times_source.data
+            for key in data.keys():
+                data[key] = np.append(data[key], lap_dict.get(key, None))
+            self.lap_times_source.data = dict(data)
+            self.dt_lap_times.source = self.lap_times_source
+            logger.info("Finished Lap added")
 
-        # Append each field value to the corresponding column
-        for key in data.keys():
-            data[key] = np.append(data[key], lap_dict.get(key, None))
-
-        self.lap_times_source.data = data
-        self.dt_lap_times.source = self.lap_times_source
-        logger.info("Lap added: %s", lap_dict)
+        if doc is not None:
+            doc.add_next_tick_callback(do_add)
+        else:
+            logger.debug("No document provided, adding lap immediately.")
+            do_add()
 
     def show_laps(self, laps: List[Lap]):
         logger.info("show_laps")
