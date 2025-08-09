@@ -6,12 +6,11 @@ from bokeh.layouts import column, row
 
 from gt7dashboard import gt7communication
 from gt7dashboard.tab_manager import TabManager
-from gt7dashboard.gt7lapstorage import load_laps_from_pickle
 
 
 # Set up logging
 logger = logging.getLogger("main")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)  # Change INFO to DEBUG
 
 
 # Create the application
@@ -21,7 +20,6 @@ class GT7Application:
         # Set up GT7 communication
         playstation_ip = os.environ.get("GT7_PLAYSTATION_IP", "255.255.255.255")
         self.gt7comm = gt7communication.GT7Communication(playstation_ip)
-        self.gt7comm.set_on_connected_callback(self.update_header)
 
         self.tab_manager = TabManager(self)
         self.tabs = self.tab_manager.create_tabs()
@@ -34,6 +32,8 @@ class GT7Application:
         doc.add_root(globalStylesheet)
 
         header = self.create_header()
+
+        self.gt7comm.set_on_connected_callback(lambda: self.update_header(doc))
 
         self.heartbeat_indicator = Div(
             text='<span id="heartbeat-dot" title="Heart beat indicator, when data is received will flash green." style="font-size:2em; color:gray;">&#10084;</span>'
@@ -57,7 +57,7 @@ class GT7Application:
         # doc.add_periodic_callback(lambda step=None: self.tab_manager.fuel_tab.update_fuel_map(step), 5000)
         # doc.add_periodic_callback(self.update_header, 5000)  # Update header every 5 seconds
 
-        self.gt7comm.set_on_heartbeat_callback(self.show_heartbeat(doc))
+        self.gt7comm.set_on_heartbeat_callback(lambda: self.show_heartbeat(doc))
 
         # Start communication with PS5
         logger.info(
@@ -79,7 +79,7 @@ class GT7Application:
 
         return self.header
 
-    def update_connection_status(self):
+    def update_connection_status(self):        
         """Generate the HTML content for the header"""
         is_connected = self.gt7comm.is_connected()
         status_color = "green" if is_connected else "red"
@@ -102,22 +102,35 @@ class GT7Application:
         </div>
         """
 
-    def update_header(self, step=None):
+    def update_header(self, doc=None, step=None):
         """Update the header with current connection status"""
-        if hasattr(self, "header"):
-            self.header.text = self.update_connection_status()
+        def do_update():
+            if hasattr(self, "header"):
+                self.header.text = self.update_connection_status()
+        if doc is not None:
+            doc.add_next_tick_callback(do_update)
+        else:
+            do_update()
 
     def show_heartbeat(self, doc):
-        def update():
-            self.heartbeat_indicator.text = '<span id="heartbeat-dot" style="font-size:2em; color:lime;">&#10084;</span>'
-            doc.add_timeout_callback(
-                lambda: self.heartbeat_indicator.update(
-                    text='<span id="heartbeat-dot" style="font-size:2em; color:gray;">&#10084;</span>'
-                ),
-                500,
-            )
-
-        doc.add_next_tick_callback(update)
+        try:
+            def update():
+                self.heartbeat_indicator.text = (
+                    '<span id="heartbeat-dot" '
+                    'title="Green: Receiving data from PlayStation. Gray: No data." '
+                    'style="font-size:2em; color:lime;">&#10084;</span>'
+                )
+                doc.add_timeout_callback(
+                    lambda: self.heartbeat_indicator.update(
+                        text='<span id="heartbeat-dot" '
+                             'title="Green: Receiving data from PlayStation. Gray: No data." '
+                             'style="font-size:2em; color:gray;">&#10084;</span>'
+                    ),
+                    500,
+                )
+            doc.add_next_tick_callback(update)
+        except Exception as e:
+            logger.exception("Exception in show_heartbeat")
 
 
 # Create and set up the application
