@@ -82,7 +82,7 @@ class GT7Communication(Thread):
                 self._check_connection_event()
                 while not self._shall_restart and self._shall_run:
                     try:
-                        data = s.recvfrom(4096)
+                        data,address = s.recvfrom(4096)
                         package_nr = package_nr + 1
                         ddata = salsa20_dec(data)
                         if (
