@@ -137,7 +137,7 @@ class RaceTab(GT7Tab):
         self.reference_lap_select = Select(value="-1", width=150)
 
         # Create checkbox for recording replays
-        self.checkbox_group = CheckboxGroup(labels=["Record Replays"], active=[1])
+        self.checkbox_group = CheckboxGroup(labels=["Record Replays"], active=[0])
 
         # Connect event handlers
         self.manual_log_button.on_click(self.log_lap_button_handler)

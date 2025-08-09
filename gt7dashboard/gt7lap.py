@@ -5,6 +5,9 @@ from scipy.signal import find_peaks
 from datetime import datetime
 from typing import List
 from pandas import DataFrame
+
+from gt7dashboard.gt7car import car_name
+
 import numpy as np
 
 RACE_LINE_BRAKING_MODE = "RACE_LINE_BRAKING_MODE"
@@ -68,6 +71,47 @@ class Lap:
 
         self.lap_start_timestamp = datetime.now()
         self.lap_end_timestamp = -1
+
+    @staticmethod
+    def seconds_to_lap_time(seconds):
+        prefix = ""
+        if seconds < 0:
+            prefix = "-"
+            seconds *= -1
+
+        minutes = seconds // 60
+        remaining = seconds % 60
+        return prefix + "{:01.0f}:{:06.3f}".format(minutes, remaining)
+
+    def pct(self, val):
+        lap_ticks = getattr(self, "lap_ticks", 1) or 1
+        return "%d" % (getattr(self, val, 0) / lap_ticks * 1000)
+
+
+    def lap_to_dict(self) -> dict:
+        """
+        Convert a Lap object to a dictionary suitable for the DataTable.
+        """
+        replay = "Y" if getattr(self, "is_replay", False) else "N"
+
+        return {
+            "number": getattr(self, "number", None),
+            "time": self.seconds_to_lap_time(getattr(self, "lap_finish_time", 0) / 1000),
+            "diff": "",
+            "timestamp": (
+                getattr(self, "lap_start_timestamp", "").strftime("%Y-%m-%d %H:%M:%S")
+                if getattr(self, "lap_start_timestamp", None)
+                else ""
+            ),
+            "replay": replay,
+            "car_name": car_name(getattr(self, "car_id", None)),
+            "fuelconsumed": "%d" % getattr(self, "fuel_consumed", 0),
+            "fullthrottle": self.pct("full_throttle_ticks"),
+            "throttleandbrake": self.pct("throttle_and_brake_ticks"),
+            "fullbrake": self.pct("full_brake_ticks"),
+            "nothrottle": self.pct("no_throttle_and_no_brake_ticks"),
+            "tyrespinning": self.pct("tyres_spinning_ticks"),
+        }
 
     def __str__(self):
         return "\n %s, %2d, %1.f, %4d, %4d, %4d" % (

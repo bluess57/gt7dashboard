@@ -43,7 +43,7 @@ class GT7Communication(Thread):
 
         # This is used to record race data in any case. This will override the "in_race" flag.
         # When recording data. Useful when recording replays.
-        self.always_record_data = False
+        self.always_record_data = True
 
     def set_on_connected_callback(self, callback):
         """Register a callback to be called when connection is established."""

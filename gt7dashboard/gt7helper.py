@@ -270,30 +270,7 @@ def pct(lap, val):
     return "%d" % (getattr(lap, val, 0) / lap_ticks * 1000)
 
 
-def lap_to_dict(lap: Lap) -> dict:
-    """
-    Convert a Lap object to a dictionary suitable for the DataTable.
-    """
-    replay = "Y" if getattr(lap, "is_replay", False) else "N"
 
-    return {
-        "number": getattr(lap, "number", None),
-        "time": seconds_to_lap_time(getattr(lap, "lap_finish_time", 0) / 1000),
-        "diff": "",
-        "timestamp": (
-            getattr(lap, "lap_start_timestamp", "").strftime("%Y-%m-%d %H:%M:%S")
-            if getattr(lap, "lap_start_timestamp", None)
-            else ""
-        ),
-        "replay": replay,
-        "car_name": car_name(getattr(lap, "car_id", None)),
-        "fuelconsumed": "%d" % getattr(lap, "fuel_consumed", 0),
-        "fullthrottle": pct(lap, "full_throttle_ticks"),
-        "throttleandbrake": pct(lap, "throttle_and_brake_ticks"),
-        "fullbrake": pct(lap, "full_brake_ticks"),
-        "nothrottle": pct(lap, "no_throttle_and_no_brake_ticks"),
-        "tyrespinning": pct(lap, "tyres_spinning_ticks"),
-    }
 
 
 def pd_data_frame_from_lap(laps: List[Lap], best_lap_time: int) -> pd.DataFrame:

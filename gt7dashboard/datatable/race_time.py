@@ -46,7 +46,7 @@ class RaceTimeDataTable(object):
         Add a lap into the datatable.
         """
         # Convert lap to dict using gt7helper (assuming this helper exists)
-        lap_dict = self.lap_to_dict(lap)
+        lap_dict = lap.lap_to_dict()
         data = self.lap_times_source.data
 
         # Append each field value to the corresponding column
