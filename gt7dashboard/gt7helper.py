@@ -315,7 +315,11 @@ def pd_data_frame_from_lap(laps: List[Lap], best_lap_time: int) -> pd.DataFrame:
                 "tyrespinning": pct(lap, "tyres_spinning_ticks"),
             }
         )
-    return pd.DataFrame(rows)
+    
+    df = pd.DataFrame(rows)
+    df.reset_index(drop=True)
+
+    return df
 
 
 def bokeh_tuple_for_list_of_lapfiles(lapfiles: List[LapFile]):

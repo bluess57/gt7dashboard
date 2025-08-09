@@ -45,9 +45,18 @@ class RaceTimeDataTable(object):
         def do_add():
             logger.debug("RaceTimeDataTable Adding lap: %s", lap)
             lap_dict = lap.lap_to_dict()
+            logger.debug("lap_dict: %s", lap_dict)
+
             data = self.lap_times_source.data
             for key in data.keys():
+                if key == "index":
+                    logger.debug("Skipping 'index' key")
+                    continue
+                if lap_dict.get(key, None) == None:
+                    logger.warning("Lap data missing at key: %s", key)
+                    break
                 data[key] = np.append(data[key], lap_dict.get(key, None))
+
             self.lap_times_source.data = dict(data)
             self.dt_lap_times.source = self.lap_times_source
             logger.info("Finished Lap added")
