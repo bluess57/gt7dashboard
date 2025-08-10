@@ -99,11 +99,11 @@ class RaceLinesTab(GT7Tab):
         self.race_lines = []
         self.race_lines_data = []
 
-        tooltips = [
-            ("Lap", "@lap_name"),
-            ("Section", "@section"),
-            ("Speed", "@speed kph"),
-        ]
+        # tooltips = [
+        #     ("Lap", "@lap_name"),
+        #     ("Section", "@section"),
+        #     ("Speed", "@speed kph"),
+        # ]
 
         for i in range(number_of_figures):
             race_line_figure = figure(
@@ -114,7 +114,7 @@ class RaceLinesTab(GT7Tab):
                 width=800,
                 height=600,
                 active_drag="box_zoom",
-                tooltips=tooltips,
+                # tooltips=tooltips,
             )
 
             # Flip Y axis to match game coordinates
