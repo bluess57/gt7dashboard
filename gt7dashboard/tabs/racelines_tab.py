@@ -99,11 +99,12 @@ class RaceLinesTab(GT7Tab):
         self.race_lines = []
         self.race_lines_data = []
 
-        # tooltips = [
-        #     ("Lap", "@lap_name"),
-        #     ("Section", "@section"),
-        #     ("Speed", "@speed kph"),
-        # ]
+        tooltips = [
+            ("Lap", "@lap_name"),
+            ("Section", "@section"),
+            ("Start Speed", "@start_speed kph"),
+            ("End Speed", "@end_speed kph"),
+        ]
 
         for i in range(number_of_figures):
             race_line_figure = figure(
@@ -114,7 +115,7 @@ class RaceLinesTab(GT7Tab):
                 width=800,
                 height=600,
                 active_drag="box_zoom",
-                # tooltips=tooltips,
+                tooltips=tooltips,
             )
 
             # Flip Y axis to match game coordinates
@@ -196,7 +197,7 @@ class RaceLinesTab(GT7Tab):
         return line_data
 
     def update_race_line_data(self, lap: Lap, figure_index: int, line_index: int):
-        """Update race line data for the given lap - CORRECTED VERSION"""
+        """Update race line data for the given lap - MODIFIED VERSION"""
         if figure_index >= len(self.race_lines_data):
             logger.error(f"Figure index {figure_index} out of range")
             return
@@ -227,9 +228,14 @@ class RaceLinesTab(GT7Tab):
         braking_xs, braking_ys = [], []
         coasting_xs, coasting_ys = [], []
 
+        # Start/end speed for all segments
+        throttle_start_speed, throttle_end_speed = [], []
+        braking_start_speed, braking_end_speed = [], []
+        coasting_start_speed, coasting_end_speed = [], []
+
         # Current segment being built
         current_state = None
-        segment_x, segment_z = [], []
+        segment_x, segment_z, segment_speed = [], [], []
 
         def finalize_segment(state):
             """Add completed segment to appropriate lists"""
@@ -239,18 +245,25 @@ class RaceLinesTab(GT7Tab):
             if state == "throttle":
                 throttle_xs.append(list(segment_x))
                 throttle_ys.append(list(segment_z))
+                throttle_start_speed.append(segment_speed[0])
+                throttle_end_speed.append(segment_speed[-1])
             elif state == "braking":
                 braking_xs.append(list(segment_x))
                 braking_ys.append(list(segment_z))
+                braking_start_speed.append(segment_speed[0])
+                braking_end_speed.append(segment_speed[-1])
             elif state == "coasting":
                 coasting_xs.append(list(segment_x))
                 coasting_ys.append(list(segment_z))
+                coasting_start_speed.append(segment_speed[0])
+                coasting_end_speed.append(segment_speed[-1])
 
         # Process each data point
         for i in range(len(x_coords)):
             # Determine current driving state
             throttle_val = throttle[i] if i < len(throttle) else 0
             brake_val = brake[i] if i < len(brake) else 0
+            speed_val = speed[i] if i < len(speed) else None
 
             if throttle_val > 0 and brake_val == 0:
                 new_state = "throttle"
@@ -266,11 +279,12 @@ class RaceLinesTab(GT7Tab):
 
                 # Start new segment
                 current_state = new_state
-                segment_x, segment_z = [], []
+                segment_x, segment_z, segment_speed = [], [], []
 
             # Add point to current segment
             segment_x.append(x_coords[i])
             segment_z.append(z_coords[i])
+            segment_speed.append(speed_val)
 
         # Don't forget the last segment
         if current_state is not None:
@@ -282,6 +296,8 @@ class RaceLinesTab(GT7Tab):
             "ys": throttle_ys,
             "lap_name": [lap.title] * len(throttle_xs),
             "section": ["Throttle"] * len(throttle_xs),
+            "start_speed": throttle_start_speed,
+            "end_speed": throttle_end_speed,
         }
 
         line_data["braking_source"].data = {
@@ -289,6 +305,8 @@ class RaceLinesTab(GT7Tab):
             "ys": braking_ys,
             "lap_name": [lap.title] * len(braking_xs),
             "section": ["Braking"] * len(braking_xs),
+            "start_speed": braking_start_speed,
+            "end_speed": braking_end_speed,
         }
 
         line_data["coasting_source"].data = {
@@ -296,6 +314,8 @@ class RaceLinesTab(GT7Tab):
             "ys": coasting_ys,
             "lap_name": [lap.title] * len(coasting_xs),
             "section": ["Coasting"] * len(coasting_xs),
+            "start_speed": coasting_start_speed,
+            "end_speed": coasting_end_speed,
         }
 
         logger.info(
