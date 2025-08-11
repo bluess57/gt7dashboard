@@ -438,6 +438,11 @@ class RaceTab(GT7Tab):
             # Trigger telemetry update to refresh all diagrams
             self.telemetry_update_needed = True
             self.update_lap_change()
+            if (
+                hasattr(self.app.tab_manager, "fuel_tab")
+                and self.app.tab_manager.fuel_tab
+            ):
+                self.app.tab_manager.fuel_tab.update_fuel_map()
 
     def get_laps_sorted_by_time(self, laps):
         """Get laps sorted by lap time (fastest first)"""
@@ -696,6 +701,10 @@ class RaceTab(GT7Tab):
             """Update the UI after a lap is finished"""
             self.update_lap_change()
             self.update_reference_lap_select(self.app.gt7comm.session.get_laps())
+
+        # Update fuel tab if it exists
+        if hasattr(self.app.tab_manager, "fuel_tab") and self.app.tab_manager.fuel_tab:
+            self.app.tab_manager.fuel_tab.update_fuel_map()
 
         # Update the speed peak and valley diagram
         self.app.doc.add_next_tick_callback(update_ui)

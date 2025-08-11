@@ -58,6 +58,7 @@ class Lap:
         self.fuel_at_start = 0
         self.fuel_at_end = -1
         self.fuel_consumed = -1
+        self.fuel_capacity = 0
         # Boost
         self.data_boost = []
         # Yaw Rate

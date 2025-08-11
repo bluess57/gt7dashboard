@@ -304,6 +304,7 @@ class GT7Communication(Thread):
         self.current_lap.is_replay = self.always_record_data
         self.current_lap.is_manual = manual
 
+        self.current_lap.fuel_capacity = self.last_data.fuel_capacity
         self.current_lap.fuel_at_end = self.last_data.current_fuel
         self.current_lap.fuel_consumed = (
             self.current_lap.fuel_at_start - self.current_lap.fuel_at_end
