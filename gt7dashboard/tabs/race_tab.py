@@ -88,7 +88,6 @@ class RaceTab(GT7Tab):
             active_drag="box_zoom",
             # tooltips=race_line_tooltips,
         )
-        logger.debug(f"s_race_line {self.s_race_line.id}")
 
         # We set this to true, since maps appear flipped in the game
         # compared to their actual coordinates

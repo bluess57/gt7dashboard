@@ -121,8 +121,6 @@ class RaceLinesTab(GT7Tab):
                 tooltips=tooltips,
             )
 
-            logger.debug(f"race_line_figure {race_line_figure.id}")
-
             # Flip Y axis to match game coordinates
             race_line_figure.y_range.flipped = True
             race_line_figure.toolbar.autohide = True
