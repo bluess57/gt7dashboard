@@ -324,7 +324,8 @@ class FuelTab(GT7Tab):
         """Periodic update method for use with Bokeh's periodic callback system"""
         self.update_fuel_map()
 
-    # Also add a method to start periodic updates if your app uses them
+    # add a method to start periodic updates, not used at the moment
+    # but can be useful for future enhancements
     def start_periodic_updates(self, period=1000):
         """Start periodic updates for the fuel tab"""
         if hasattr(self.app, "doc") and self.app.doc:
