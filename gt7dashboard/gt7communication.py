@@ -21,9 +21,10 @@ logger.setLevel(get_log_level())
 class GT7Communication(Thread):
     def __init__(self, playstation_ip):
         # Thread control
-        Thread.__init__(self)
+        Thread.__init__(self, name="GT7CommunicationThread")
         self._shall_run = True
         self._shall_restart = False
+        self.exceptioncount = 0
         # True will always quit with the main process
         self.daemon = True
         self._on_heartbeat_callback = None
@@ -138,14 +139,15 @@ class GT7Communication(Thread):
                         self._send_hb(s)
 
             except Exception as e:
-                # Handler for general socket exceptions
-                logger.error(
-                    "GT7Communication Error while connecting to %s:%d: %s"
-                    % (self.playstation_ip, self.send_port, e)
-                )
-                s.close()
-                # Wait before reconnect
-                time.sleep(5)
+                if self.exceptioncount < 3:
+                    # Handler for general socket exceptions
+                    s.close()
+                    # Wait before reconnect
+                    time.sleep(5)
+                    self.exceptioncount = self.exceptioncount + 1
+                else:
+                    self._shall_run = False
+                    logger.error("GT7Communication stopping with exception count")
 
             finally:
                 if s:
