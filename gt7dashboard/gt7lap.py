@@ -73,6 +73,7 @@ class Lap:
 
         self.lap_start_timestamp = datetime.now()
         self.lap_end_timestamp = -1
+        self.estimated_top_speed = 0
 
     @staticmethod
     def seconds_to_lap_time(seconds):

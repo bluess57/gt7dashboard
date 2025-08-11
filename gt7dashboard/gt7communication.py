@@ -318,7 +318,7 @@ class GT7Communication(Thread):
         self.current_lap.number = (
             self.last_data.current_lap - 1
         )  # Is not counting the same way as the in-game timetable
-        self.current_lap.EstimatedTopSpeed = self.last_data.estimated_top_speed
+        self.current_lap.estimated_top_speed = self.last_data.estimated_top_speed
 
         self.current_lap.lap_end_timestamp = datetime.datetime.now()
 
