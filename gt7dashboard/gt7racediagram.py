@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from bokeh.layouts import layout
 from bokeh.models import ColumnDataSource, Range1d, Span
@@ -6,6 +7,10 @@ from bokeh.plotting import figure
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR
+from gt7dashboard.gt7settings import get_log_level
+
+logger = logging.getLogger("gt7racediagram")
+logger.setLevel(get_log_level())
 
 
 class RaceDiagram:
@@ -94,6 +99,7 @@ class RaceDiagram:
             tooltips=tooltips,
             active_drag="box_zoom",
         )
+
         self.f_braking = figure(
             x_range=self.f_speed.x_range,
             y_axis_label="Braking",
@@ -166,8 +172,18 @@ class RaceDiagram:
             line_dash="dashed",
             line_width=1,
         )
-        self.f_time_diff.add_layout(span_zero_time_diff)
 
+        self.source_time_diff = ColumnDataSource(data={"distance": [], "timedelta": []})
+        self.f_time_diff.line(
+            x="distance",
+            y="timedelta",
+            source=self.source_time_diff,
+            line_width=1,
+            color="cyan",
+            line_alpha=1,
+        )
+
+        self.f_time_diff.add_layout(span_zero_time_diff)
         self.f_time_diff.toolbar.autohide = True
 
         self.f_speed_variance.xaxis.visible = False
@@ -197,14 +213,19 @@ class RaceDiagram:
         self.f_yaw_rate.xaxis.visible = False
         self.f_yaw_rate.toolbar.autohide = True
 
-        self.source_time_diff = ColumnDataSource(data={"distance": [], "timedelta": []})
-        self.f_time_diff.line(
+        # Add renderers FIRST (these create the legends)
+        self.source_speed_variance = ColumnDataSource(
+            data={"distance": [], "speed_variance": []}
+        )
+
+        self.f_speed_variance.line(
             x="distance",
-            y="timedelta",
-            source=self.source_time_diff,
+            y="speed_variance",
+            source=self.source_speed_variance,
             line_width=1,
-            color="cyan",
+            color="gray",
             line_alpha=1,
+            visible=True,
         )
 
         self.source_last_lap = self.add_lap_to_race_diagram(
@@ -217,17 +238,33 @@ class RaceDiagram:
             MEDIAN_LAP_COLOR, "Median Lap", False
         )
 
+        # NOW set legend click policies AFTER renderers are added
         legend_click_policy = "hide"
 
-        self.f_speed.legend.click_policy = legend_click_policy
-        self.f_throttle.legend.click_policy = legend_click_policy
-        self.f_braking.legend.click_policy = legend_click_policy
-        self.f_coasting.legend.click_policy = legend_click_policy
-        self.f_tyres.legend.click_policy = legend_click_policy
-        self.f_gear.legend.click_policy = legend_click_policy
-        self.f_rpm.legend.click_policy = legend_click_policy
-        self.f_boost.legend.click_policy = legend_click_policy
-        self.f_yaw_rate.legend.click_policy = legend_click_policy
+        # Only set legend policy on figures that actually have legends
+        figures_with_legends = [
+            self.f_speed,
+            self.f_throttle,
+            self.f_braking,
+            self.f_coasting,
+            self.f_tyres,
+            self.f_gear,
+            self.f_rpm,
+            self.f_boost,
+            self.f_yaw_rate,
+        ]
+
+        for fig in figures_with_legends:
+            try:
+                if (
+                    hasattr(fig, "legend")
+                    and fig.legend
+                    and hasattr(fig.legend, "items")
+                    and len(fig.legend.items) > 0
+                ):
+                    fig.legend.click_policy = legend_click_policy
+            except (AttributeError, TypeError) as e:
+                print(f"Could not set legend policy: {e}")
 
         min_border_left = 60
         self.f_time_diff.min_border_left = min_border_left
@@ -242,6 +279,7 @@ class RaceDiagram:
         self.f_boost.min_border_left = min_border_left
         self.f_yaw_rate.min_border_left = min_border_left
 
+        # Create layout last
         self.layout = layout(
             self.f_time_diff,
             self.f_speed,
@@ -256,19 +294,8 @@ class RaceDiagram:
             self.f_boost,
         )
 
-        self.source_speed_variance = ColumnDataSource(
-            data={"distance": [], "speed_variance": []}
-        )
-
-        self.f_speed_variance.line(
-            x="distance",
-            y="speed_variance",
-            source=self.source_speed_variance,
-            line_width=1,
-            color="gray",
-            line_alpha=1,
-            visible=True,
-        )
+        # Debug call at the end to identify missing renderers
+        # self.debug_renderer_count()
 
     def add_additional_lap_to_race_diagram(
         self, color: str, lap: Lap, visible: bool = True
@@ -409,6 +436,7 @@ class RaceDiagram:
         return self.layout
 
     def delete_all_additional_laps(self):
+        logger.debug("delete all additional laps")
         self.sources_additional_laps = []
         for i, _ in enumerate(self.f_speed.renderers):
             if i >= self.number_of_default_laps:
@@ -426,3 +454,28 @@ class RaceDiagram:
                 self.f_tyres.legend.items.pop(i)
                 self.f_yaw_rate.legend.items.pop(i)
                 self.f_boost.legend.items.pop(i)
+
+    def debug_renderer_count(self):
+        """Debug method to check renderer counts after initialization"""
+        figures = [
+            ("f_speed", self.f_speed),
+            ("f_speed_variance", self.f_speed_variance),
+            ("f_time_diff", self.f_time_diff),
+            ("f_throttle", self.f_throttle),
+            ("f_braking", self.f_braking),
+            ("f_coasting", self.f_coasting),
+            ("f_tyres", self.f_tyres),
+            ("f_gear", self.f_gear),
+            ("f_rpm", self.f_rpm),
+            ("f_boost", self.f_boost),
+            ("f_yaw_rate", self.f_yaw_rate),
+        ]
+
+        print("=== Renderer Count Debug ===")
+        for name, fig in figures:
+            renderer_count = len(fig.renderers)
+            print(f"{name}: {renderer_count} renderers")
+            if renderer_count == 0:
+                print(f"  ⚠️  {name} HAS NO RENDERERS!")
+
+        return True

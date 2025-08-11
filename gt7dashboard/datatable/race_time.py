@@ -3,10 +3,11 @@ from typing import List
 from bokeh.models import ColumnDataSource, TableColumn, DataTable, ImportedStyleSheet
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
+from gt7dashboard.gt7settings import get_log_level
 import numpy as np
 
 logger = logging.getLogger("RaceTimeDataTable")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(get_log_level())
 
 
 class RaceTimeDataTable(object):

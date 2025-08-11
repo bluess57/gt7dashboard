@@ -56,11 +56,12 @@ from gt7dashboard.datatable.deviance_laps import deviance_laps_datatable
 from gt7dashboard.datatable.speed_peak_valley import SpeedPeakValleyDataTable
 from .GT7Tab import GT7Tab
 from gt7dashboard.gt7help import get_help_div
+from gt7dashboard.gt7settings import get_log_level
 
 # Use LAST_LAP_COLOR wherever needed
 
 logger = logging.getLogger("race_tab")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(get_log_level())
 
 
 class RaceTab(GT7Tab):
@@ -85,6 +86,8 @@ class RaceTab(GT7Tab):
             active_drag="box_zoom",
             tooltips=race_line_tooltips,
         )
+        logger.debug(f"s_race_line {self.s_race_line.id}")
+
         # We set this to true, since maps appear flipped in the game
         # compared to their actual coordinates
         self.s_race_line.y_range.flipped = True
@@ -526,7 +529,7 @@ class RaceTab(GT7Tab):
 
         self.app.tab_manager.race_lines_tab.update_race_lines(laps, reference_lap)
 
-    # TODO: Uncomment and implement tyre temperature display 
+    # TODO: Uncomment and implement tyre temperature display
     # def create_tyre_temp_display(self):
     #     """Create a display for tyre temperatures."""
     #     self.tyre_temp_FL = Div(text="FL: -- °C", width=80)
@@ -549,8 +552,9 @@ class RaceTab(GT7Tab):
     #     self.tyre_temp_RL.text = f"RL: {getattr(lap, 'tyre_temp_RL', '--'):.1f} °C"
     #     self.tyre_temp_RR.text = f"RR: {getattr(lap, 'tyre_temp_RR', '--'):.1f} °C"
 
-    def on_lap_finished(self, lap):        
+    def on_lap_finished(self, lap):
         logger.debug("RaceTab Lap finished: %s" % lap.format())
+
         def update_ui():
             """Update the UI after a lap is finished"""
             self.update_lap_change()

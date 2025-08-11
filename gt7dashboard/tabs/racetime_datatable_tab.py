@@ -4,9 +4,10 @@ from bokeh.layouts import column, row
 from bokeh.plotting import curdoc
 from gt7dashboard.datatable.race_time import RaceTimeDataTable
 from .GT7Tab import GT7Tab
+from gt7dashboard.gt7settings import get_log_level
 
 logger = logging.getLogger("racetime_datatable_tab")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(get_log_level())
 
 
 class RaceTimeDataTableTab(GT7Tab):
@@ -36,7 +37,7 @@ class RaceTimeDataTableTab(GT7Tab):
         A lap was added to session so add to the data table
         """
         logger.debug("RaceTimeDataTableTab: Add a lap to RaceTimeDataTable")
-        self.race_time_datatable.add_lap(lap,self.app.doc)
+        self.race_time_datatable.add_lap(lap, self.app.doc)
 
     def show_laps(self, laps):
         """

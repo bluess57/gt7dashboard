@@ -7,10 +7,11 @@ from bokeh.layouts import column, row
 from gt7dashboard import gt7communication
 from gt7dashboard.tab_manager import TabManager
 
+from gt7dashboard.gt7settings import GT7Settings, get_log_level
 
 # Set up logging
 logger = logging.getLogger("main")
-logger.setLevel(logging.DEBUG)  # Change INFO to DEBUG
+logger.setLevel(get_log_level())
 
 
 # Create the application
@@ -80,7 +81,7 @@ class GT7Application:
 
         return self.header
 
-    def update_connection_status(self):        
+    def update_connection_status(self):
         """Generate the HTML content for the header"""
         is_connected = self.gt7comm.is_connected()
         status_color = "green" if is_connected else "red"
@@ -105,9 +106,11 @@ class GT7Application:
 
     def update_header(self, doc=None, step=None):
         """Update the header with current connection status"""
+
         def do_update():
             if hasattr(self, "header"):
                 self.header.text = self.update_connection_status()
+
         if doc is not None:
             doc.add_next_tick_callback(do_update)
         else:
@@ -115,6 +118,7 @@ class GT7Application:
 
     def show_heartbeat(self, doc):
         try:
+
             def update():
                 self.heartbeat_indicator.text = (
                     '<span id="heartbeat-dot" '
@@ -124,11 +128,12 @@ class GT7Application:
                 doc.add_timeout_callback(
                     lambda: self.heartbeat_indicator.update(
                         text='<span id="heartbeat-dot" '
-                             'title="Green: Receiving data from PlayStation. Gray: No data." '
-                             'style="font-size:2em; color:gray;">&#10084;</span>'
+                        'title="Green: Receiving data from PlayStation. Gray: No data." '
+                        'style="font-size:2em; color:gray;">&#10084;</span>'
                     ),
                     500,
                 )
+
             doc.add_next_tick_callback(update)
         except Exception as e:
             logger.exception("Exception in show_heartbeat")

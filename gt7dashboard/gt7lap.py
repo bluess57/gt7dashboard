@@ -7,6 +7,7 @@ from typing import List
 from pandas import DataFrame
 
 from gt7dashboard.gt7car import car_name
+from .gt7settings import get_log_level
 
 import numpy as np
 
@@ -16,7 +17,7 @@ RACE_LINE_COASTING_MODE = "RACE_LINE_COASTING_MODE"
 
 # Set up logging
 logger = logging.getLogger("gt7lap.py")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(get_log_level())
 
 
 class Lap:
@@ -87,7 +88,6 @@ class Lap:
         lap_ticks = getattr(self, "lap_ticks", 1) or 1
         return "%d" % (getattr(self, val, 0) / lap_ticks * 1000)
 
-
     def lap_to_dict(self) -> dict:
         """
         Convert a Lap object to a dictionary suitable for the DataTable.
@@ -96,7 +96,9 @@ class Lap:
 
         return {
             "number": getattr(self, "number", None),
-            "time": self.seconds_to_lap_time(getattr(self, "lap_finish_time", 0) / 1000),
+            "time": self.seconds_to_lap_time(
+                getattr(self, "lap_finish_time", 0) / 1000
+            ),
             "diff": "",
             "timestamp": (
                 getattr(self, "lap_start_timestamp", "").strftime("%Y-%m-%d %H:%M:%S")

@@ -21,9 +21,12 @@ from gt7dashboard.gt7diagrams import (
     get_throttle_braking_race_line_diagram,
     add_annotations_to_race_line,
 )
+from gt7dashboard.gt7settings import (
+    get_log_level,
+)
 
 logger = logging.getLogger("racelines_tab")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(get_log_level())  # This will now work correctly
 
 
 class RaceLinesTab(GT7Tab):
@@ -118,9 +121,22 @@ class RaceLinesTab(GT7Tab):
                 tooltips=tooltips,
             )
 
+            logger.debug(f"race_line_figure {race_line_figure.id}")
+
             # Flip Y axis to match game coordinates
             race_line_figure.y_range.flipped = True
             race_line_figure.toolbar.autohide = True
+
+            # ADD A PLACEHOLDER RENDERER TO PREVENT WARNING
+            # This creates an invisible line that prevents the MISSING_RENDERERS warning
+            placeholder_source = ColumnDataSource(data={"x": [], "y": []})
+            placeholder_line = race_line_figure.line(
+                x="x",
+                y="y",
+                source=placeholder_source,
+                line_alpha=0,  # Make it invisible
+                line_width=0,  # Make it invisible
+            )
 
             self.race_lines.append(race_line_figure)
 

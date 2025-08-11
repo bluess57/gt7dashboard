@@ -1,10 +1,8 @@
 from bokeh.models import Tabs
-from bokeh.plotting import figure
 from .tabs.racelines_tab import RaceLinesTab
 from .tabs.race_tab import RaceTab
 from .tabs.config_tab import ConfigTab
 from .tabs.fuel_tab import FuelTab
-from .tabs.laptime_analysis_tab import LapTimeAnalysisTab
 from .tabs.racetime_datatable_tab import RaceTimeDataTableTab
 
 

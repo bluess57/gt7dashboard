@@ -15,9 +15,10 @@ from gt7dashboard.gt7lapstorage import (
 
 from gt7dashboard.gt7helper import bokeh_tuple_for_list_of_lapfiles
 from gt7dashboard.gt7communication import GT7Communication
+from gt7dashboard.gt7settings import get_log_level
 
 logger = logging.getLogger("config_tab")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(get_log_level())
 
 
 class ConfigTab(GT7Tab):

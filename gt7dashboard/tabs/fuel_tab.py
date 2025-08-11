@@ -4,9 +4,10 @@ from bokeh.models import Div, TabPanel
 from bokeh.driving import linear
 from .GT7Tab import GT7Tab
 from gt7dashboard import gt7diagrams
+from gt7dashboard.gt7settings import get_log_level
 
 logger = logging.getLogger("fuel_tab")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(get_log_level())
 
 
 class FuelTab(GT7Tab):
