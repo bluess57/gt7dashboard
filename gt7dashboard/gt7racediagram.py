@@ -15,6 +15,8 @@ logger.setLevel(get_log_level())
 
 class RaceDiagram:
     def __init__(self, width=400):
+        self.selected_lap_source = None
+        self.selected_lap_lines = []
         self.speed_lines = []
         self.braking_lines = []
         self.coasting_lines = []
@@ -479,3 +481,73 @@ class RaceDiagram:
                 print(f"  ⚠️  {name} HAS NO RENDERERS!")
 
         return True
+
+    def set_selected_lap(self, lap, color="orange", legend="Selected Lap"):
+        """Set a single selected lap, removing any previous selection"""
+        # Remove previous selected lap if it exists
+        self.clear_selected_lap()
+
+        # Add the new selected lap
+        self.selected_lap_source = self.add_lap_to_race_diagram(
+            color=color,
+            legend=legend,
+            visible=True,
+        )
+
+        # Update with lap data
+        if self.selected_lap_source and lap:
+            lap_data = lap.get_data_dict()
+            self.selected_lap_source.data = lap_data
+
+            # Store reference to the selected lap lines for easy removal
+            self.selected_lap_lines = [
+                self.speed_lines[-1],
+                self.throttle_lines[-1],
+                self.braking_lines[-1],
+                self.coasting_lines[-1],
+                self.tyres_lines[-1],
+                self.gears_lines[-1],
+                self.rpm_lines[-1],
+                self.boost_lines[-1],
+                self.yaw_rate_lines[-1],
+            ]
+
+            logger.debug(f"Set selected lap: {legend}")
+
+    def clear_selected_lap(self):
+        """Remove the currently selected lap from all diagrams"""
+        if self.selected_lap_lines:
+            figures_and_lines = [
+                (self.f_speed, self.speed_lines),
+                (self.f_throttle, self.throttle_lines),
+                (self.f_braking, self.braking_lines),
+                (self.f_coasting, self.coasting_lines),
+                (self.f_tyres, self.tyres_lines),
+                (self.f_gear, self.gears_lines),
+                (self.f_rpm, self.rpm_lines),
+                (self.f_boost, self.boost_lines),
+                (self.f_yaw_rate, self.yaw_rate_lines),
+            ]
+
+            # Remove selected lap lines from each figure
+            for figure, line_list in figures_and_lines:
+                for line in self.selected_lap_lines:
+                    if line in line_list:
+                        line_list.remove(line)
+                    if line in figure.renderers:
+                        figure.renderers.remove(line)
+
+            # Clear legend items for selected lap
+            for figure, _ in figures_and_lines:
+                if hasattr(figure, "legend") and figure.legend and figure.legend.items:
+                    # Remove legend items that match our selected lap
+                    figure.legend.items = [
+                        item
+                        for item in figure.legend.items
+                        if not item.label.value.startswith("Selected:")
+                    ]
+
+            self.selected_lap_lines = []
+            self.selected_lap_source = None
+
+            logger.debug("Cleared selected lap from diagrams")

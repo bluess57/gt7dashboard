@@ -71,6 +71,7 @@ class RaceTab(GT7Tab):
         """Initialize the race telemetry tab"""
         super().__init__("Get Faster")
         self.app = app_instance
+        self.selected_lap_index = None
 
         # Create race line figure
         race_line_tooltips = [("index", "$index"), ("Brakepoint", "")]
@@ -179,7 +180,7 @@ class RaceTab(GT7Tab):
         """Connect callbacks after all tabs are initialized"""
         if hasattr(self.app.tab_manager, "racetime_datatable_tab"):
             self.app.tab_manager.racetime_datatable_tab.race_time_datatable.lap_times_source.selected.on_change(
-                "indices", self.table_row_selection_callback
+                "indices", self.on_lap_selection_change
             )
         else:
             logger.warning(
@@ -399,29 +400,34 @@ class RaceTab(GT7Tab):
         self.telemetry_update_needed = True
         self.update_lap_change()
 
-    def table_row_selection_callback(self, attrname, old, new):
-        """Handle selecting rows in the lap times table"""
-        selectionIndex = (
-            self.app.tab_manager.racetime_datatable_tab.race_time_datatable.lap_times_source.selected.indices
-        )
-        logger.info("You have selected the row nr " + str(selectionIndex))
+    def on_lap_selection_change(self, attrname, old, new):
+        """Handle lap selection change in the lap times table"""
+        if new:  # if there are selected indices
+            selected_index = new[0]  # Get the first selected index
+            laps = self.app.gt7comm.session.get_laps()
 
-        colors_index = (
-            len(self.race_diagram.sources_additional_laps)
-            + self.race_diagram.number_of_default_laps
-        )
+            if selected_index < len(laps):
+                selected_lap = laps[selected_index]
+                self.selected_lap_index = selected_index
 
-        for index in selectionIndex:
-            if index >= len(TABLE_ROW_COLORS):
-                colors_index = 0
+                self.update_get_faster_tab_diagrams(selected_lap)
+                logger.debug(
+                    f"Selected lap {selected_lap.number}: {selected_lap.title}"
+                )
 
-            color = TABLE_ROW_COLORS[colors_index]
-            colors_index += 1
-            lap_to_add = self.app.gt7comm.session.laps[index]
-            new_lap_data_source = self.race_diagram.add_lap_to_race_diagram(
-                color, legend=self.app.gt7comm.session.laps[index].title, visible=True
+    def update_get_faster_tab_diagrams(self, selected_lap):
+        """Update the get faster tab with the selected lap"""
+        if self.race_diagram:
+            # Set the selected lap (this will clear previous and add new)
+            self.race_diagram.set_selected_lap(
+                lap=selected_lap,
+                color="orange",
+                legend=f"Selected: {selected_lap.title}",
             )
-            new_lap_data_source.data = lap_to_add.get_data_dict()
+
+            logger.info(f"Updated get faster tab with lap: {selected_lap.title}")
+        else:
+            logger.warning("Race diagram reference not set")
 
     def update_speed_velocity_graph(self, laps):
         """Update the speed velocity graphs"""
@@ -562,3 +568,21 @@ class RaceTab(GT7Tab):
 
         # Update the speed peak and valley diagram
         self.app.doc.add_next_tick_callback(update_ui)
+
+    def set_race_diagram_reference(self, race_diagram):
+        """Set reference to the race diagram for updating selections"""
+        self.race_diagram = race_diagram
+
+    def update_get_faster_tab_diagrams(self, selected_lap):
+        """Update the get faster tab with the selected lap"""
+        if self.race_diagram:
+            # Set the selected lap (this will clear previous and add new)
+            self.race_diagram.set_selected_lap(
+                lap=selected_lap,
+                color="orange",
+                legend=f"Selected: {selected_lap.title}",
+            )
+
+            logger.info(f"Updated get faster tab with lap: {selected_lap.title}")
+        else:
+            logger.warning("Race diagram reference not set")
