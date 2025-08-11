@@ -1,10 +1,112 @@
 import struct
 import json
 from datetime import timedelta
+from typing import Optional
 
 
 class GT7Data:
-    def __init__(self, ddata):
+    def __init__(self, ddata: Optional[bytes]):
+        # Type annotations for all attributes
+        self.package_id: int
+        self.best_lap: int
+        self.last_lap: int
+        self.current_lap: int  # 16-bit signed integer (-32,768 to 32,767)
+        self.current_gear: int
+        self.suggested_gear: int
+        self.fuel_capacity: float
+        self.current_fuel: float
+        self.boost: float
+
+        # Tyre diameters
+        self.tyre_diameter_FL: float
+        self.tyre_diameter_FR: float
+        self.tyre_diameter_RL: float
+        self.tyre_diameter_RR: float
+
+        # Tyre speeds
+        self.type_speed_FL: float
+        self.type_speed_FR: float
+        self.type_speed_RL: float
+        self.tyre_speed_RR: float
+
+        self.car_speed: float
+
+        # Tyre slip ratios (stored as formatted strings)
+        self.tyre_slip_ratio_FL: str
+        self.tyre_slip_ratio_FR: str
+        self.tyre_slip_ratio_RL: str
+        self.tyre_slip_ratio_RR: str
+
+        self.time_on_track: timedelta
+        self.total_laps: int  # 16-bit signed integer
+        self.current_position: int  # 16-bit signed integer
+        self.total_positions: int  # 16-bit signed integer
+        self.car_id: int
+
+        self.throttle: float
+        self.rpm: float
+        self.rpm_rev_warning: int  # 16-bit unsigned integer
+        self.rpm_rev_limiter: int  # 16-bit unsigned integer
+        self.brake: float
+
+        self.estimated_top_speed: int  # 16-bit signed integer (-32,768 to 32,767)
+
+        self.clutch: float
+        self.clutch_engaged: float
+        self.rpm_after_clutch: float
+
+        # Temperature and pressure
+        self.oil_temp: float
+        self.water_temp: float
+        self.oil_pressure: float
+        self.ride_height: float
+
+        # Tyre temperatures
+        self.tyre_temp_FL: float
+        self.tyre_temp_FR: float
+        self.tyre_temp_RL: float
+        self.tyre_temp_RR: float
+
+        # Suspension
+        self.suspension_fl: float
+        self.suspension_fr: float
+        self.suspension_rl: float
+        self.suspension_rr: float
+
+        # Gear ratios
+        self.gear_1: float
+        self.gear_2: float
+        self.gear_3: float
+        self.gear_4: float
+        self.gear_5: float
+        self.gear_6: float
+        self.gear_7: float
+        self.gear_8: float
+
+        # Position coordinates
+        self.position_x: float
+        self.position_y: float
+        self.position_z: float
+
+        # Velocity
+        self.velocity_x: float
+        self.velocity_y: float
+        self.velocity_z: float
+
+        # Rotation
+        self.rotation_pitch: float
+        self.rotation_yaw: float
+        self.rotation_roll: float
+
+        # Angular velocity
+        self.angular_velocity_x: float
+        self.angular_velocity_y: float
+        self.angular_velocity_z: float
+
+        # Status flags
+        self.is_paused: bool
+        self.in_race: bool
+
         if not ddata:
             return
 
@@ -122,5 +224,5 @@ class GT7Data:
         self.is_paused = bin(struct.unpack("B", ddata[0x8E : 0x8E + 1])[0])[-2] == "1"
         self.in_race = bin(struct.unpack("B", ddata[0x8E : 0x8E + 1])[0])[-1] == "1"
 
-    def to_json(self):
+    def to_json(self) -> str:
         return json.dumps(self, indent=4, sort_keys=True, default=str)
