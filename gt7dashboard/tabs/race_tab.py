@@ -42,6 +42,7 @@ from gt7dashboard.colors import (
     REFERENCE_LAP_COLOR,
     MEDIAN_LAP_COLOR,
     TABLE_ROW_COLORS,
+    SELECTED_LAP_COLOR,
 )
 from .GT7Tab import GT7Tab
 from gt7dashboard.gt7racediagram import RaceDiagram
@@ -394,16 +395,86 @@ class RaceTab(GT7Tab):
         self.app.gt7comm.session.load_laps(
             load_laps_from_json(new), replace_other_laps=True
         )
-        self.update_reference_lap_select(self.app.gt7comm.session.get_laps())
+
+        loaded_laps = self.app.gt7comm.session.get_laps()
+
+        # Update reference lap options
+        self.update_reference_lap_select(loaded_laps)
 
         # Check if loaded laps have boost data and update visibility
-        loaded_laps = self.app.gt7comm.session.get_laps()
         if loaded_laps:
             has_boost_data = self.check_boost_data_for_laps(loaded_laps)
             self.toggle_boost_diagram_visibility(has_boost_data)
             logger.debug(
                 f"Boost diagram visibility set to {has_boost_data} after loading laps"
             )
+
+            # Auto-select fastest laps
+            self.auto_select_fastest_laps(loaded_laps)
+
+            # Trigger telemetry update to refresh all diagrams
+            self.telemetry_update_needed = True
+            self.update_lap_change()
+
+    def get_laps_sorted_by_time(self, laps):
+        """Get laps sorted by lap time (fastest first)"""
+        if not laps:
+            return []
+
+        # Filter out laps with invalid times and sort by lap time
+        valid_laps = [
+            lap for lap in laps if hasattr(lap, "lap_time") and lap.lap_time > 0
+        ]
+        return sorted(valid_laps, key=lambda lap: lap.lap_time)
+
+    def auto_select_fastest_laps(self, loaded_laps):
+        """Auto-select fastest lap as reference and second fastest as selected"""
+        if not loaded_laps:
+            return
+
+        sorted_laps = self.get_laps_sorted_by_time(loaded_laps)
+
+        if len(sorted_laps) >= 2:
+            fastest_lap = sorted_laps[0]
+            second_fastest_lap = sorted_laps[1]
+
+            # Set reference lap to fastest
+            fastest_lap_index = loaded_laps.index(fastest_lap)
+            self.reference_lap_select.value = str(fastest_lap_index)
+            self.reference_lap_selected = fastest_lap
+
+            # Set selected lap to second fastest
+            second_fastest_index = loaded_laps.index(second_fastest_lap)
+            self.selected_lap_index = second_fastest_index
+            self.update_get_faster_tab_diagrams(second_fastest_lap)
+
+            # Update race time table selection if available
+            self.update_race_time_table_selection(second_fastest_index)
+
+            logger.info(
+                f"Auto-selected reference: {fastest_lap.title} ({fastest_lap.lap_time:.3f}s)"
+            )
+            logger.info(
+                f"Auto-selected comparison: {second_fastest_lap.title} ({second_fastest_lap.lap_time:.3f}s)"
+            )
+
+        elif len(sorted_laps) == 1:
+            # Only one lap - set it as reference
+            self.reference_lap_select.value = "0"
+            self.reference_lap_selected = sorted_laps[0]
+            logger.info(f"Single lap loaded - set as reference: {sorted_laps[0].title}")
+
+    def update_race_time_table_selection(self, selected_index):
+        """Update the race time table selection"""
+        try:
+            if hasattr(self.app.tab_manager, "racetime_datatable_tab"):
+                race_time_table = (
+                    self.app.tab_manager.racetime_datatable_tab.race_time_datatable
+                )
+                if race_time_table and hasattr(race_time_table, "lap_times_source"):
+                    race_time_table.lap_times_source.selected.indices = [selected_index]
+        except Exception as e:
+            logger.warning(f"Could not update race time table selection: {e}")
 
     def has_meaningful_boost_data(self, lap):
         """Check if lap has meaningful boost data (not all -1)"""
@@ -458,7 +529,7 @@ class RaceTab(GT7Tab):
             # Set the selected lap (this will clear previous and add new)
             self.race_diagram.set_selected_lap(
                 lap=selected_lap,
-                color="orange",
+                color=SELECTED_LAP_COLOR,
                 legend=f"Selected: {selected_lap.title}",
             )
 
@@ -616,7 +687,7 @@ class RaceTab(GT7Tab):
             # Set the selected lap (this will clear previous and add new)
             self.race_diagram.set_selected_lap(
                 lap=selected_lap,
-                color="orange",
+                color=SELECTED_LAP_COLOR,
                 legend=f"Selected: {selected_lap.title}",
             )
 

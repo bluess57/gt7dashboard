@@ -6,7 +6,12 @@ from bokeh.plotting import figure
 
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
-from gt7dashboard.colors import LAST_LAP_COLOR, REFERENCE_LAP_COLOR, MEDIAN_LAP_COLOR
+from gt7dashboard.colors import (
+    LAST_LAP_COLOR,
+    REFERENCE_LAP_COLOR,
+    MEDIAN_LAP_COLOR,
+    SELECTED_LAP_COLOR,
+)
 from gt7dashboard.gt7settings import get_log_level
 
 logger = logging.getLogger("gt7racediagram")
@@ -237,7 +242,7 @@ class RaceDiagram:
             REFERENCE_LAP_COLOR, "Reference Lap", True
         )
         self.source_median_lap = self.add_lap_to_race_diagram(
-            MEDIAN_LAP_COLOR, "Median Lap", False
+            MEDIAN_LAP_COLOR, "Median Lap", True
         )
 
         # NOW set legend click policies AFTER renderers are added
@@ -482,7 +487,7 @@ class RaceDiagram:
 
         return True
 
-    def set_selected_lap(self, lap, color="orange", legend="Selected Lap"):
+    def set_selected_lap(self, lap, color=SELECTED_LAP_COLOR, legend="Selected Lap"):
         """Set a single selected lap, removing any previous selection"""
         # Remove previous selected lap if it exists
         self.clear_selected_lap()
