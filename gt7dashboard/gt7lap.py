@@ -381,13 +381,50 @@ class Lap:
         return df
 
     def get_brake_points(self):
+        """Get brake points with optimized performance using NumPy"""
+        if len(self.data_braking) < 2:
+            return [], []
+
+        try:
+            # Convert to numpy arrays for vectorized operations
+            braking = np.array(self.data_braking, dtype=float)
+            pos_x = np.array(self.data_position_x, dtype=float)
+            pos_z = np.array(self.data_position_z, dtype=float)
+
+            # Vectorized brake point detection: prev==0 and curr>0
+            brake_start_mask = (braking[:-1] == 0) & (braking[1:] > 0)
+            brake_indices = np.where(brake_start_mask)[0] + 1
+
+            # Extract coordinates at brake points
+            x = pos_x[brake_indices].tolist()
+            y = pos_z[brake_indices].tolist()
+
+            return x, y
+
+        except (ValueError, TypeError) as e:
+            logger.warning(f"NumPy brake point detection failed: {e}, using fallback")
+            return self._get_brake_points_fallback()
+
+    def _get_brake_points_fallback(self):
+        """Fallback optimized Python version"""
+        if len(self.data_braking) < 2:
+            return [], []
+
+        # Cache attribute references
+        braking = self.data_braking
+        pos_x = self.data_position_x
+        pos_z = self.data_position_z
+
         x = []
         y = []
-        for i, b in enumerate(self.data_braking):
-            if i > 0:
-                if self.data_braking[i - 1] == 0 and self.data_braking[i] > 0:
-                    x.append(self.data_position_x[i])
-                    y.append(self.data_position_z[i])
+        prev_brake = braking[0]
+
+        for i in range(1, len(braking)):
+            curr_brake = braking[i]
+            if prev_brake == 0 and curr_brake > 0:
+                x.append(pos_x[i])
+                y.append(pos_z[i])
+            prev_brake = curr_brake
 
         return x, y
 

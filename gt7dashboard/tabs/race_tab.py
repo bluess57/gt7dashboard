@@ -56,7 +56,7 @@ from gt7dashboard.datatable.deviance_laps import deviance_laps_datatable
 from gt7dashboard.datatable.speed_peak_valley import SpeedPeakValleyDataTable
 from .GT7Tab import GT7Tab
 from gt7dashboard.gt7help import get_help_div
-from gt7dashboard.gt7settings import get_log_level
+from gt7dashboard.gt7settings import get_log_level, settings
 
 # Use LAST_LAP_COLOR wherever needed
 
@@ -74,7 +74,7 @@ class RaceTab(GT7Tab):
         self.selected_lap_index = None
 
         # Create race line figure
-        race_line_tooltips = [("index", "$index"), ("Brakepoint", "")]
+        # race_line_tooltips = [("index", "$index"), ("Brakepoint", "")]
         race_line_width = 250
 
         self.s_race_line = figure(
@@ -85,7 +85,7 @@ class RaceTab(GT7Tab):
             width=race_line_width,
             height=race_line_width,
             active_drag="box_zoom",
-            tooltips=race_line_tooltips,
+            # tooltips=race_line_tooltips,
         )
         logger.debug(f"s_race_line {self.s_race_line.id}")
 
@@ -214,6 +214,8 @@ class RaceTab(GT7Tab):
                 self.s_race_line,
             ],
         )
+
+        # Help divs
         speed_help = get_help_div(SPEED_DIAGRAM)
         throttle_help = get_help_div(THROTTLE_DIAGRAM)
         speedvar_help = get_help_div(SPEED_VARIANCE)
@@ -222,6 +224,10 @@ class RaceTab(GT7Tab):
         yawrate_help = get_help_div(YAW_RATE_DIAGRAM)
         coasting_help = get_help_div(COASTING_DIAGRAM)
         tyre_help = get_help_div(TIRE_DIAGRAM)
+
+        # Store boost row for dynamic visibility
+        self.boost_row = row([self.race_diagram.f_boost])
+        self.boost_row.visible = True  # Initially visible
 
         main_diagrams_column = column(
             row([self.header_line]),
@@ -234,12 +240,18 @@ class RaceTab(GT7Tab):
             row([self.race_diagram.f_coasting, coasting_help]),
             row([self.race_diagram.f_gear]),
             row([self.race_diagram.f_rpm]),
-            row([self.race_diagram.f_boost]),
+            self.boost_row,  # Use stored row for visibility control
             row([self.race_diagram.f_tyres, tyre_help]),
         )
 
         self.layout = row(left_column, main_diagrams_column)
         return self.layout
+
+    def toggle_boost_diagram_visibility(self, show_boost):
+        """Show or hide the boost diagram row based on whether car has turbo/supercharger"""
+        if hasattr(self, "boost_row"):
+            self.boost_row.visible = show_boost
+            logger.debug(f"Boost diagram row visibility set to: {show_boost}")
 
     def update_reference_lap_select(self, laps):
         """Update the reference lap selection dropdown"""
@@ -384,6 +396,31 @@ class RaceTab(GT7Tab):
         )
         self.update_reference_lap_select(self.app.gt7comm.session.get_laps())
 
+        # Check if loaded laps have boost data and update visibility
+        loaded_laps = self.app.gt7comm.session.get_laps()
+        if loaded_laps:
+            has_boost_data = self.check_boost_data_for_laps(loaded_laps)
+            self.toggle_boost_diagram_visibility(has_boost_data)
+            logger.debug(
+                f"Boost diagram visibility set to {has_boost_data} after loading laps"
+            )
+
+    def has_meaningful_boost_data(self, lap):
+        """Check if lap has meaningful boost data (not all -1)"""
+        if not lap or not hasattr(lap, "data_boost") or not lap.data_boost:
+            return False
+
+        # Check if all boost values are -1 (no turbo/supercharger)
+        return any(boost_value > -1 for boost_value in lap.data_boost)
+
+    def check_boost_data_for_laps(self, laps):
+        """Check if any of the laps have meaningful boost data"""
+        if not laps:
+            return False
+
+        # Check if any lap has boost data
+        return any(self.has_meaningful_boost_data(lap) for lap in laps)
+
     def load_reference_lap_handler(self, attr, old, new):
         """Handle changing the reference lap"""
         if int(new) == -1:
@@ -464,7 +501,7 @@ class RaceTab(GT7Tab):
         }
 
         # Update brakepoints
-        brake_points_enabled = os.environ.get("GT7_ADD_BRAKEPOINTS") == "true"
+        brake_points_enabled = settings.brake_points_enabled()
 
         if brake_points_enabled and len(last_lap.data_braking) > 0:
             self.update_brake_points(last_lap, self.s_race_line, LAST_LAP_COLOR)

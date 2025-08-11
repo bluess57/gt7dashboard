@@ -15,7 +15,7 @@ from gt7dashboard.gt7lapstorage import (
 
 from gt7dashboard.gt7helper import bokeh_tuple_for_list_of_lapfiles
 from gt7dashboard.gt7communication import GT7Communication
-from gt7dashboard.gt7settings import get_log_level
+from gt7dashboard.gt7settings import get_log_level, settings
 
 logger = logging.getLogger("config_tab")
 logger.setLevel(get_log_level())
@@ -31,7 +31,7 @@ class ConfigTab(GT7Tab):
         # Checkbox for GT7_ADD_BRAKEPOINTS
         self.brakepoints_checkbox = CheckboxGroup(
             labels=["Enable GT7 Add Brakepoints"],
-            active=[0] if os.environ.get("GT7_ADD_BRAKEPOINTS") == "true" else [],
+            active=[0] if settings.brake_points_enabled() else [],
         )
         self.brakepoints_checkbox.on_change(
             "active", self.on_brakepoints_checkbox_change

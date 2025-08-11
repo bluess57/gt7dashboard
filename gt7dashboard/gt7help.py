@@ -29,7 +29,7 @@ In the 'Best Lap' dropdown list you can select the reference lap. Usually this w
 """
 
 TIME_DIFF = """ This is a graph for showing the relative time difference between the last lap and the reference lap.
-Everything under the solid bar at 0 is slower than the reference lap. Everything above is slower than the reference lap.
+Everything under the solid bar at 0 is faster than the reference lap. Everything above is slower than the reference lap.
 
 If you see a bump in this graph to the top or the bottom this means that you were slower or faster at this point respectively.
 """

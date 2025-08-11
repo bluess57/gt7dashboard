@@ -33,6 +33,10 @@ class GT7Settings:
         }
         self._log_level = level_map.get(level.upper(), logging.INFO)
 
+    def brake_points_enabled(self) -> bool:
+        """Check if brake points are enabled based on environment variable"""
+        return str_to_bool(os.environ.get("GT7_ADD_BRAKEPOINTS", ""))
+
 
 # Global settings instance
 settings = GT7Settings()
@@ -41,3 +45,8 @@ settings = GT7Settings()
 # Convenience function for backward compatibility
 def get_log_level():
     return settings.get_log_level()
+
+
+def str_to_bool(value):
+    """Convert string to boolean (case-insensitive)"""
+    return str(value).lower() in ("true", "1", "yes", "on")
