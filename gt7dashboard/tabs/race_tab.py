@@ -142,7 +142,10 @@ class RaceTab(GT7Tab):
         self.reference_lap_select = Select(value="-1", width=150)
 
         # Create checkbox for recording replays
-        self.checkbox_group = CheckboxGroup(labels=["Record Replays"], active=[0])
+        self.replay_checkbox = CheckboxGroup(labels=["Record Replays"], active=[0])
+
+        # Create checkbox for median lap visibility
+        self.median_lap_checkbox = CheckboxGroup(labels=["Show Median Lap"], active=[])
 
         # Connect event handlers
         self.manual_log_button.on_click(self.log_lap_button_handler)
@@ -150,7 +153,8 @@ class RaceTab(GT7Tab):
         self.reset_button.on_click(self.reset_button_handler)
         self.selectLoadLaps.on_change("value", self.load_laps_handler)
         self.reference_lap_select.on_change("value", self.load_reference_lap_handler)
-        self.checkbox_group.on_change("active", self.always_record_checkbox_handler)
+        self.replay_checkbox.on_change("active", self.always_record_checkbox_handler)
+        self.median_lap_checkbox.on_change("active", self.median_lap_visibility_handler)
 
         self.app.gt7comm.set_lap_callback(self.on_lap_finished)
 
@@ -203,7 +207,8 @@ class RaceTab(GT7Tab):
                 self.save_button,
                 self.reset_button,
                 self.manual_log_button,
-                self.checkbox_group,
+                self.replay_checkbox,  # Separate checkbox for replays
+                self.median_lap_checkbox,  # New checkbox for median lap
                 self.selectLoadLapsTitle,
                 self.selectLoadLaps,
                 self.selectreferenceLapTitle,
@@ -362,12 +367,25 @@ class RaceTab(GT7Tab):
 
     def always_record_checkbox_handler(self, event, old, new):
         """Handle record replays checkbox change"""
-        if len(new) == 2:
+        if 0 in new:
             logger.info("Set always record data to True")
             self.app.gt7comm.always_record_data = True
         else:
             logger.info("Set always record data to False")
             self.app.gt7comm.always_record_data = False
+
+    def median_lap_visibility_handler(self, attr, old, new):
+        """Handle median lap visibility checkbox change"""
+        show_median = 0 in new  # Check if checkbox is active
+        if self.race_diagram:
+            self.race_diagram.set_median_lap_visibility(show_median)
+            logger.info(f"Median lap and legend visibility changed to: {show_median}")
+
+            # Force a refresh of the current lap data to ensure legend is properly updated
+            if show_median:
+                # If showing median lap, trigger an update to ensure data is present
+                self.telemetry_update_needed = True
+                self.update_lap_change()
 
     def log_lap_button_handler(self, event):
         """Handle manual lap logging"""
@@ -411,6 +429,11 @@ class RaceTab(GT7Tab):
 
             # Auto-select fastest laps
             self.auto_select_fastest_laps(loaded_laps)
+
+            # Apply current median lap visibility setting (both line and legend)
+            show_median = 0 in self.median_lap_checkbox.active
+            self.race_diagram.set_median_lap_visibility(show_median)
+            logger.debug(f"Applied median lap visibility setting: {show_median}")
 
             # Trigger telemetry update to refresh all diagrams
             self.telemetry_update_needed = True

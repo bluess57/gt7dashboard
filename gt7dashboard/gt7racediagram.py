@@ -556,3 +556,74 @@ class RaceDiagram:
             self.selected_lap_source = None
 
             logger.debug("Cleared selected lap from diagrams")
+
+    def set_median_lap_visibility(self, visible: bool):
+        """Show or hide the median lap in all diagrams and update legend visibility"""
+        if len(self.speed_lines) >= 3:  # Median lap is the 3rd line (index 2)
+            median_line_index = 2
+
+            figures_and_lines = [
+                (self.f_speed, self.speed_lines),
+                (self.f_throttle, self.throttle_lines),
+                (self.f_braking, self.braking_lines),
+                (self.f_coasting, self.coasting_lines),
+                (self.f_tyres, self.tyres_lines),
+                (self.f_gear, self.gears_lines),
+                (self.f_rpm, self.rpm_lines),
+                (self.f_boost, self.boost_lines),
+                (self.f_yaw_rate, self.yaw_rate_lines),
+            ]
+
+            # Update line visibility
+            for figure, line_list in figures_and_lines:
+                if len(line_list) > median_line_index:
+                    line_list[median_line_index].visible = visible
+
+            # Update legend visibility for median lap
+            self._update_median_lap_legend_visibility(visible)
+
+            logger.debug(f"Median lap visibility set to: {visible}")
+
+    def _update_median_lap_legend_visibility(self, visible: bool):
+        """Update legend visibility for median lap across all figures"""
+        median_line_index = 2
+
+        figures_with_legends = [
+            self.f_speed,
+            self.f_throttle,
+            self.f_braking,
+            self.f_coasting,
+            self.f_tyres,
+            self.f_gear,
+            self.f_rpm,
+            self.f_boost,
+            self.f_yaw_rate,
+        ]
+
+        for figure in figures_with_legends:
+            if (
+                hasattr(figure, "legend")
+                and figure.legend
+                and hasattr(figure.legend, "items")
+                and len(figure.legend.items) > median_line_index
+            ):
+
+                # Get the median lap legend item
+                median_legend_item = figure.legend.items[median_line_index]
+
+                # Set visibility of the legend item
+                if hasattr(median_legend_item, "visible"):
+                    median_legend_item.visible = visible
+                else:
+                    # Alternative approach: modify the legend label
+                    if visible:
+                        # Show the legend with original label
+                        if not median_legend_item.label.value.startswith("Median Lap"):
+                            median_legend_item.label.value = "Median Lap"
+                    else:
+                        # Hide by making label empty or adding invisible marker
+                        median_legend_item.label.value = ""
+
+                logger.debug(
+                    f"Updated median lap legend visibility to {visible} on figure {figure}"
+                )
