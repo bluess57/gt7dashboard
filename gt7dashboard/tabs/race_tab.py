@@ -442,7 +442,7 @@ class RaceTab(GT7Tab):
                 hasattr(self.app.tab_manager, "fuel_tab")
                 and self.app.tab_manager.fuel_tab
             ):
-                self.app.tab_manager.fuel_tab.update_fuel_map()
+                self.app.tab_manager.fuel_tab.update_fuel_map_all_laps()
 
     def get_laps_sorted_by_time(self, laps):
         """Get laps sorted by lap time (fastest first)"""

@@ -623,7 +623,3 @@ class RaceDiagram:
                     else:
                         # Hide by making label empty or adding invisible marker
                         median_legend_item.label.value = ""
-
-                logger.debug(
-                    f"Updated median lap legend visibility to {visible} on figure {figure}"
-                )

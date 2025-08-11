@@ -37,39 +37,48 @@ class FuelTab(GT7Tab):
         <h3>Fuel Consumption</h3>
         <p>This panel shows detailed fuel consumption data for your laps.</p>
         <ul>
+            <li><b>Lap Number:</b> Sequential lap identifier</li>
+            <li><b>Lap Time:</b> Time taken to complete the lap</li>
             <li><b>Fuel Used:</b> Total fuel consumed during the lap</li>
-            <li><b>Fuel per Lap:</b> Average consumption rate</li>
             <li><b>Fuel per Minute:</b> Consumption rate over time</li>
-            <li><b>Estimated Range:</b> Estimated laps/minutes remaining with current fuel level</li>
+            <li><b>Car:</b> Vehicle used for the lap</li>
         </ul>
         """,
-            width=450,
+            width=600,
         )
 
-        # Create data source for fuel table
+        # Create data source for fuel table with specific columns
         self.fuel_data_source = ColumnDataSource(
-            data={"metric": [], "value": [], "unit": []}
+            data={
+                "lap_number": [],
+                "lap_time": [],
+                "fuel_used": [],
+                "fuel_per_minute": [],
+                "car": [],
+            }
         )
 
-        # Define table columns
+        # Define table columns with adjusted widths (total: ~450px)
         columns = [
-            TableColumn(field="metric", title="Metric", width=200),
-            TableColumn(field="value", title="Value", width=100),
-            TableColumn(field="unit", title="Unit", width=100),
+            TableColumn(field="lap_number", title="Lap #", width=60),
+            TableColumn(field="lap_time", title="Time", width=90),
+            TableColumn(field="fuel_used", title="Fuel (L)", width=80),
+            TableColumn(field="fuel_per_minute", title="L/min", width=70),
+            TableColumn(field="car", title="Car", width=250),
         ]
 
         dtstylesheet = ImportedStyleSheet(url="gt7dashboard/static/css/styles.css")
 
-        # Create fuel data table
+        # Create fuel data table with reduced width
         self.fuel_data_table = DataTable(
             source=self.fuel_data_source,
             columns=columns,
-            width=450,
+            width=450,  # Reduced from 600
             height=300,
             selectable=False,
             index_position=None,
-            sortable=False,
-            autosize_mode="fit_columns",
+            sortable=True,
+            autosize_mode="none",
             stylesheets=[dtstylesheet],
         )
 
@@ -84,99 +93,90 @@ class FuelTab(GT7Tab):
         )
 
     def extract_fuel_data(self, lap):
-        """Extract fuel consumption data from a lap object"""
+        """Extract fuel consumption data from a lap object for specific columns"""
         try:
-            fuel_data = {"metrics": [], "values": [], "units": []}
+            # Initialize data with default values
+            lap_data = {
+                "lap_number": "N/A",
+                "lap_time": "N/A",
+                "fuel_used": "N/A",
+                "fuel_per_minute": "N/A",
+                "car": "N/A",
+            }
 
-            # Add lap identification
+            # Lap Number
             if hasattr(lap, "number") and lap.number:
-                fuel_data["metrics"].append("Lap Number")
-                fuel_data["values"].append(str(lap.number))
-                fuel_data["units"].append("")
+                lap_data["lap_number"] = str(lap.number)
 
-            if hasattr(lap, "title") and lap.title:
-                fuel_data["metrics"].append("Lap Title")
-                fuel_data["values"].append(lap.title)
-                fuel_data["units"].append("")
+            if (
+                lap_data["lap_time"] == "N/A"
+                and hasattr(lap, "lap_finish_time")
+                and lap.lap_finish_time > 0
+            ):
+                total_seconds = lap.lap_finish_time / 1000.0
+                minutes = int(total_seconds // 60)
+                seconds = total_seconds % 60
+                lap_data["lap_time"] = f"{minutes}:{seconds:06.3f}"
 
-            # Lap time
-            if hasattr(lap, "lap_time") and lap.lap_time > 0:
-                fuel_data["metrics"].append("Lap Time")
-                fuel_data["values"].append(f"{lap.lap_time:.3f}")
-                fuel_data["units"].append("s")
+            # Get lap time in seconds for fuel calculations
+            lap_time_seconds = None
+            if hasattr(lap, "lap_finish_time") and lap.lap_finish_time > 0:
+                lap_time_seconds = lap.lap_finish_time / 1000.0
+            elif hasattr(lap, "data_time") and lap.data_time and len(lap.data_time) > 1:
+                lap_time_seconds = lap.data_time[-1] - lap.data_time[0]
 
-            # Fuel consumed (if available)
-            if hasattr(lap, "fuel_consumed") and lap.fuel_consumed is not None:
-                fuel_data["metrics"].append("Fuel Used")
-                fuel_data["values"].append(f"{lap.fuel_consumed:.2f}")
-                fuel_data["units"].append("L")
-
-                # Calculate fuel consumption rate if lap time is available
-                if hasattr(lap, "lap_time") and lap.lap_time > 0:
-                    fuel_per_minute = (lap.fuel_consumed / lap.lap_time) * 60
-                    fuel_data["metrics"].append("Fuel per Minute")
-                    fuel_data["values"].append(f"{fuel_per_minute:.3f}")
-                    fuel_data["units"].append("L/min")
-
-            # Current fuel level from telemetry data
-            if hasattr(lap, "data_fuel_capacity") and lap.data_fuel_capacity:
+            # Fuel Used
+            fuel_consumed = None
+            if (
+                hasattr(lap, "fuel_consumed")
+                and lap.fuel_consumed is not None
+                and lap.fuel_consumed > 0
+            ):
+                fuel_consumed = lap.fuel_consumed
+                lap_data["fuel_used"] = f"{fuel_consumed:.2f}"
+            elif (
+                hasattr(lap, "data_fuel_capacity")
+                and lap.data_fuel_capacity
+                and len(lap.data_fuel_capacity) > 1
+            ):
+                # Calculate from telemetry data
                 try:
-                    # Get the last fuel reading from the lap
-                    current_fuel = float(lap.data_fuel_capacity[-1])
-                    fuel_data["metrics"].append("Fuel Level (End)")
-                    fuel_data["values"].append(f"{current_fuel:.2f}")
-                    fuel_data["units"].append("L")
-
-                    # Get starting fuel level
                     start_fuel = float(lap.data_fuel_capacity[0])
-                    fuel_data["metrics"].append("Fuel Level (Start)")
-                    fuel_data["values"].append(f"{start_fuel:.2f}")
-                    fuel_data["units"].append("L")
+                    end_fuel = float(lap.data_fuel_capacity[-1])
+                    fuel_consumed = start_fuel - end_fuel
+                    if fuel_consumed > 0:
+                        lap_data["fuel_used"] = f"{fuel_consumed:.2f}"
+                except (IndexError, ValueError, TypeError):
+                    pass
 
-                    # Calculate fuel consumed from telemetry
-                    fuel_consumed_calc = start_fuel - current_fuel
-                    if fuel_consumed_calc > 0:
-                        fuel_data["metrics"].append("Fuel Used (Calculated)")
-                        fuel_data["values"].append(f"{fuel_consumed_calc:.2f}")
-                        fuel_data["units"].append("L")
+            # Fuel per Minute
+            if fuel_consumed and lap_time_seconds and lap_time_seconds > 0:
+                fuel_per_minute = (fuel_consumed / lap_time_seconds) * 60
+                lap_data["fuel_per_minute"] = f"{fuel_per_minute:.3f}"
 
-                        # Estimate remaining laps
-                        if current_fuel > 0 and fuel_consumed_calc > 0:
-                            estimated_laps = current_fuel / fuel_consumed_calc
-                            fuel_data["metrics"].append("Estimated Laps Remaining")
-                            fuel_data["values"].append(f"{estimated_laps:.1f}")
-                            fuel_data["units"].append("laps")
-
-                except (IndexError, ValueError, TypeError) as e:
-                    logger.debug(f"Error processing fuel capacity data: {e}")
-
-            # Car information
+            # Car
             if hasattr(lap, "car_id") and lap.car_id:
-                from gt7dashboard.gt7car import car_name
+                try:
+                    from gt7dashboard.gt7car import car_name
 
-                fuel_data["metrics"].append("Car")
-                fuel_data["values"].append(car_name(lap.car_id))
-                fuel_data["units"].append("")
+                    lap_data["car"] = car_name(lap.car_id)
+                except:
+                    lap_data["car"] = f"Car ID: {lap.car_id}"
 
-            # If no fuel data was found, show a message
-            if len(fuel_data["metrics"]) <= 2:  # Only lap number and title
-                fuel_data["metrics"].append("Fuel Data")
-                fuel_data["values"].append("No fuel data available")
-                fuel_data["units"].append("")
-
-            return fuel_data
+            return lap_data
 
         except Exception as e:
             logger.error(f"Error extracting fuel data: {e}")
             return {
-                "metrics": ["Error"],
-                "values": [f"Error extracting fuel data: {str(e)}"],
-                "units": [""],
+                "lap_number": "Error",
+                "lap_time": "Error",
+                "fuel_used": "Error",
+                "fuel_per_minute": "Error",
+                "car": str(e),
             }
 
-    @linear()
     def update_fuel_map(self, step=None):
-        """Update the fuel data table with current data"""
+        """Update the fuel data table with current data (removed @linear decorator)"""
         logger.debug(
             f"update_fuel_map called with {len(self.app.gt7comm.session.laps)} laps"
         )
@@ -184,14 +184,20 @@ class FuelTab(GT7Tab):
         if len(self.app.gt7comm.session.laps) == 0:
             # Clear the table when no laps are available
             self.fuel_data_source.data = {
-                "metric": ["Status"],
-                "value": ["No lap data available"],
-                "unit": [""],
+                "lap_number": ["No Data"],
+                "lap_time": ["No laps"],
+                "fuel_used": ["available"],
+                "fuel_per_minute": [""],
+                "car": [""],
             }
             return
 
         # Get the most recent lap (last in the list)
         last_lap = self.app.gt7comm.session.laps[-1]
+
+        # Add debug method if it doesn't exist
+        if hasattr(self, "debug_lap_fuel_data"):
+            self.debug_lap_fuel_data(last_lap)
 
         # Only update if the lap has changed
         if last_lap == self.stored_fuel_map:
@@ -201,57 +207,80 @@ class FuelTab(GT7Tab):
 
         try:
             # Extract fuel data from the lap
-            fuel_data = self.extract_fuel_data(last_lap)
+            lap_data = self.extract_fuel_data(last_lap)
 
-            # Update the data source
+            # Update the data source with single row of data
             self.fuel_data_source.data = {
-                "metric": fuel_data["metrics"],
-                "value": fuel_data["values"],
-                "unit": fuel_data["units"],
+                "lap_number": [lap_data["lap_number"]],
+                "lap_time": [lap_data["lap_time"]],
+                "fuel_used": [lap_data["fuel_used"]],
+                "fuel_per_minute": [lap_data["fuel_per_minute"]],
+                "car": [lap_data["car"]],
             }
 
             logger.debug(
-                f"Updated fuel table with {len(fuel_data['metrics'])} data points from lap: {getattr(last_lap, 'title', 'Unknown')}"
+                f"Updated fuel table with data from lap: {getattr(last_lap, 'title', 'Unknown')}"
             )
 
         except Exception as e:
             logger.error(f"Error updating fuel table: {e}")
             self.fuel_data_source.data = {
-                "metric": ["Error"],
-                "value": [f"Error loading fuel data: {str(e)}"],
-                "unit": [""],
+                "lap_number": ["Error"],
+                "lap_time": ["Error"],
+                "fuel_used": ["Error"],
+                "fuel_per_minute": ["Error"],
+                "car": [str(e)],
             }
 
-    def get_lap_fuel_summary(self):
-        """Get a summary of fuel consumption across all laps"""
-        laps = self.app.gt7comm.session.laps
-        if not laps:
-            return None
+    def update_fuel_map_all_laps(self, step=None):
+        """Update the fuel data table with all lap data"""
+        logger.debug(
+            f"update_fuel_map called with {len(self.app.gt7comm.session.laps)} laps"
+        )
+
+        if len(self.app.gt7comm.session.laps) == 0:
+            self.fuel_data_source.data = {
+                "lap_number": ["No Data"],
+                "lap_time": ["No laps available"],
+                "fuel_used": [""],
+                "fuel_per_minute": [""],
+                "car": [""],
+            }
+            return
 
         try:
-            total_fuel = sum(
-                getattr(lap, "fuel_consumed", 0)
-                for lap in laps
-                if hasattr(lap, "fuel_consumed")
-            )
-            total_time = sum(
-                getattr(lap, "lap_time", 0) for lap in laps if hasattr(lap, "lap_time")
-            )
-            avg_fuel_per_lap = total_fuel / len(laps) if laps else 0
-            avg_fuel_per_minute = (
-                (total_fuel / total_time) * 60 if total_time > 0 else 0
+            # Extract data for all laps
+            all_lap_data = {
+                "lap_number": [],
+                "lap_time": [],
+                "fuel_used": [],
+                "fuel_per_minute": [],
+                "car": [],
+            }
+
+            for lap in self.app.gt7comm.session.laps:
+                lap_data = self.extract_fuel_data(lap)
+                all_lap_data["lap_number"].append(lap_data["lap_number"])
+                all_lap_data["lap_time"].append(lap_data["lap_time"])
+                all_lap_data["fuel_used"].append(lap_data["fuel_used"])
+                all_lap_data["fuel_per_minute"].append(lap_data["fuel_per_minute"])
+                all_lap_data["car"].append(lap_data["car"])
+
+            # Update the data source with all laps
+            self.fuel_data_source.data = all_lap_data
+            logger.info(
+                f"Updated fuel table with {len(self.app.gt7comm.session.laps)} laps"
             )
 
-            return {
-                "total_fuel": total_fuel,
-                "total_time": total_time,
-                "avg_fuel_per_lap": avg_fuel_per_lap,
-                "avg_fuel_per_minute": avg_fuel_per_minute,
-                "lap_count": len(laps),
-            }
         except Exception as e:
-            logger.error(f"Error calculating fuel summary: {e}")
-            return None
+            logger.error(f"Error updating fuel table: {e}")
+            self.fuel_data_source.data = {
+                "lap_number": ["Error"],
+                "lap_time": ["Error"],
+                "fuel_used": ["Error"],
+                "fuel_per_minute": ["Error"],
+                "car": [str(e)],
+            }
 
     def debug_lap_fuel_data(self, lap):
         """Debug method to check what fuel data is available in a lap"""
@@ -267,12 +296,20 @@ class FuelTab(GT7Tab):
             "fuel_remaining",
             "fuel_consumption_rate",
             "fuel_per_lap",
+            "lap_finish_time",
+            "data_time",
         ]
 
         for attr in fuel_attributes:
             if hasattr(lap, attr):
                 value = getattr(lap, attr)
-                logger.debug(f"  {attr}: {value} (type: {type(value)})")
+                value_type = type(value)
+                if isinstance(value, list):
+                    logger.debug(
+                        f"  {attr}: {value_type} with {len(value)} items - first: {value[0] if value else 'N/A'}, last: {value[-1] if value else 'N/A'}"
+                    )
+                else:
+                    logger.debug(f"  {attr}: {value} (type: {value_type})")
             else:
                 logger.debug(f"  {attr}: NOT FOUND")
 
@@ -281,50 +318,14 @@ class FuelTab(GT7Tab):
             fuel_related = [k for k in lap.__dict__.keys() if "fuel" in k.lower()]
             logger.debug(f"  All fuel-related attributes: {fuel_related}")
 
-    def update_fuel_map(self):
-        """Update the fuel data table with current data"""
-        logger.debug(
-            f"update_fuel_map called with {len(self.app.gt7comm.session.laps)} laps"
-        )
+    # Add a method for periodic updates if needed
+    @linear()
+    def periodic_fuel_update(self, step=None):
+        """Periodic update method for use with Bokeh's periodic callback system"""
+        self.update_fuel_map()
 
-        if len(self.app.gt7comm.session.laps) == 0:
-            # Clear the table when no laps are available
-            self.fuel_data_source.data = {
-                "metric": ["Status"],
-                "value": ["No lap data available"],
-                "unit": [""],
-            }
-            return
-
-        # Get the most recent lap (last in the list)
-        last_lap = self.app.gt7comm.session.laps[-1]
-        self.debug_lap_fuel_data(last_lap)  # Add this line for debugging
-
-        # Only update if the lap has changed
-        if last_lap == self.stored_fuel_map:
-            return
-        else:
-            self.stored_fuel_map = last_lap
-
-        try:
-            # Extract fuel data from the lap
-            fuel_data = self.extract_fuel_data(last_lap)
-
-            # Update the data source
-            self.fuel_data_source.data = {
-                "metric": fuel_data["metrics"],
-                "value": fuel_data["values"],
-                "unit": fuel_data["units"],
-            }
-
-            logger.debug(
-                f"Updated fuel table with {len(fuel_data['metrics'])} data points from lap: {getattr(last_lap, 'title', 'Unknown')}"
-            )
-
-        except Exception as e:
-            logger.error(f"Error updating fuel table: {e}")
-            self.fuel_data_source.data = {
-                "metric": ["Error"],
-                "value": [f"Error loading fuel data: {str(e)}"],
-                "unit": [""],
-            }
+    # Also add a method to start periodic updates if your app uses them
+    def start_periodic_updates(self, period=1000):
+        """Start periodic updates for the fuel tab"""
+        if hasattr(self.app, "doc") and self.app.doc:
+            self.app.doc.add_periodic_callback(self.periodic_fuel_update, period)
