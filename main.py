@@ -134,7 +134,9 @@ class GT7Application:
                     500,
                 )
 
-            doc.add_next_tick_callback(update)
+            if self.gt7comm.is_connected():
+                doc.add_next_tick_callback(update)
+
         except Exception as e:
             logger.exception("Exception in show_heartbeat")
 
