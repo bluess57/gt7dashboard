@@ -675,12 +675,14 @@ class RaceTab(GT7Tab):
             self.update_lap_change()
             self.update_reference_lap_select(self.app.gt7comm.session.get_laps())
 
-        # Update fuel tab if it exists
-        if hasattr(self.app.tab_manager, "fuel_tab") and self.app.tab_manager.fuel_tab:
+        def update_fuel_map():
+            """Update the fuel map fuel tab"""
             self.app.tab_manager.fuel_tab.update_fuel_map()
 
         # Update the speed peak and valley diagram
         self.app.doc.add_next_tick_callback(update_ui)
+        # Update the fuel map in the fuel tab
+        self.app.doc.add_next_tick_callback(update_fuel_map)
 
     def set_race_diagram_reference(self, race_diagram):
         """Set reference to the race diagram for updating selections"""
