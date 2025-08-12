@@ -17,6 +17,7 @@ from bokeh.models import (
 
 from bokeh.models.dom import HTML
 
+from gt7dashboard.gt7performance_monitor import performance_monitor
 from gt7dashboard.gt7helper import (
     bokeh_tuple_for_list_of_laps,
     bokeh_tuple_for_list_of_lapfiles,
@@ -61,7 +62,7 @@ from gt7dashboard.gt7settings import get_log_level, settings
 
 # Use LAST_LAP_COLOR wherever needed
 
-logger = logging.getLogger("race_tab")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 
@@ -622,6 +623,7 @@ class RaceTab(GT7Tab):
                 fill_color=color,
             )
 
+    @performance_monitor
     def update_lap_change(self):
         """Update the display when laps change"""
 

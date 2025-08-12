@@ -17,7 +17,7 @@ from gt7dashboard.gt7helper import bokeh_tuple_for_list_of_lapfiles
 from gt7dashboard.gt7communication import GT7Communication
 from gt7dashboard.gt7settings import get_log_level, settings
 
-logger = logging.getLogger("config_tab")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 

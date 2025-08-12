@@ -6,7 +6,7 @@ from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7settings import get_log_level
 import numpy as np
 
-logger = logging.getLogger("RaceTimeDataTable")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 

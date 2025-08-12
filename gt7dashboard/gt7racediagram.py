@@ -1,4 +1,6 @@
 import logging
+import time
+from functools import wraps
 from typing import List
 from bokeh.layouts import layout
 from bokeh.models import ColumnDataSource, Range1d, Span
@@ -13,8 +15,9 @@ from gt7dashboard.colors import (
     SELECTED_LAP_COLOR,
 )
 from gt7dashboard.gt7settings import get_log_level
+from gt7dashboard.gt7performance_monitor import performance_monitor
 
-logger = logging.getLogger("gt7racediagram")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 
@@ -308,6 +311,7 @@ class RaceDiagram:
 
         return source
 
+    @performance_monitor
     def add_additional_lap_to_race_diagram(
         self, color: str, lap: Lap, visible: bool = True
     ):

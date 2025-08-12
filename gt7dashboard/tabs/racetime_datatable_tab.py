@@ -6,7 +6,7 @@ from gt7dashboard.datatable.race_time import RaceTimeDataTable
 from .GT7Tab import GT7Tab
 from gt7dashboard.gt7settings import get_log_level
 
-logger = logging.getLogger("racetime_datatable_tab")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 

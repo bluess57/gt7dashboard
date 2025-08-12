@@ -10,7 +10,7 @@ from gt7dashboard.tab_manager import TabManager
 from gt7dashboard.gt7settings import GT7Settings, get_log_level
 
 # Set up logging
-logger = logging.getLogger("main")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 

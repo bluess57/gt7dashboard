@@ -3,7 +3,7 @@ from typing import List
 
 from gt7dashboard.gt7lap import Lap
 
-logger = logging.getLogger("gt7session")
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
