@@ -12,15 +12,17 @@ PLAYSTATION_IP = "ps5wifi"
 def is_host_up(ip: str) -> bool:
     response = os.system("ping -c 1 " + PLAYSTATION_IP)
 
-    #and then check the response...
+    # and then check the response...
     if response == 0:
         return True
     else:
         return False
 
 
-@unittest.skipIf(not is_host_up(PLAYSTATION_IP),
-                 "Playstation host is not up on %s" % (PLAYSTATION_IP))
+@unittest.skipIf(
+    not is_host_up(PLAYSTATION_IP),
+    "Playstation host is not up on %s" % (PLAYSTATION_IP),
+)
 class GT7CommunicationTest(unittest.TestCase):
     @classmethod
     def setUpClass(self) -> None:
@@ -49,21 +51,21 @@ class GT7CommunicationTest(unittest.TestCase):
     #         # print(car_data.rpm, car_data.in_race)
 
     def test_load_laps(self):
-        self.gt7comm.laps = [Lap()]
-        self.gt7comm.laps[0].number = 0
+        self.gt7comm.session.laps = [Lap()]
+        self.gt7comm.session.laps[0].number = 0
 
         laps = [Lap(), Lap()]
         laps[0].number = 1
         laps[1].number = 2
 
-        self.gt7comm.load_laps(laps, to_last_position=True)
-        self.assertEqual(3, len(self.gt7comm.laps))
-        self.assertEqual(1, self.gt7comm.laps[1].number)
+        self.gt7comm.session.load_laps(laps, to_last_position=True)
+        self.assertEqual(3, len(self.gt7comm.session.laps))
+        self.assertEqual(1, self.gt7comm.session.laps[1].number)
 
-        self.gt7comm.load_laps(laps, to_first_position=True)
-        self.assertEqual(5, len(self.gt7comm.laps))
-        self.assertEqual(1, self.gt7comm.laps[3].number)
+        self.gt7comm.session.load_laps(laps, to_first_position=True)
+        self.assertEqual(5, len(self.gt7comm.session.laps))
+        self.assertEqual(1, self.gt7comm.session.laps[3].number)
 
-        self.gt7comm.load_laps(laps, replace_other_laps=True)
-        self.assertEqual(2, len(self.gt7comm.laps))
-        self.assertEqual(1, self.gt7comm.laps[0].number)
+        self.gt7comm.session.load_laps(laps, replace_other_laps=True)
+        self.assertEqual(2, len(self.gt7comm.session.laps))
+        self.assertEqual(1, self.gt7comm.session.laps[0].number)

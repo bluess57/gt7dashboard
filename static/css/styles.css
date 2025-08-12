@@ -1,0 +1,48 @@
+body {
+    background: #181c24;
+    color: #e0e6ef;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* Links */
+a {
+    color: #4f8cff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+a:hover {
+    color: #82b1ff;
+}
+
+.custom-tooltip {
+    max-width: fit-content;
+    width: 300px;
+    white-space: normal;
+    word-break: break-word;
+    height: auto;
+    max-height: fit-content;
+}
+
+.slick-cell.selected {
+    background-color: green; /* Replace with your desired color */
+}
+
+.slick-row.odd {
+    background-color: #444;
+}
+
+.slick-row.even {
+    background-color: lightslategray;
+}
+
+.bk-data-table .gridcanvas .ui-widget-content .slick-cell {
+    background-color: #444;
+}
+
+.header-table {
+   background-color: red;
+   color: green;
+}

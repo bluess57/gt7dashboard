@@ -1,7 +1,9 @@
 #!/bin/bash
+# Set path to a python virtual environment
+pythonvenv="/home/ian/gt7dashboard-1/python/bin"
 
-pip3 install -r requirements.txt
+$pythonvenv/pip3 install -r requirements.txt
 
-python3 helper/download_cars_csv.py
+$pythonvenv/python3 helper/download_cars_csv.py
 
-python3 -m bokeh serve .
+$pythonvenv/python3 -m bokeh serve --show .

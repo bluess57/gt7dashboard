@@ -1,5 +1,5 @@
-bokeh~=3.6.3
-pycryptodome~=3.21.0
-tabulate~=0.8.10
+bokeh~=3.7.3
+pycryptodome~=3.23.0
 pandas~=2.2.3
-scipy~=1.15.1
+scipy~=1.16.0
+numpy>=1.21.0

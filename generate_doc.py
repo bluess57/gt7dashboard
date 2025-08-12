@@ -2,16 +2,15 @@ import os
 
 import gt7dashboard.gt7help as gt7help
 
-def add_screenshot(filename):
-    # join path
-    str_screenshot_path = os.path.join("README.assets", filename)
-    # check if file exists
-    if os.path.exists(str_screenshot_path):
-        return f"![screenshot_header]({str_screenshot_path})"
-    else:
-        raise Exception("File does not exist: " + str_screenshot_path)
 
-if __name__ == '__main__':
+def add_screenshot(filename):
+    """Add a screenshot to the markdown with proper path separators"""
+    # Always use forward slashes for web compatibility
+    path = f"README.assets/{filename}"
+    return f"![screenshot]({path})"
+
+
+if __name__ == "__main__":
 
     out_markdown = "## Manual\n\n"
 
@@ -27,13 +26,13 @@ if __name__ == '__main__':
 
     out_markdown += "#### Time / Diff\n\n"
     out_markdown += add_screenshot("screenshot_timediff.png") + "\n\n"
-    out_markdown += gt7help.TIME_DIFF + "\n\n"
+    out_markdown += gt7help.TIME_DIFF + "\n"
 
     out_markdown += "#### Manual Controls\n\n"
     out_markdown += add_screenshot("screenshot_manualcontrols.png") + "\n\n"
-    out_markdown += gt7help.MANUAL_CONTROLS + "\n\n"
+    out_markdown += gt7help.MANUAL_CONTROLS + "\n"
 
-    out_markdown += "#### Speed \n\n"
+    out_markdown += "#### Speed\n\n"
     out_markdown += add_screenshot("screenshot_speed.png") + "\n\n"
     out_markdown += gt7help.SPEED_DIAGRAM + "\n\n"
 
@@ -47,7 +46,7 @@ if __name__ == '__main__':
 
     out_markdown += "#### Speed Deviation (Spd. Dev.)\n\n"
     out_markdown += add_screenshot("screenshot_speeddeviation.png") + "\n\n"
-    out_markdown += gt7help.SPEED_VARIANCE + "\n\n"
+    out_markdown += gt7help.SPEED_VARIANCE + "\n"
 
     out_markdown += """I got inspired for this diagram by the [Your Data Driven Podcast](https://www.yourdatadriven.com/).
 On two different episodes of this podcast both [Peter Krause](https://www.yourdatadriven.com/ep12-go-faster-now-with-motorsports-data-analytics-guru-peter-krause/) and [Ross Bentley](https://www.yourdatadriven.com/ep3-tips-for-racing-faster-with-ross-bentley/) mentioned this visualization.
@@ -60,7 +59,7 @@ If they had one graph it would be the deviation in the (best) laps of the same d
     out_markdown += "#### Yaw Rate / Second\n\n"
     out_markdown += add_screenshot("screenshot_yaw.png") + "\n\n"
     out_markdown += gt7help.YAW_RATE_DIAGRAM + "\n\n"
-    out_markdown += "[Suellio Almeida](https://suellioalmeida.ca) introduced this concept to me. See [here](https://www.youtube.com/watch?v=B92vFKKjyB0) for more information.\n\n"
+    out_markdown += "[Suellio Almeida](https://suellioalmeida.ca) introduced this concept to me. See [youtube video](https://www.youtube.com/watch?v=B92vFKKjyB0) for more information.\n\n"
 
     out_markdown += "#### Braking\n\n"
     out_markdown += add_screenshot("screenshot_braking.png") + "\n\n"
@@ -82,13 +81,13 @@ If they had one graph it would be the deviation in the (best) laps of the same d
     out_markdown += add_screenshot("screenshot_boost.png") + "\n\n"
     out_markdown += gt7help.BOOST_DIAGRAM + "\n\n"
 
-    out_markdown += "#### Tire Speed / Car Speed\n\n"
-    out_markdown += add_screenshot("screenshot_tirespeed.png") + "\n\n"
+    out_markdown += "#### Tyre Speed / Car Speed\n\n"
+    out_markdown += add_screenshot("screenshot_tyrespeed.png") + "\n\n"
     out_markdown += gt7help.TIRE_DIAGRAM + "\n\n"
 
     out_markdown += "#### Time Table\n\n"
     out_markdown += add_screenshot("screenshot_timetable.png") + "\n\n"
-    out_markdown += gt7help.TIME_TABLE + "\n\n"
+    out_markdown += gt7help.TIME_TABLE + "\n"
 
     out_markdown += "#### Fuel Map\n\n"
     out_markdown += add_screenshot("screenshot_fuelmap.png") + "\n\n"
@@ -101,14 +100,23 @@ If they had one graph it would be the deviation in the (best) laps of the same d
     out_markdown += "### Tab 'Race Line'\n\n"
 
     out_markdown += add_screenshot("screenshot_race_line.png") + "\n\n"
-    out_markdown += gt7help.RACE_LINE_BIG + "\n\n"
+    out_markdown += gt7help.RACE_LINE_BIG
 
     print(out_markdown)
 
-    with open("README.md", 'r+') as f:
+    # Read the entire file first
+    with open("README.md", "r", encoding="utf-8") as f:
         content = f.read()
-        pos = content.find('## Manual')
-        if pos != -1:
-            f.seek(pos)
-            f.truncate()
-            f.write(out_markdown)
+
+    # Find the position to insert/replace content
+    pos = content.find("## Manual")
+    if pos != -1:
+        # Replace everything from "## Manual" onwards
+        new_content = content[:pos] + out_markdown
+    else:
+        # If "## Manual" not found, append to the end
+        new_content = content + "\n" + out_markdown
+
+    # Write the new content
+    with open("README.md", "w", encoding="utf-8") as f:
+        f.write(new_content)

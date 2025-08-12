@@ -1,14 +1,17 @@
 # gt7dashboard
 
 gt7dashboard is a live dashboard for Gran Turismo 7. Based on the recent discovery of the telemetry interface of GT7 described [here first](https://www.gtplanet.net/forum/threads/gt7-is-compatible-with-motion-rig.410728 ). This began as a fork of Bornhalls [gt7telemetry](https://github.com/Bornhall/gt7telemetry).
+This is a fork from the original author [gt7dashboard](https://github.com/snipem/gt7telemetry)
+This version applies a dark theme/carbon theme to the display and hopefully improves the user interface experience.
 
 See the [Manual](#manual) for detailed instructions.
 
 ## Features
 
-![](README.assets/screenshot.png)
-![](README.assets/screenshot_race_line.png)
+![screenmain](README.assets/theme_carbon/screenshot.png)
+![screenraceline](README.assets/theme_carbon/screenshot_race_line.png)
 
+* Connection to playstation IP - once connected and data is being received the heart icon will flash green when data received then revert to grey
 * Time Diff Graph between Last Lap and Reference Lap
   * *Under dashed line* is better and *over dashed line* is worse than Reference Lap
 * Race Line view with speed peaks and valleys of last lap and reference lap
@@ -26,7 +29,7 @@ See the [Manual](#manual) for detailed instructions.
 * List off all recent laps with additional metrics, measured in percentage * 1000 for better readability
 * Additional data for tuning such as Max Speed and Min Body Height
 * Ability to Save current laps and reset all laps
-* Race Lines for the most recent laps depicting throttling (green), braking (red) and coasting (blue)
+* Race Lines for the most recent laps depicting throttling (green), braking (red) and coasting (cyan)
 * Additional "Race view" with only fuel map
 * Optional Brake Points (slow) when setting `GT7_ADD_BRAKEPOINTS=true`
 * Add additional laps from the race lap table to the diagrams
@@ -37,10 +40,10 @@ Enable the "Always Record" checkbox to always record replays. Otherwise, will on
 
 ## How to run
 
-You will have to have a running Python installation. Look [here](https://wiki.python.org/moin/BeginnersGuide/Download) for instructions.
+You will have to have a running Python installation. Look [python wiki](https://wiki.python.org/moin/BeginnersGuide/Download) for instructions.
 
-* If you are on Windows 
-  * Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/
+* If you are on Windows
+  * Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
 
   * Run the file `run.ps1` with a double click
 * If you are on MacOS run the file `run.command`
@@ -52,15 +55,15 @@ The commands `pip3` or `python3` may be different on your OS. Try `pip` or `pyth
 ## How to run for experienced users
 
 1. (Once) `pip3 install -r requirements.txt` to install Python dependencies
-   1. On Windows: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/
+   1. On Windows: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": <https://visualstudio.microsoft.com/visual-cpp-build-tools/>
 
 2. (Optional, Once) Download the list of car names with `python3 helper/download_cars_csv.py`. Without this file, car names will only show as `CAR-ID-123`.
 3. Running the Dashboard
-    - (Mac/Linux) `bokeh serve .` (when inside the  `gt7dashboard` folder)
-    - (Windows) `python -m bokeh serve .`  (when inside the `gt7dashboard` folder)
+    * (Mac/Linux) `bokeh serve --show .` (when inside the  `gt7dashboard` folder)
+    * (Windows) `python -m bokeh serve --show .`  (when inside the `gt7dashboard` folder)
 4. (Optional) Running the Dashboard with a custom IP
-   - (Mac/Linux) `GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS> bokeh serve .` (when inside the  `gt7dashboard` folder)
-   - (Windows) `set GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS>` and `python -m bokeh serve .`  (when inside the `gt7dashboard` folder)
+   * (Mac/Linux) `GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS> bokeh serve .` (when inside the  `gt7dashboard` folder)
+   * (Windows) `set GT7_PLAYSTATION_IP=<CONSOLE IP ADDRESS>` and `python -m bokeh serve --show .`  (when inside the `gt7dashboard` folder)
 
 ## Troubleshooting
 
@@ -68,7 +71,7 @@ If you run into `TimeoutError`s make sure to check your firewall. You may have t
 
 ## Docker
 
-There is a `Dockerfile` and [readily made images](https://github.com/snipem/gt7dashboard/pkgs/container/gt7dashboard) available. 
+There is a `Dockerfile` and [readily made images](https://github.com/snipem/gt7dashboard/pkgs/container/gt7dashboard) available.
 
 ```bash
 # If building from the Dockerfile
@@ -113,7 +116,7 @@ Hint: You should set the `GT7_PLAYSTATION_IP` env var since Docker containers ar
 
 ## Lap Files
 
-If you want to edit your lap files, use a JSON editor. For example ` cat ... | jq -c '.[0:4]' > ...` will shorten the laps to the first 4 laps in the save file.
+If you want to edit your lap files, use a JSON editor. For example `cat ... | jq -c '.[0:4]' > ...` will shorten the laps to the first 4 laps in the save file.
 
 ## Contributing
 
@@ -127,7 +130,7 @@ If you want to add something to the manual, please edit `gt7dashboard/gt7help.py
 
 #### Header
 
-![screenshot_header](README.assets/screenshot_header.png)
+![screenshot](README.assets/theme_carbon/screenshot_header.png)
 
 The red or green button reflects the current connection status to Gran Turismo 7. i.e. if there was a packet received successfully in the last second, the button will turn green.
 
@@ -135,24 +138,23 @@ Next is a brief description of the last and reference lap. The reference lap can
 
 #### Lap Controls
 
-![screenshot_header](README.assets/screenshot_lapcontrols.png)
+![screenshot](README.assets/theme_carbon/screenshot_lapcontrols.png)
 
 You can reset all laps with the 'Reset Laps' button. This is helpful if you are switching tracks or cars in a session. Otherwise the different tracks will mix in the dashboard.
 'Save Laps' will save your recorded laps to a file. You can load the laps afterwards with the dropdown list to the right.
 
 #### Time / Diff
 
-![screenshot_header](README.assets/screenshot_timediff.png)
+![screenshot](README.assets/theme_carbon/screenshot_timediff.png)
 
  This is a graph for showing the relative time difference between the last lap and the reference lap.
 Everything under the solid bar at 0 is slower than the reference lap. Everything above is slower than the reference lap.
 
 If you see a bump in this graph to the top or the bottom this means that you were slower or faster at this point respectively.
 
-
 #### Manual Controls
 
-![screenshot_header](README.assets/screenshot_manualcontrols.png)
+![screenshot](README.assets/theme_carbon/screenshot_lapcontrols.png)
 
 'Log Lap Now' will log a lap now even you have not crossed the finished line. This is helpful for missions or license tests where the end of a test is not necessarily identical with the finish line.
 
@@ -160,18 +162,17 @@ The checkbox 'Record Replays' will allow you to record replays. Be careful since
 
 In the 'Best Lap' dropdown list you can select the reference lap. Usually this will point to the best lap of the session.
 
+#### Speed
 
-#### Speed 
-
-![screenshot_header](README.assets/screenshot_speed.png)
+![screenshot](README.assets/theme_carbon/screenshot_speed.png)
 
 The total speed of the laps selected. This value is in km/h. or mph. depending on your in-game setting
 
 #### Race Line
 
-![screenshot_header](README.assets/screenshot_raceline.png)
+![screenshot](README.assets/theme_carbon/screenshot_raceline.png)
 
-This is a race line map with the last lap (blue) and the reference lap (magenta). Zoom in for more details.
+This is a race line map with the last lap (cyan) and the reference lap (magenta). Zoom in for more details.
 
 This map is helpful if you are using the index number of a graph to quickly determine where in the lap a measurement was taken.
 
@@ -179,24 +180,25 @@ See the tab 'Race Line' for a more detailed race line.
 
 #### Peaks and Valleys
 
-![screenshot_header](README.assets/screenshot_peaks_and_valleys.png)
+Not implemented in this version, undecided about how useful this is or if it is just confusing.
+
+![screenshot](README.assets/screenshot_peaks_and_valleys.png)
 
 A list of speed peaks and valleys for the selected laps. We assume peaks are straights (s) and valleys are turns (T). Use this to compare the difference in speed between the last lap and the reference lap on given positions of the race track.
 
 #### Speed Deviation (Spd. Dev.)
 
-![screenshot_header](README.assets/screenshot_speeddeviation.png)
+![screenshot](README.assets/screenshot_speeddeviation.png)
 
 Displays the speed deviation of the fastest laps within a 5.0% time difference threshold of the fastest lap.
 Replay laps are ignored. The speed deviation is calculated as the standard deviation between these fastest laps.
 
-With a perfect driver in an ideal world, this line would be flat. In a real world situation, you will get an almost flat line, 
+With a perfect driver in an ideal world, this line would be flat. In a real world situation, you will get an almost flat line,
 with bumps at the corners and long straights. This is where even your best laps deviate.
 
 You may get some insights for improvement on your consistency if you look at the points of the track where this line is bumpy.
 
 The list on the right hand side shows your best laps that are token into consideration for the speed variance.
-
 
 I got inspired for this diagram by the [Your Data Driven Podcast](https://www.yourdatadriven.com/).
 On two different episodes of this podcast both [Peter Krause](https://www.yourdatadriven.com/ep12-go-faster-now-with-motorsports-data-analytics-guru-peter-krause/) and [Ross Bentley](https://www.yourdatadriven.com/ep3-tips-for-racing-faster-with-ross-bentley/) mentioned this visualization.
@@ -204,57 +206,57 @@ If they had one graph it would be the deviation in the (best) laps of the same d
 
 #### Throttle
 
-![screenshot_header](README.assets/screenshot_throttle.png)
+![screenshot](README.assets/theme_carbon/screenshot_throttle.png)
 
 This is the amount of throttle pressure from 0% to 100% of the laps selected.
 
 #### Yaw Rate / Second
 
-![screenshot_header](README.assets/screenshot_yaw.png)
+![screenshot](README.assets/theme_carbon/screenshot_yaw.png)
 
 This is the yaw rate per second of your car. Use this to determine the Maximum Rotation Point (MRP). At this point you should normally accelerate.
 
-[Suellio Almeida](https://suellioalmeida.ca) introduced this concept to me. See [here](https://www.youtube.com/watch?v=B92vFKKjyB0) for more information.
+[Suellio Almeida](https://suellioalmeida.ca) introduced this concept to me. See [youtube video](https://www.youtube.com/watch?v=B92vFKKjyB0) for more information.
 
 #### Braking
 
-![screenshot_header](README.assets/screenshot_braking.png)
+![screenshot](README.assets/theme_carbon/screenshot_braking.png)
 
 This is the amount of braking pressure from 0% to 100% of the laps selected.
 
 #### Coasting
 
-![screenshot_header](README.assets/screenshot_coasting.png)
+![screenshot](README.assets/theme_carbon/screenshot_coasting.png)
 
 This is the amount of coasting from 0% to 100% of the laps selected. Coasting is when neither throttle nor brake are engaged.
 
 #### Gear
 
-![screenshot_header](README.assets/screenshot_gear.png)
+![screenshot](README.assets/theme_carbon/screenshot_gear.png)
 
 This is the current gear of the laps selected.
 
 #### RPM
 
-![screenshot_header](README.assets/screenshot_rpm.png)
+![screenshot](README.assets/theme_carbon/screenshot_rpm.png)
 
 This is the current RPM of the laps selected.
 
 #### Boost
 
-![screenshot_header](README.assets/screenshot_boost.png)
+![screenshot](README.assets/screenshot_boost.png)
 
-This is the current Boost in x100 kPa of the laps selected.
+This is the current Boost in x100 kPa of the laps selected. Will only be shown if boosted car/data is received.
 
-#### Tire Speed / Car Speed
+#### Tyre Speed / Car Speed
 
-![screenshot_header](README.assets/screenshot_tirespeed.png)
+![screenshot](README.assets/screenshot_tyrespeed.png)
 
-This is the relation between the speed of the tires and the speed of the car. If your tires are faster than your car, your tires might be spinning. If they are slower, your tires might be blocking. Use this judge your car control.
+This is the relation between the speed of the tyres and the speed of the car. If your tyres are faster than your car, your tyres might be spinning. If they are slower, your tyres might be blocking. Use this judge your car control.
 
 #### Time Table
 
-![screenshot_header](README.assets/screenshot_timetable.png)
+![screenshot](README.assets/theme_carbon/screenshot_timetable.png)
 
 A table with logged information of the session. # is the number of the lap as reported by the game. There might be multiple laps of the same number if you restarted a session. Time and Diff are self-explaining. Info will hold additional meta data, for example if this lap was a replay.
 Fuel Consumed is the amount of fuel consumed in the lap.
@@ -266,25 +268,24 @@ You can click on one of these laps to add them to the diagrams above. These laps
 
 Car will hold the car name. You will have to have the `db/cars.csv` file downloaded for this to work.
 
-
 #### Fuel Map
-
-![screenshot_header](README.assets/screenshot_fuelmap.png)
+Not implemented yet.
+![screenshot](README.assets/screenshot_fuelmap.png)
 
 This fuel map will help to determine the fuel setting of your car. The game does not report the current fuel setting, so this map is relative.
 The current fuel setting will always be at 0. If you want to change the fuel to a leaner setting count downwards with the amount of steps left. For example: If you are at fuel setting 2 in the game and want to go to the games fuel setting 5, have a look at Fuel Lvl. 3 in this map.
 It will give you a raw assumption of the laps and time remaining and the assumed time difference in lap time for the new setting.
 
 #### Tuning Info
-
-![screenshot_header](README.assets/screenshot_tuninginfo.png)
+Not implemented in this version. Let me know if this is useful and want it displayed.
+![screenshot](README.assets/screenshot_tuninginfo.png)
 
 Here is some useful information you may use for tuning. Such as Max Speed and minimal body height in relation to the track. The later seems to be helpful when determining the possible body height.
 
 ### Tab 'Race Line'
 
-![screenshot_header](README.assets/screenshot_race_line.png)
+![screenshot](README.assets/theme_Carbon/screenshot_race_line.png)
 
-This is a race line map with the last lap (blue) and the reference lap (magenta). This diagram does also feature spead peaks (▴) and valleys (▾) as well as throttle, brake and coasting zones.
+This is a race line map with the last lap (cyan) and the reference lap (magenta). This diagram does also feature spead peaks (▴) and valleys (▾) as well as throttle, brake and coasting zones.
 
 The thinner line of the two is your last lap. The reference line is the thicker translucent line. If you want to make out differences in the race line have a look at the middle of the reference lap line and your line. You may zoom in to spot the differences and read the values on peaks and valleys.

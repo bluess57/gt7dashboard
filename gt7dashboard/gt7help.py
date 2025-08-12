@@ -1,11 +1,11 @@
-from bokeh.models import Div
+from bokeh.models import Div, HoverTool
 
 from gt7dashboard import gt7helper
 
 SPEED_VARIANCE = f"""Displays the speed deviation of the fastest laps within a {gt7helper.DEFAULT_FASTEST_LAPS_PERCENT_THRESHOLD * 100}% time difference threshold of the fastest lap.
 Replay laps are ignored. The speed deviation is calculated as the standard deviation between these fastest laps.
 
-With a perfect driver in an ideal world, this line would be flat. In a real world situation, you will get an almost flat line, 
+With a perfect driver in an ideal world, this line would be flat. In a real world situation, you will get an almost flat line,
 with bumps at the corners and long straights. This is where even your best laps deviate.
 
 You may get some insights for improvement on your consistency if you look at the points of the track where this line is bumpy.
@@ -16,7 +16,7 @@ The list on the right hand side shows your best laps that are token into conside
 HEADER = """The red or green button reflects the current connection status to Gran Turismo 7. i.e. if there was a packet received successfully in the last second, the button will turn green.
 
 Next is a brief description of the last and reference lap. The reference lap can be selected on the right side."""
-RACE_LINE_MINI = """This is a race line map with the last lap (blue) and the reference lap (magenta). Zoom in for more details.
+RACE_LINE_MINI = """This is a race line map with the last lap (cyan) and the reference lap (magenta). Zoom in for more details.
 
 This map is helpful if you are using the index number of a graph to quickly determine where in the lap a measurement was taken.
 
@@ -29,20 +29,24 @@ In the 'Best Lap' dropdown list you can select the reference lap. Usually this w
 """
 
 TIME_DIFF = """ This is a graph for showing the relative time difference between the last lap and the reference lap.
-Everything under the solid bar at 0 is slower than the reference lap. Everything above is slower than the reference lap.
+Everything under the solid bar at 0 is faster than the reference lap. Everything above is slower than the reference lap.
 
 If you see a bump in this graph to the top or the bottom this means that you were slower or faster at this point respectively.
 """
 LAP_CONTROLS = """You can reset all laps with the 'Reset Laps' button. This is helpful if you are switching tracks or cars in a session. Otherwise the different tracks will mix in the dashboard.
 'Save Laps' will save your recorded laps to a file. You can load the laps afterwards with the dropdown list to the right."""
 SPEED_DIAGRAM = """The total speed of the laps selected. This value is in km/h. or mph. depending on your in-game setting"""
-THROTTLE_DIAGRAM = """This is the amount of throttle pressure from 0% to 100% of the laps selected."""
-BRAKING_DIAGRAM = """This is the amount of braking pressure from 0% to 100% of the laps selected."""
+THROTTLE_DIAGRAM = (
+    """This is the amount of throttle pressure from 0% to 100% of the laps selected."""
+)
+BRAKING_DIAGRAM = (
+    """This is the amount of braking pressure from 0% to 100% of the laps selected."""
+)
 COASTING_DIAGRAM = """This is the amount of coasting from 0% to 100% of the laps selected. Coasting is when neither throttle nor brake are engaged."""
 GEAR_DIAGRAM = """This is the current gear of the laps selected."""
 RPM_DIAGRAM = "This is the current RPM of the laps selected."
 BOOST_DIAGRAM = "This is the current Boost in x100 kPa of the laps selected."
-TIRE_DIAGRAM = """This is the relation between the speed of the tires and the speed of the car. If your tires are faster than your car, your tires might be spinning. If they are slower, your tires might be blocking. Use this judge your car control."""
+TIRE_DIAGRAM = """This is the relation between the speed of the tyres and the speed of the car. If your tyres are faster than your car, your tyres might be spinning. If they are slower, your tyres might be blocking. Use this judge your car control."""
 
 SPEED_PEAKS_AND_VALLEYS = """A list of speed peaks and valleys for the selected laps. We assume peaks are straights (s) and valleys are turns (T). Use this to compare the difference in speed between the last lap and the reference lap on given positions of the race track."""
 TIME_TABLE = """A table with logged information of the session. # is the number of the lap as reported by the game. There might be multiple laps of the same number if you restarted a session. Time and Diff are self-explaining. Info will hold additional meta data, for example if this lap was a replay.
@@ -60,7 +64,7 @@ The current fuel setting will always be at 0. If you want to change the fuel to 
 It will give you a raw assumption of the laps and time remaining and the assumed time difference in lap time for the new setting."""
 TUNING_INFO = """Here is some useful information you may use for tuning. Such as Max Speed and minimal body height in relation to the track. The later seems to be helpful when determining the possible body height."""
 
-RACE_LINE_BIG = """This is a race line map with the last lap (blue) and the reference lap (magenta). This diagram does also feature spead peaks (▴) and valleys (▾) as well as throttle, brake and coasting zones.
+RACE_LINE_BIG = """This is a race line map with the last lap (cyan) and the reference lap (magenta). This diagram does also feature spead peaks (▴) and valleys (▾) as well as throttle, brake and coasting zones.
 
 The thinner line of the two is your last lap. The reference line is the thicker translucent line. If you want to make out differences in the race line have a look at the middle of the reference lap line and your line. You may zoom in to spot the differences and read the values on peaks and valleys.
 """
@@ -69,10 +73,80 @@ YAW_RATE_DIAGRAM = """This is the yaw rate per second of your car. Use this to d
 
 
 def get_help_div(help_text_resource):
-    return Div(text=get_help_text_resource(help_text_resource), width=7, height=5)
+    return Div(text=get_help_text_resource(help_text_resource), width=8, height=5)
 
 
 def get_help_text_resource(help_text_resource):
     return f"""
-    <div title="{help_text_resource}">?⃝</div>
+    <div title="{help_text_resource}" style="cursor: pointer;">ℹ️</div>
     """
+
+
+def add_help_tooltip(ui_element, help_text):
+    """
+    Add help text as a tooltip to a Bokeh UI element
+
+    Args:
+        ui_element: The Bokeh UI element to add the tooltip to
+        help_text: The help text to display in the tooltip
+
+    Returns:
+        The modified UI element with tooltip
+    """
+    # Set the title attribute which Bokeh uses for tooltips
+    ui_element.title = help_text
+    return ui_element
+
+
+def add_enhanced_tooltip(ui_element, help_text):
+    """Add enhanced tooltip with custom styling"""
+    # Add custom CSS class
+    if not hasattr(ui_element, "css_classes") or ui_element.css_classes is None:
+        ui_element.css_classes = []
+
+    ui_element.css_classes.append("tooltip-element")
+
+    # Create a unique ID for this tooltip
+    import uuid
+
+    tooltip_id = f"tooltip-{uuid.uuid4().hex[:8]}"
+
+    # Create tooltip HTML
+    tooltip_html = f"""
+    <div id="{tooltip_id}" class="gt7-tooltip">{help_text}</div>
+    """
+
+    # Add the tooltip div to the document
+    tooltip_div = Div(
+        text=tooltip_html, css_classes=["tooltip-container"], visible=False
+    )
+
+    # Add JavaScript for showing/hiding tooltip
+    ui_element.js_on_event(
+        "mouseover",
+        f"""
+        document.getElementById('{tooltip_id}').style.display = 'block';
+    """,
+    )
+    ui_element.js_on_event(
+        "mouseout",
+        f"""
+        document.getElementById('{tooltip_id}').style.display = 'none';
+    """,
+    )
+
+    return ui_element, tooltip_div
+
+
+def add_plot_tooltip(plot, help_text):
+    """Add a tooltip to a plot using HoverTool"""
+    hover = HoverTool(
+        tooltips=f"""
+        <div style="background-color: #f8f8f8; padding: 10px; border-radius: 5px;">
+            <span style="font-size: 12pt;">{help_text}</span>
+        </div>
+        """,
+        point_policy="follow_mouse",
+    )
+    plot.add_tools(hover)
+    return plot
