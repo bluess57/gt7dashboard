@@ -677,7 +677,10 @@ class RaceTab(GT7Tab):
 
         def update_fuel_map():
             """Update the fuel map fuel tab"""
-            self.app.tab_manager.fuel_tab.update_fuel_map()
+            try:
+                self.app.tab_manager.fuel_tab.update_fuel_map()
+            except Exception as e:
+                logger.error(f"Error updating fuel map: {e}")
 
         # Update the speed peak and valley diagram
         self.app.doc.add_next_tick_callback(update_ui)

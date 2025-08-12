@@ -318,15 +318,6 @@ class FuelTab(GT7Tab):
             fuel_related = [k for k in lap.__dict__.keys() if "fuel" in k.lower()]
             logger.debug(f"  All fuel-related attributes: {fuel_related}")
 
-    # Add a method for periodic updates if needed
-    @linear()
     def periodic_fuel_update(self, step=None):
         """Periodic update method for use with Bokeh's periodic callback system"""
         self.update_fuel_map()
-
-    # add a method to start periodic updates, not used at the moment
-    # but can be useful for future enhancements
-    def start_periodic_updates(self, period=1000):
-        """Start periodic updates for the fuel tab"""
-        if hasattr(self.app, "doc") and self.app.doc:
-            self.app.doc.add_periodic_callback(self.periodic_fuel_update, period)
