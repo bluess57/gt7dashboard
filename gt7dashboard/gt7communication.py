@@ -14,7 +14,7 @@ from gt7dashboard.gt7salsa import salsa20_dec
 from .gt7settings import get_log_level
 
 # Set up logging
-logger = logging.getLogger("gt7communication.py")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 

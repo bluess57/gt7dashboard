@@ -3,7 +3,7 @@ from bokeh.models import ColumnDataSource, TableColumn, DataTable, ImportedStyle
 from gt7dashboard.gt7lap import Lap
 from gt7dashboard.gt7settings import get_log_level
 
-logger = logging.getLogger("SpeedPeakValleyDataTable")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 

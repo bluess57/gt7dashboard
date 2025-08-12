@@ -13,7 +13,7 @@ from .GT7Tab import GT7Tab
 from gt7dashboard import gt7diagrams
 from gt7dashboard.gt7settings import get_log_level
 
-logger = logging.getLogger("fuel_tab")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 

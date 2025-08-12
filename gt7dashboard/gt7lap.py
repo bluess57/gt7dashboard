@@ -16,7 +16,7 @@ RACE_LINE_THROTTLE_MODE = "RACE_LINE_THROTTLE_MODE"
 RACE_LINE_COASTING_MODE = "RACE_LINE_COASTING_MODE"
 
 # Set up logging
-logger = logging.getLogger("gt7lap.py")
+logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
 
