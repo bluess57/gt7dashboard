@@ -627,13 +627,10 @@ class RaceTab(GT7Tab):
     def update_lap_change(self):
         """Update the display when laps change"""
 
-        update_start_time = time.time()
         laps = self.app.gt7comm.session.get_laps()
 
         if not self.telemetry_update_needed:
             return
-
-        logger.info("update_lap_change laps")
 
         if laps is not None and len(laps) > 0:
             # Get all three laps (last, reference, median) at once
@@ -652,17 +649,8 @@ class RaceTab(GT7Tab):
 
             logger.info("Updating of %d laps" % len(laps))
 
-            start_time = time.time()
             self.update_speed_velocity_graph(laps)
-            logger.debug(
-                "Updating speed velocity graph took %dms"
-                % ((time.time() - start_time) * 1000)
-            )
 
-            logger.debug(
-                "End of updating laps, whole Update took %dms"
-                % ((time.time() - update_start_time) * 1000)
-            )
             self.update_header_line(last_lap, reference_lap)
             self.telemetry_update_needed = False
         else:
