@@ -32,6 +32,7 @@ class ColoredFormatter(logging.Formatter):
 
 logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
+logger.propagate = False  # Prevent propagation to root logger
 
 # Create colored handler if one doesn't exist
 if not logger.handlers:
@@ -53,7 +54,7 @@ def performance_monitor(func):
         execution_time = time.time() - start_time
 
         if execution_time > 0.1:  # Log slow operations
-            logger.debug(f"{func.__name__} took {execution_time:.3f}s")
+            logger.warning(f"{func.__name__} took {execution_time:.3f}s")
         return result
 
     return wrapper

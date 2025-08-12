@@ -3,6 +3,7 @@ from typing import List
 from bokeh.models import ColumnDataSource, TableColumn, DataTable, ImportedStyleSheet
 from gt7dashboard import gt7helper
 from gt7dashboard.gt7lap import Lap
+from gt7dashboard.gt7performance_monitor import performance_monitor
 from gt7dashboard.gt7settings import get_log_level
 import numpy as np
 
@@ -68,8 +69,8 @@ class RaceTimeDataTable(object):
             logger.debug("No document provided, adding lap immediately.")
             do_add()
 
+    @performance_monitor
     def show_laps(self, laps: List[Lap]):
-        logger.info("show_laps")
         best_lap = gt7helper.get_best_lap(laps)
         if best_lap is None:
             empty_df = gt7helper.pd_data_frame_from_lap([], best_lap_time=0)
