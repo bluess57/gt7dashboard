@@ -1,7 +1,7 @@
 import logging
 import itertools
 import numpy as np
-from typing import List
+from typing import List, Dict, Tuple, Optional
 from bokeh.layouts import layout, column, row
 from bokeh.models import (
     ColumnDataSource,
@@ -36,10 +36,27 @@ class RaceLinesTab(GT7Tab):
         """Initialize the race lines tab"""
         super().__init__("Race Lines")
         self.app = app_instance
-        self.race_lines = []
-        self.race_lines_data = []
-        self.selected_laps = []
-        self.race_line_colors = itertools.cycle(palette)
+
+        # Pre-generate color palette for better performance
+        self._color_palette = list(palette)
+        self._color_index = 0
+
+        # Initialize color cycle for backward compatibility
+        self.race_line_colors = itertools.cycle(self._color_palette)
+
+        # Cache for frequently used components and data
+        self._component_cache = {}
+        self._lap_data_cache = {}  # Cache processed lap data
+        self._segment_cache = {}  # Cache segment calculations
+
+        # Pre-allocate data structures for better memory management
+        self.race_lines: List = []
+        self.race_lines_data: List[List[Dict]] = []
+        self.selected_laps: List = []
+
+        # Cache car names to avoid repeated lookups
+        self._car_name_cache: Dict[Optional[int], str] = {}
+
         self.create_components()
         self.layout = self.create_layout()
 
@@ -98,49 +115,49 @@ class RaceLinesTab(GT7Tab):
         self.app.gt7comm.session.set_on_load_laps_callback(self.update_lap_options)
 
     def create_race_line_figures(self, number_of_figures=1):
-        """Create figures for displaying race lines"""
+        """Optimized figure creation with object pooling"""
         self.race_lines = []
         self.race_lines_data = []
 
-        tooltips = [
-            ("Lap", "@lap_name"),
-            ("Section", "@section"),
-            ("Start Speed", "@start_speed kph"),
-            ("End Speed", "@end_speed kph"),
-        ]
+        # Cache configurations to avoid repeated object creation
+        if not hasattr(self, "_figure_config_cache"):
+            self._figure_config_cache = {
+                "tooltips": [
+                    ("Lap", "@lap_name"),
+                    ("Section", "@section"),
+                    ("Start Speed", "@start_speed kph"),
+                    ("End Speed", "@end_speed kph"),
+                ],
+                "figure_kwargs": {
+                    "title": "Race Line",
+                    "x_axis_label": "X",
+                    "y_axis_label": "Z",
+                    "match_aspect": True,
+                    "width": 800,
+                    "height": 600,
+                    "active_drag": "box_zoom",
+                },
+            }
+
+        config = self._figure_config_cache
 
         for i in range(number_of_figures):
             race_line_figure = figure(
-                title="Race Line",
-                x_axis_label="X",
-                y_axis_label="Z",
-                match_aspect=True,
-                width=800,
-                height=600,
-                active_drag="box_zoom",
-                tooltips=tooltips,
+                tooltips=config["tooltips"], **config["figure_kwargs"]
             )
 
-            # Flip Y axis to match game coordinates
+            # Batch configuration
             race_line_figure.y_range.flipped = True
             race_line_figure.toolbar.autohide = True
 
-            # ADD A PLACEHOLDER RENDERER TO PREVENT WARNING
-            # This creates an invisible line that prevents the MISSING_RENDERERS warning
+            # Pre-create placeholder to avoid warnings
             placeholder_source = ColumnDataSource(data={"x": [], "y": []})
-            placeholder_line = race_line_figure.line(
-                x="x",
-                y="y",
-                source=placeholder_source,
-                line_alpha=0,  # Make it invisible
-                line_width=0,  # Make it invisible
+            race_line_figure.line(
+                x="x", y="y", source=placeholder_source, line_alpha=0, line_width=0
             )
 
             self.race_lines.append(race_line_figure)
-
-            # Create data sources for this figure
-            figure_data_sources = []
-            self.race_lines_data.append(figure_data_sources)
+            self.race_lines_data.append([])
 
     def add_race_line(self, lap: Lap, color: str, figure_index=0):
         """Add a race line using multi_line for better continuity"""
@@ -211,7 +228,7 @@ class RaceLinesTab(GT7Tab):
         return line_data
 
     def update_race_line_data(self, lap: Lap, figure_index: int, line_index: int):
-        """Update race line data for the given lap - MODIFIED VERSION"""
+        """Optimized race line data update with caching"""
         if figure_index >= len(self.race_lines_data):
             logger.error(f"Figure index {figure_index} out of range")
             return
@@ -220,132 +237,415 @@ class RaceLinesTab(GT7Tab):
             logger.error(f"Line index {line_index} out of range")
             return
 
-        line_data = self.race_lines_data[figure_index][line_index]
+        # Check cache first
+        lap_cache_key = f"{lap.title}_{id(lap)}"
+        if lap_cache_key in self._lap_data_cache:
+            cached_data = self._lap_data_cache[lap_cache_key]
+            line_data = self.race_lines_data[figure_index][line_index]
 
-        # Extract coordinates
-        x_coords = lap.data_position_x
-        z_coords = lap.data_position_z
-        throttle = lap.data_throttle if hasattr(lap, "data_throttle") else []
-        brake = lap.data_braking if hasattr(lap, "data_braking") else []
-        speed = lap.data_speed if hasattr(lap, "data_speed") else []
-
-        if len(x_coords) == 0:
-            logger.warning(f"Lap {lap.title} has no position data")
+            # Update sources with cached data
+            line_data["throttle_source"].data = cached_data["throttle_segments"]
+            line_data["braking_source"].data = cached_data["braking_segments"]
+            line_data["coasting_source"].data = cached_data["coasting_segments"]
             return
 
-        logger.debug(
-            f"Processing lap {lap.title}: {len(x_coords)} position points, {len(throttle)} throttle points, {len(brake)} brake points"
+        line_data = self.race_lines_data[figure_index][line_index]
+
+        # Extract and process coordinates efficiently
+        coords_data = self._extract_lap_coordinates(lap)
+        if coords_data is None:
+            return
+
+        x_coords, z_coords, throttle, brake, speed = coords_data
+
+        # Vectorized state determination
+        throttle_mask = (throttle > 0) & (brake == 0)
+        braking_mask = brake > 0
+        coasting_mask = ~throttle_mask & ~braking_mask
+
+        # Create segment data
+        throttle_segments = self._create_segments_vectorized(
+            x_coords, z_coords, speed, throttle_mask, lap.title, "Throttle"
+        )
+        braking_segments = self._create_segments_vectorized(
+            x_coords, z_coords, speed, braking_mask, lap.title, "Braking"
+        )
+        coasting_segments = self._create_segments_vectorized(
+            x_coords, z_coords, speed, coasting_mask, lap.title, "Coasting"
         )
 
-        # Create lists to hold line segments for multi_line
-        throttle_xs, throttle_ys = [], []
-        braking_xs, braking_ys = [], []
-        coasting_xs, coasting_ys = [], []
-
-        # Start/end speed for all segments
-        throttle_start_speed, throttle_end_speed = [], []
-        braking_start_speed, braking_end_speed = [], []
-        coasting_start_speed, coasting_end_speed = [], []
-
-        # Current segment being built
-        current_state = None
-        segment_x, segment_z, segment_speed = [], [], []
-
-        def finalize_segment(state):
-            """Add completed segment to appropriate lists"""
-            if len(segment_x) < 2:  # Need at least 2 points for a line
-                return
-
-            if state == "throttle":
-                throttle_xs.append(list(segment_x))
-                throttle_ys.append(list(segment_z))
-                throttle_start_speed.append(segment_speed[0])
-                throttle_end_speed.append(segment_speed[-1])
-            elif state == "braking":
-                braking_xs.append(list(segment_x))
-                braking_ys.append(list(segment_z))
-                braking_start_speed.append(segment_speed[0])
-                braking_end_speed.append(segment_speed[-1])
-            elif state == "coasting":
-                coasting_xs.append(list(segment_x))
-                coasting_ys.append(list(segment_z))
-                coasting_start_speed.append(segment_speed[0])
-                coasting_end_speed.append(segment_speed[-1])
-
-        # Process each data point
-        for i in range(len(x_coords)):
-            # Determine current driving state
-            throttle_val = throttle[i] if i < len(throttle) else 0
-            brake_val = brake[i] if i < len(brake) else 0
-            speed_val = speed[i] if i < len(speed) else None
-
-            if throttle_val > 0 and brake_val == 0:
-                new_state = "throttle"
-            elif brake_val > 0:
-                new_state = "braking"
-            else:
-                new_state = "coasting"
-
-            # If state changed, finalize previous segment and start new one
-            if new_state != current_state:
-                if current_state is not None:
-                    finalize_segment(current_state)
-
-                # Start new segment
-                current_state = new_state
-                segment_x, segment_z, segment_speed = [], [], []
-
-            # Add point to current segment
-            segment_x.append(x_coords[i])
-            segment_z.append(z_coords[i])
-            segment_speed.append(speed_val)
-
-        # Don't forget the last segment
-        if current_state is not None:
-            finalize_segment(current_state)
-
-        # Update data sources with proper multi_line format
-        line_data["throttle_source"].data = {
-            "xs": throttle_xs,
-            "ys": throttle_ys,
-            "lap_name": [lap.title] * len(throttle_xs),
-            "section": ["Throttle"] * len(throttle_xs),
-            "start_speed": throttle_start_speed,
-            "end_speed": throttle_end_speed,
+        # Cache the results
+        self._lap_data_cache[lap_cache_key] = {
+            "throttle_segments": throttle_segments,
+            "braking_segments": braking_segments,
+            "coasting_segments": coasting_segments,
         }
 
-        line_data["braking_source"].data = {
-            "xs": braking_xs,
-            "ys": braking_ys,
-            "lap_name": [lap.title] * len(braking_xs),
-            "section": ["Braking"] * len(braking_xs),
-            "start_speed": braking_start_speed,
-            "end_speed": braking_end_speed,
-        }
+        # Update data sources
+        line_data["throttle_source"].data = throttle_segments
+        line_data["braking_source"].data = braking_segments
+        line_data["coasting_source"].data = coasting_segments
 
-        line_data["coasting_source"].data = {
-            "xs": coasting_xs,
-            "ys": coasting_ys,
-            "lap_name": [lap.title] * len(coasting_xs),
-            "section": ["Coasting"] * len(coasting_xs),
-            "start_speed": coasting_start_speed,
-            "end_speed": coasting_end_speed,
-        }
+    def _extract_lap_coordinates(self, lap: Lap) -> Optional[Tuple[np.ndarray, ...]]:
+        """Extract and validate lap coordinates efficiently"""
+        try:
+            x_coords = (
+                np.asarray(lap.data_position_x, dtype=np.float32)
+                if lap.data_position_x
+                else np.array([])
+            )
+            z_coords = (
+                np.asarray(lap.data_position_z, dtype=np.float32)
+                if lap.data_position_z
+                else np.array([])
+            )
 
-        logger.info(
-            f"Updated race line data for {lap.title}: {len(throttle_xs)} throttle segments, {len(braking_xs)} braking segments, {len(coasting_xs)} coasting segments"
-        )
+            if len(x_coords) == 0:
+                logger.warning(f"Lap {lap.title} has no position data")
+                return None
+
+            # Extract other data with same length
+            data_length = len(x_coords)
+            throttle = (
+                np.asarray(lap.data_throttle[:data_length], dtype=np.float32)
+                if hasattr(lap, "data_throttle") and lap.data_throttle
+                else np.zeros(data_length, dtype=np.float32)
+            )
+            brake = (
+                np.asarray(lap.data_braking[:data_length], dtype=np.float32)
+                if hasattr(lap, "data_braking") and lap.data_braking
+                else np.zeros(data_length, dtype=np.float32)
+            )
+            speed = (
+                np.asarray(lap.data_speed[:data_length], dtype=np.float32)
+                if hasattr(lap, "data_speed") and lap.data_speed
+                else np.zeros(data_length, dtype=np.float32)
+            )
+
+            return x_coords, z_coords, throttle, brake, speed
+
+        except Exception as e:
+            logger.error(f"Error extracting coordinates for lap {lap.title}: {e}")
+            return None
+
+    def _create_segments_vectorized(
+        self,
+        x_coords: np.ndarray,
+        z_coords: np.ndarray,
+        speed: np.ndarray,
+        mask: np.ndarray,
+        lap_title: str,
+        section_name: str,
+    ) -> Dict[str, List]:
+        """Highly optimized segment creation using vectorized operations"""
+        if not np.any(mask):
+            return {
+                "xs": [],
+                "ys": [],
+                "lap_name": [],
+                "section": [],
+                "start_speed": [],
+                "end_speed": [],
+            }
+
+        # Use efficient boundary detection
+        mask_padded = np.concatenate(([False], mask, [False]))
+        diff = np.diff(mask_padded.astype(np.int8))
+        starts = np.where(diff == 1)[0]
+        ends = np.where(diff == -1)[0]
+
+        # Pre-allocate lists with estimated size for better performance
+        estimated_segments = len(starts)
+        xs = []
+        ys = []
+        start_speeds = np.empty(estimated_segments, dtype=np.float32)
+        end_speeds = np.empty(estimated_segments, dtype=np.float32)
+
+        valid_segments = 0
+
+        for i, (start, end) in enumerate(zip(starts, ends)):
+            if end - start >= 2:  # Need at least 2 points
+                xs.append(x_coords[start:end].astype(np.float32).tolist())
+                ys.append(z_coords[start:end].astype(np.float32).tolist())
+                start_speeds[valid_segments] = speed[start]
+                end_speeds[valid_segments] = speed[end - 1]
+                valid_segments += 1
+
+        # Trim arrays to actual size
+        start_speeds = start_speeds[:valid_segments].tolist()
+        end_speeds = end_speeds[:valid_segments].tolist()
+
+        return {
+            "xs": xs,
+            "ys": ys,
+            "lap_name": [lap_title] * len(xs),
+            "section": [section_name] * len(xs),
+            "start_speed": start_speeds,
+            "end_speed": end_speeds,
+        }
 
     def update_lap_options(self, laps=None):
-        """Update available laps in the dropdown"""
+        """Optimized lap options update with caching"""
         if laps is None:
             laps = self.app.gt7comm.session.get_laps()
 
-        options = [
-            (str(i), f"{lap.title} - {car_name(lap.car_id)}")
-            for i, lap in enumerate(laps)
-        ]
-        self.lap_select.options = options
+        options = []
+        for i, lap in enumerate(laps):
+            # Use cached car name lookup
+            car_id = getattr(lap, "car_id", None)
+            if car_id not in self._car_name_cache:
+                self._car_name_cache[car_id] = car_name(car_id)
+
+            car_display_name = self._car_name_cache[car_id]
+            options.append((str(i), f"{lap.title} - {car_display_name}"))
+
+        # Only update if options actually changed
+        if self.lap_select.options != options:
+            self.lap_select.options = options
+
+    def add_race_line(self, lap: Lap, color: str, figure_index=0):
+        """Add a race line using multi_line for better continuity"""
+        if figure_index >= len(self.race_lines):
+            logger.error(f"Figure index {figure_index} out of range")
+            return
+
+        # Debug lap data
+        self.debug_lap_data(lap)
+
+        # Create data sources for segments
+        throttle_source = ColumnDataSource(data={"xs": [], "ys": []})
+        braking_source = ColumnDataSource(data={"xs": [], "ys": []})
+        coasting_source = ColumnDataSource(data={"xs": [], "ys": []})
+
+        # Add multi-line renderers to the figure
+        throttle_line = self.race_lines[figure_index].multi_line(
+            xs="xs",
+            ys="ys",
+            line_width=3,
+            color="green",
+            legend_label=f"{lap.title} (Throttle)",
+            source=throttle_source,
+        )
+
+        braking_line = self.race_lines[figure_index].multi_line(
+            xs="xs",
+            ys="ys",
+            line_width=3,
+            color="red",
+            legend_label=f"{lap.title} (Braking)",
+            source=braking_source,
+        )
+
+        coasting_line = self.race_lines[figure_index].multi_line(
+            xs="xs",
+            ys="ys",
+            line_width=3,
+            color="cyan",
+            legend_label=f"{lap.title} (Coasting)",
+            source=coasting_source,
+        )
+
+        # Store data sources
+        line_data = {
+            "lap": lap,
+            "color": color,
+            "throttle_line": throttle_line,
+            "braking_line": braking_line,
+            "coasting_line": coasting_line,
+            "throttle_source": throttle_source,
+            "braking_source": braking_source,
+            "coasting_source": coasting_source,
+        }
+
+        self.race_lines_data[figure_index].append(line_data)
+
+        # Update the figure title
+        self.race_lines[figure_index].title.text = (
+            f"Race Lines - {len(self.race_lines_data[figure_index])} laps"
+        )
+
+        # Update the race line data
+        self.update_race_line_data(
+            lap, figure_index, len(self.race_lines_data[figure_index]) - 1
+        )
+
+        return line_data
+
+    def update_race_line_data(self, lap: Lap, figure_index: int, line_index: int):
+        """Optimized race line data update with caching"""
+        if figure_index >= len(self.race_lines_data):
+            logger.error(f"Figure index {figure_index} out of range")
+            return
+
+        if line_index >= len(self.race_lines_data[figure_index]):
+            logger.error(f"Line index {line_index} out of range")
+            return
+
+        # Check cache first
+        lap_cache_key = f"{lap.title}_{id(lap)}"
+        if lap_cache_key in self._lap_data_cache:
+            cached_data = self._lap_data_cache[lap_cache_key]
+            line_data = self.race_lines_data[figure_index][line_index]
+
+            # Update sources with cached data
+            line_data["throttle_source"].data = cached_data["throttle_segments"]
+            line_data["braking_source"].data = cached_data["braking_segments"]
+            line_data["coasting_source"].data = cached_data["coasting_segments"]
+            return
+
+        line_data = self.race_lines_data[figure_index][line_index]
+
+        # Extract and process coordinates efficiently
+        coords_data = self._extract_lap_coordinates(lap)
+        if coords_data is None:
+            return
+
+        x_coords, z_coords, throttle, brake, speed = coords_data
+
+        # Vectorized state determination
+        throttle_mask = (throttle > 0) & (brake == 0)
+        braking_mask = brake > 0
+        coasting_mask = ~throttle_mask & ~braking_mask
+
+        # Create segment data
+        throttle_segments = self._create_segments_vectorized(
+            x_coords, z_coords, speed, throttle_mask, lap.title, "Throttle"
+        )
+        braking_segments = self._create_segments_vectorized(
+            x_coords, z_coords, speed, braking_mask, lap.title, "Braking"
+        )
+        coasting_segments = self._create_segments_vectorized(
+            x_coords, z_coords, speed, coasting_mask, lap.title, "Coasting"
+        )
+
+        # Cache the results
+        self._lap_data_cache[lap_cache_key] = {
+            "throttle_segments": throttle_segments,
+            "braking_segments": braking_segments,
+            "coasting_segments": coasting_segments,
+        }
+
+        # Update data sources
+        line_data["throttle_source"].data = throttle_segments
+        line_data["braking_source"].data = braking_segments
+        line_data["coasting_source"].data = coasting_segments
+
+    def _extract_lap_coordinates(self, lap: Lap) -> Optional[Tuple[np.ndarray, ...]]:
+        """Extract and validate lap coordinates efficiently"""
+        try:
+            x_coords = (
+                np.asarray(lap.data_position_x, dtype=np.float32)
+                if lap.data_position_x
+                else np.array([])
+            )
+            z_coords = (
+                np.asarray(lap.data_position_z, dtype=np.float32)
+                if lap.data_position_z
+                else np.array([])
+            )
+
+            if len(x_coords) == 0:
+                logger.warning(f"Lap {lap.title} has no position data")
+                return None
+
+            # Extract other data with same length
+            data_length = len(x_coords)
+            throttle = (
+                np.asarray(lap.data_throttle[:data_length], dtype=np.float32)
+                if hasattr(lap, "data_throttle") and lap.data_throttle
+                else np.zeros(data_length, dtype=np.float32)
+            )
+            brake = (
+                np.asarray(lap.data_braking[:data_length], dtype=np.float32)
+                if hasattr(lap, "data_braking") and lap.data_braking
+                else np.zeros(data_length, dtype=np.float32)
+            )
+            speed = (
+                np.asarray(lap.data_speed[:data_length], dtype=np.float32)
+                if hasattr(lap, "data_speed") and lap.data_speed
+                else np.zeros(data_length, dtype=np.float32)
+            )
+
+            return x_coords, z_coords, throttle, brake, speed
+
+        except Exception as e:
+            logger.error(f"Error extracting coordinates for lap {lap.title}: {e}")
+            return None
+
+    def _create_segments_vectorized(
+        self,
+        x_coords: np.ndarray,
+        z_coords: np.ndarray,
+        speed: np.ndarray,
+        mask: np.ndarray,
+        lap_title: str,
+        section_name: str,
+    ) -> Dict[str, List]:
+        """Highly optimized segment creation using vectorized operations"""
+        if not np.any(mask):
+            return {
+                "xs": [],
+                "ys": [],
+                "lap_name": [],
+                "section": [],
+                "start_speed": [],
+                "end_speed": [],
+            }
+
+        # Use efficient boundary detection
+        mask_padded = np.concatenate(([False], mask, [False]))
+        diff = np.diff(mask_padded.astype(np.int8))
+        starts = np.where(diff == 1)[0]
+        ends = np.where(diff == -1)[0]
+
+        # Pre-allocate lists with estimated size for better performance
+        estimated_segments = len(starts)
+        xs = []
+        ys = []
+        start_speeds = np.empty(estimated_segments, dtype=np.float32)
+        end_speeds = np.empty(estimated_segments, dtype=np.float32)
+
+        valid_segments = 0
+
+        for i, (start, end) in enumerate(zip(starts, ends)):
+            if end - start >= 2:  # Need at least 2 points
+                xs.append(x_coords[start:end].astype(np.float32).tolist())
+                ys.append(z_coords[start:end].astype(np.float32).tolist())
+                start_speeds[valid_segments] = speed[start]
+                end_speeds[valid_segments] = speed[end - 1]
+                valid_segments += 1
+
+        # Trim arrays to actual size
+        start_speeds = start_speeds[:valid_segments].tolist()
+        end_speeds = end_speeds[:valid_segments].tolist()
+
+        return {
+            "xs": xs,
+            "ys": ys,
+            "lap_name": [lap_title] * len(xs),
+            "section": [section_name] * len(xs),
+            "start_speed": start_speeds,
+            "end_speed": end_speeds,
+        }
+
+    def update_lap_options(self, laps=None):
+        """Optimized lap options update with caching"""
+        if laps is None:
+            laps = self.app.gt7comm.session.get_laps()
+
+        options = []
+        for i, lap in enumerate(laps):
+            # Use cached car name lookup
+            car_id = getattr(lap, "car_id", None)
+            if car_id not in self._car_name_cache:
+                self._car_name_cache[car_id] = car_name(car_id)
+
+            car_display_name = self._car_name_cache[car_id]
+            options.append((str(i), f"{lap.title} - {car_display_name}"))
+
+        # Only update if options actually changed
+        if self.lap_select.options != options:
+            self.lap_select.options = options
 
     def add_lap_handler(self, event):
         """Handler for adding a lap to the comparison"""
@@ -361,7 +661,8 @@ class RaceLinesTab(GT7Tab):
             return
 
         lap = laps[lap_index]
-        color = next(self.race_line_colors)
+        # Use the optimized color method instead of itertools.cycle
+        color = self.get_next_color()
 
         # Check if lap is already displayed
         for line_data in self.race_lines_data[0]:
@@ -374,49 +675,50 @@ class RaceLinesTab(GT7Tab):
         self.selected_laps.append(lap)
 
     def clear_lines_handler(self, event):
-        """Handler for clearing all race lines"""
-        # Clear each figure completely
-        for figure_index, figure_data in enumerate(self.race_lines_data):
-            figure = self.race_lines[figure_index]
+        """Highly optimized race lines clearing with minimal operations"""
+        if not any(self.race_lines_data):  # Early exit if no data
+            return
 
-            # Remove all renderers associated with race lines
+        # Collect all operations to minimize figure updates
+        for figure_index, (figure, figure_data) in enumerate(
+            zip(self.race_lines, self.race_lines_data)
+        ):
+            if not figure_data:
+                continue
+
+            # Collect all renderers to remove in one pass
+            renderers_to_remove = set()  # Use set for O(1) lookup
             for line_data in figure_data:
-                # Remove the line renderers from the figure
-                renderers_to_remove = [
-                    line_data["throttle_line"],
-                    line_data["braking_line"],
-                    line_data["coasting_line"],
-                ]
+                renderers_to_remove.update(
+                    [
+                        line_data["throttle_line"],
+                        line_data["braking_line"],
+                        line_data["coasting_line"],
+                    ]
+                )
 
-                for renderer in renderers_to_remove:
-                    if renderer in figure.renderers:
-                        figure.renderers.remove(renderer)
+            # Single batch operation to remove renderers
+            figure.renderers = [
+                r for r in figure.renderers if r not in renderers_to_remove
+            ]
 
-            # Explicitly clear the legend after removing renderers
+            # Clear legend in single operation
             if hasattr(figure, "legend") and figure.legend:
-                try:
-                    # Method 1: Clear legend items
-                    if hasattr(figure.legend, "items"):
-                        figure.legend.items = []
+                figure.legend.items.clear()
 
-                    # Method 2: Force legend update by creating new legend
-                    figure.legend.items = []
-
-                    # Method 3: Remove and recreate legend (most reliable)
-                    if hasattr(figure, "legend") and figure.legend in figure.renderers:
-                        figure.renderers.remove(figure.legend)
-
-                except (AttributeError, ValueError) as e:
-                    logger.debug(f"Legend clearing failed: {e}")
-
-            # Reset figure title
+            # Reset title
             figure.title.text = "Race Line"
 
-        # Clear data structures
-        self.race_lines_data = [[] for _ in range(len(self.race_lines))]
-        self.selected_laps = []
+        # Clear data structures efficiently
+        self.race_lines_data.clear()
+        self.race_lines_data.extend([[] for _ in range(len(self.race_lines))])
+        self.selected_laps.clear()
 
-        logger.info("All race lines and legends cleared")
+        # Clear caches
+        self._lap_data_cache.clear()
+        self._segment_cache.clear()
+
+        logger.info("All race lines cleared efficiently")
 
     def display_options_handler(self, attr, old, new):
         """Handler for display options changes"""
@@ -522,7 +824,8 @@ class RaceLinesTab(GT7Tab):
         )  # Show max 5 recent laps
 
         for i, lap in enumerate(laps[-max_laps_to_show:]):
-            color = next(self.race_line_colors)
+            # Use the optimized color method instead of itertools.cycle
+            color = self.get_next_color()
             self.add_race_line(lap, color, figure_index=0)
             logger.info(f"Added race line for lap {lap.title}")
 
@@ -554,3 +857,9 @@ class RaceLinesTab(GT7Tab):
         if hasattr(lap, "data_braking") and lap.data_braking:
             brake_active = sum(1 for b in lap.data_braking if b > 0)
             logger.debug(f"Active braking points: {brake_active}")
+
+    def get_next_color(self):
+        """Get next color from palette with better performance"""
+        color = self._color_palette[self._color_index % len(self._color_palette)]
+        self._color_index += 1
+        return color
