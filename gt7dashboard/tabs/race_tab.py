@@ -1,6 +1,5 @@
 import os
 import logging
-import time
 
 from bokeh.plotting import curdoc
 from bokeh.plotting import figure
@@ -56,7 +55,6 @@ from gt7dashboard.gt7lapstorage import (
 )
 from gt7dashboard.datatable.deviance_laps import deviance_laps_datatable
 from gt7dashboard.datatable.speed_peak_valley import SpeedPeakValleyDataTable
-from .GT7Tab import GT7Tab
 from gt7dashboard.gt7help import get_help_div
 from gt7dashboard.gt7settings import get_log_level, settings
 
@@ -550,20 +548,6 @@ class RaceTab(GT7Tab):
                 logger.debug(
                     f"Selected lap {selected_lap.number}: {selected_lap.title}"
                 )
-
-    def update_get_faster_tab_diagrams(self, selected_lap):
-        """Update the get faster tab with the selected lap"""
-        if self.race_diagram:
-            # Set the selected lap (this will clear previous and add new)
-            self.race_diagram.set_selected_lap(
-                lap=selected_lap,
-                color=SELECTED_LAP_COLOR,
-                legend=f"Selected: {selected_lap.title}",
-            )
-
-            logger.info(f"Updated get faster tab with lap: {selected_lap.title}")
-        else:
-            logger.warning("Race diagram reference not set")
 
     def update_speed_velocity_graph(self, laps):
         """Update the speed velocity graphs"""
