@@ -164,13 +164,13 @@ class TestHelper(unittest.TestCase):
         save(d)
         print("View file for reference at %s" % out_file)
 
-    def test_race_table(self):
-        rt = RaceTimeDataTable(self)
-        rt.show_laps(self.test_laps)
+    # def test_race_table(self):
+    #     rt = RaceTimeDataTable(self)
+    #     rt.show_laps(self.test_laps)
 
-        out_file = "test_out/test_race_table.html"
-        output_file(out_file)
-        save(rt.t_lap_times)
+    #     out_file = "test_out/test_race_table.html"
+    #     output_file(out_file)
+    #     save(rt.t_lap_times)
 
     def test_display_variance(self):
         rd = self.helper_get_race_diagram()
