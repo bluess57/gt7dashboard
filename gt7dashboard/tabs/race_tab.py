@@ -352,7 +352,6 @@ class RaceTab(GT7Tab):
 
         # Clear information displays
         self.update_header_line(None, None)
-        self.div_speed_peak_valley_diagram.text = ""
 
         # Reset reference lap selection
         self.reference_lap_selected = None
@@ -620,6 +619,7 @@ class RaceTab(GT7Tab):
         laps = self.app.gt7comm.session.get_laps()
 
         if not self.telemetry_update_needed:
+            logger.debug("No telemetry update needed, skipping lap change update")
             return
 
         if laps is not None and len(laps) > 0:
@@ -676,10 +676,13 @@ class RaceTab(GT7Tab):
     def on_lap_finished(self, lap):
         logger.debug("RaceTab Lap finished: %s" % lap.format())
 
+        self.telemetry_update_needed = True
+
         def update_ui():
             """Update the UI after a lap is finished"""
+            updated_laps = self.app.gt7comm.session.get_laps()
+            self.update_reference_lap_select(updated_laps)
             self.update_lap_change()
-            self.update_reference_lap_select(self.app.gt7comm.session.get_laps())
 
         def update_fuel_map():
             """Update the fuel map fuel tab"""
