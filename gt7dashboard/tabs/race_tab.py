@@ -399,12 +399,86 @@ class RaceTab(GT7Tab):
         )
 
     def save_button_handler(self, event):
-        """Handle saving laps"""
+        """Handle saving laps with status feedback"""
         if len(self.app.gt7comm.session.laps) > 0:
-            path = save_laps_to_json(self.app.gt7comm.session.laps)
-            logger.info(
-                "Saved %d laps as %s" % (len(self.app.gt7comm.session.laps), path)
-            )
+            try:
+                path = save_laps_to_json(self.app.gt7comm.session.laps)
+                lap_count = len(self.app.gt7comm.session.laps)
+                filename = os.path.basename(path)
+                
+                logger.info(f"Saved {lap_count} laps as {path}")
+                
+                # Update save button with success feedback
+                def show_success():
+                    original_label = self.save_button.label
+                    original_type = self.save_button.button_type
+                    
+                    self.save_button.label = f"✅ Saved {lap_count} laps!"
+                    self.save_button.button_type = "success"
+                    
+                    # Reset button after 3 seconds
+                    def reset_button():
+                        self.save_button.label = original_label
+                        self.save_button.button_type = original_type
+                    
+                    self.app.doc.add_timeout_callback(reset_button, 3000)
+                
+                self.app.doc.add_next_tick_callback(show_success)
+                
+                # Also update header line temporarily
+                def show_status():
+                    original_text = self.header_line.text
+                    self.header_line.text = f"""
+                    <div style="color: green; text-align: center; padding: 10px; background-color: #d4edda; border-radius: 5px;">
+                        ✅ Successfully saved {lap_count} laps to {filename}
+                    </div>
+                    """
+                    
+                    # Reset after 5 seconds
+                    def reset_header():
+                        self.header_line.text = original_text
+                    
+                    self.app.doc.add_timeout_callback(reset_header, 5000)
+                
+                self.app.doc.add_next_tick_callback(show_status)
+                
+            except Exception as e:
+                logger.error(f"Error saving laps: {e}")
+                
+                # Show error feedback
+                def show_error():
+                    original_label = self.save_button.label
+                    original_type = self.save_button.button_type
+                    
+                    self.save_button.label = "❌ Save Failed"
+                    self.save_button.button_type = "danger"
+                    
+                    # Reset button after 3 seconds
+                    def reset_button():
+                        self.save_button.label = original_label
+                        self.save_button.button_type = original_type
+                    
+                    self.app.doc.add_timeout_callback(reset_button, 3000)
+                
+                self.app.doc.add_next_tick_callback(show_error)
+            
+        else:
+            # No laps to save
+            def show_no_laps():
+                original_label = self.save_button.label
+                original_type = self.save_button.button_type
+                
+                self.save_button.label = "⚠️ No laps to save"
+                self.save_button.button_type = "warning"
+                
+                # Reset button after 3 seconds
+                def reset_button():
+                    self.save_button.label = original_label
+                    self.save_button.button_type = original_type
+                
+                self.app.doc.add_timeout_callback(reset_button, 3000)
+            
+            self.app.doc.add_next_tick_callback(show_no_laps)
 
     def load_laps_handler(self, attr, old, new):
         """Handle loading laps from file"""
