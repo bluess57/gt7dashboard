@@ -293,7 +293,7 @@ class GT7Communication(Thread):
                 return None
             time.sleep(0.01)
 
-    def set_lap_callback(
+    def set_on_lapfinish_callback(
         self, new_lap_callback: Optional[Callable[[Lap], None]]
     ) -> None:
         """Set callback function for lap completion"""

@@ -229,6 +229,44 @@ class GT7Application:
         """Destructor to ensure cleanup"""
         self.cleanup()
 
+    def reconnect_gt7comm(self, new_ip: str):
+        """Reconnect GT7Communication with new IP while preserving callbacks"""
+        logger.info(f"Reconnecting GT7Communication to IP: {new_ip}")
+
+        # Store existing callbacks before stopping
+        old_callbacks = {}
+        if self._gt7comm:
+            old_callbacks = {
+                "lap_callback": getattr(self._gt7comm, "_on_lapfinish_callback", None),
+                "heartbeat_callback": getattr(
+                    self._gt7comm, "_on_heartbeat_callback", None
+                ),
+                "connected_callback": getattr(
+                    self._gt7comm, "_on_connected_callback", None
+                ),
+                "reset_callback": getattr(self._gt7comm, "_on_reset_callback", None),
+            }
+            self._gt7comm.stop()
+
+        # Create new GT7Communication instance
+        self._gt7comm = gt7communication.GT7Communication(new_ip)
+
+        # Re-establish callbacks
+        for callback_type, callback_func in old_callbacks.items():
+            if callback_func:
+                if callback_type == "lap_callback":
+                    self._gt7comm.set_on_lapfinish_callback(callback_func)
+                elif callback_type == "heartbeat_callback":
+                    self._gt7comm.set_on_heartbeat_callback(callback_func)
+                elif callback_type == "connected_callback":
+                    self._gt7comm.set_on_connected_callback(callback_func)
+                elif callback_type == "reset_callback":
+                    self._gt7comm.set_on_reset_callback(callback_func)
+
+        # Start the new instance
+        self._gt7comm.start()
+        logger.info("GT7Communication reconnected successfully with callbacks restored")
+
 
 # Create and set up the application
 app = GT7Application()
