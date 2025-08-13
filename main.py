@@ -187,7 +187,7 @@ class GT7Application:
             do_update()
 
     def show_heartbeat(self, doc):
-        """Optimized heartbeat with reduced DOM updates"""
+        """Optimized heartbeat with reduced DOM updates and proper timeout handling"""
         try:
 
             def update():
@@ -195,14 +195,23 @@ class GT7Application:
 
                 # Cancel existing timeout to prevent multiple timers
                 if self._heartbeat_timeout_id:
-                    doc.remove_timeout_callback(self._heartbeat_timeout_id)
+                    try:
+                        doc.remove_timeout_callback(self._heartbeat_timeout_id)
+                    except ValueError:
+                        # Callback already ran or was removed, which is fine
+                        pass
+                    finally:
+                        self._heartbeat_timeout_id = None
 
                 # Set new timeout
+                def reset_heartbeat():
+                    """Reset heartbeat to inactive state"""
+                    if hasattr(self, "heartbeat_indicator"):
+                        self.heartbeat_indicator.text = self._heartbeat_inactive
+                    self._heartbeat_timeout_id = None
+
                 self._heartbeat_timeout_id = doc.add_timeout_callback(
-                    lambda: setattr(
-                        self.heartbeat_indicator, "text", self._heartbeat_inactive
-                    ),
-                    500,
+                    reset_heartbeat, 500
                 )
 
             if self.gt7comm.is_connected():
