@@ -184,9 +184,30 @@ class ConfigTab(GT7Tab):
 
         logger.info(f"Connecting to PlayStation at IP: {new_ip}")
 
+        # Store existing callbacks before stopping
+        old_lap_callback = getattr(self.app.gt7comm, "lap_callback_function", None)
+        old_heartbeat_callback = getattr(
+            self.app.gt7comm, "_on_heartbeat_callback", None
+        )
+        old_connected_callback = getattr(
+            self.app.gt7comm, "_on_connected_callback", None
+        )
+        old_reset_callback = getattr(self.app.gt7comm, "_on_reset_callback", None)
+
         # Update connection with new IP
         self.app.gt7comm.stop()
         self.app.gt7comm = GT7Communication(new_ip)
+
+        # Re-establish the callbacks
+        if old_lap_callback:
+            self.app.gt7comm.set_lap_callback(old_lap_callback)
+        if old_heartbeat_callback:
+            self.app.gt7comm.set_on_heartbeat_callback(old_heartbeat_callback)
+        if old_connected_callback:
+            self.app.gt7comm.set_on_connected_callback(old_connected_callback)
+        if old_reset_callback:
+            self.app.gt7comm.set_on_reset_callback(old_reset_callback)
+
         self.app.gt7comm.start()
 
     def load_path_button_handler(self, event):
