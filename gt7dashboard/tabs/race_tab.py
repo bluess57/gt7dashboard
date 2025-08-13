@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import TYPE_CHECKING
 
 from bokeh.plotting import curdoc
 from bokeh.plotting import figure
@@ -58,6 +59,11 @@ from gt7dashboard.datatable.speed_peak_valley import SpeedPeakValleyDataTable
 from gt7dashboard.gt7help import get_help_div
 from gt7dashboard.gt7settings import get_log_level, settings
 
+# Import GT7Application only for type checking to avoid circular imports
+if TYPE_CHECKING:
+    from main import GT7Application
+
+
 # Use LAST_LAP_COLOR wherever needed
 
 logger = logging.getLogger(__name__)
@@ -67,10 +73,10 @@ logger.setLevel(get_log_level())
 class RaceTab(GT7Tab):
     """Main telemetry tab (Get Faster) for GT7 Dashboard"""
 
-    def __init__(self, app_instance):
+    def __init__(self, app_instance: "GT7Application"):
         """Initialize the race telemetry tab"""
         super().__init__("Get Faster")
-        self.app = app_instance
+        self.app: "GT7Application" = app_instance
         self.selected_lap_index = None
 
         # Create race line figure
@@ -154,7 +160,7 @@ class RaceTab(GT7Tab):
         self.replay_checkbox.on_change("active", self.always_record_checkbox_handler)
         self.median_lap_checkbox.on_change("active", self.median_lap_visibility_handler)
 
-        self.app.gt7comm.set_lap_callback(self.on_lap_finished)
+        self.app.gt7comm.set_on_lapfinish_callback(self.on_lap_finished)
 
         self.deviance_laps_datatable = deviance_laps_datatable()
 

@@ -1,6 +1,7 @@
 import os
 import logging
 import re
+from typing import TYPE_CHECKING
 
 from bokeh.layouts import layout, column
 from bokeh.models import Div, Button, TextInput, TabPanel, CheckboxGroup
@@ -17,6 +18,10 @@ from gt7dashboard.gt7helper import bokeh_tuple_for_list_of_lapfiles
 from gt7dashboard.gt7communication import GT7Communication
 from gt7dashboard.gt7settings import get_log_level, settings
 
+# Import GT7Application only for type checking to avoid circular imports
+if TYPE_CHECKING:
+    from main import GT7Application
+
 logger = logging.getLogger(__name__)
 logger.setLevel(get_log_level())
 
@@ -24,9 +29,9 @@ logger.setLevel(get_log_level())
 class ConfigTab(GT7Tab):
     """Configuration tab for GT7 Dashboard"""
 
-    def __init__(self, app_instance):
+    def __init__(self, app_instance: "GT7Application"):
         super().__init__("Configuration")
-        self.app = app_instance
+        self.app: "GT7Application" = app_instance
 
         # Checkbox for GT7_ADD_BRAKEPOINTS
         self.brakepoints_checkbox = CheckboxGroup(
@@ -184,10 +189,19 @@ class ConfigTab(GT7Tab):
 
         logger.info(f"Connecting to PlayStation at IP: {new_ip}")
 
-        # Update connection with new IP
-        self.app.gt7comm.stop()
-        self.app.gt7comm = GT7Communication(new_ip)
-        self.app.gt7comm.start()
+        try:
+            self.app.reconnect_gt7comm(new_ip)
+
+            # Update connection status
+            self.connection_status.text = (
+                f"<span style='color:green'>Connected to {new_ip}</span>"
+            )
+            logger.info(f"Successfully connected to PlayStation at IP: {new_ip}")
+
+        except Exception as e:
+            error_msg = f"Failed to connect to {new_ip}: {e}"
+            logger.error(error_msg)
+            self.connection_status.text = f"<span style='color:red'>{error_msg}</span>"
 
     def load_path_button_handler(self, event):
         """Handle loading laps from specified path"""
