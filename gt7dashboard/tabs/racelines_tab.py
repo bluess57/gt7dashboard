@@ -375,7 +375,7 @@ class RaceLinesTab(GT7Tab):
         self.selected_laps.append(lap)
 
     def clear_lines_handler(self, event):
-        """Highly optimized race lines clearing with minimal operations"""
+        """race lines clearing with proper legend removal"""
         if not any(self.race_lines_data):  # Early exit if no data
             return
 
@@ -402,9 +402,10 @@ class RaceLinesTab(GT7Tab):
                 r for r in figure.renderers if r not in renderers_to_remove
             ]
 
-            # Clear legend in single operation
+            # clear legend items
             if hasattr(figure, "legend") and figure.legend:
-                figure.legend.items.clear()
+                # Method 1: Clear all legend items
+                figure.legend.items = []
 
             # Reset title
             figure.title.text = "Race Line"
@@ -418,7 +419,7 @@ class RaceLinesTab(GT7Tab):
         self._lap_data_cache.clear()
         self._segment_cache.clear()
 
-        logger.debug("All race lines cleared")
+        logger.debug("All race lines and legends cleared")
 
     def display_options_handler(self, attr, old, new):
         """Handler for display options changes"""
