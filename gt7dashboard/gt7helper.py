@@ -270,9 +270,6 @@ def pct(lap, val):
     return "%d" % (getattr(lap, val, 0) / lap_ticks * 1000)
 
 
-
-
-
 def pd_data_frame_from_lap(laps: List[Lap], best_lap_time: int) -> pd.DataFrame:
     """
     Convert a list of Lap objects to a pandas DataFrame for the DataTable.
@@ -315,7 +312,7 @@ def pd_data_frame_from_lap(laps: List[Lap], best_lap_time: int) -> pd.DataFrame:
                 "tyrespinning": pct(lap, "tyres_spinning_ticks"),
             }
         )
-    
+
     df = pd.DataFrame(rows)
     df.reset_index(drop=True)
 
@@ -385,10 +382,10 @@ def get_fuel_on_consumption_by_relative_fuel_levels(lap: Lap) -> List[FuelMap]:
 def get_n_fastest_laps_within_percent_threshold_ignoring_replays(
     laps: List[Lap], number_of_laps: int, percent_threshold: float
 ):
-    # FIXME Replace later with this line
-    # filtered_laps = [lap for lap in laps if not lap.is_replay]
     filtered_laps = [
-        lap for lap in laps if not (len(lap.data_speed) == 0 or lap.is_replay)
+        lap
+        for lap in laps
+        if lap.in_race and not lap.is_replay and len(lap.data_speed) > 0
     ]
 
     if len(filtered_laps) == 0:
