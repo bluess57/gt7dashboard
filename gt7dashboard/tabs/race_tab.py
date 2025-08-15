@@ -79,8 +79,6 @@ class RaceTab(GT7Tab):
         self.app: "GT7Application" = app_instance
         self.selected_lap_index = None
 
-        # Create race line figure
-        # race_line_tooltips = [("index", "$index"), ("Brakepoint", "")]
         race_line_width = 250
 
         self.s_race_line = figure(
@@ -91,7 +89,6 @@ class RaceTab(GT7Tab):
             width=race_line_width,
             height=race_line_width,
             active_drag="box_zoom",
-            # tooltips=race_line_tooltips,
         )
 
         # We set this to true, since maps appear flipped in the game
@@ -100,7 +97,6 @@ class RaceTab(GT7Tab):
         self.s_race_line.toolbar.autohide = True
 
         # State variables
-        # self.laps_stored = []
         self.reference_lap_selected = None
         self.telemetry_update_needed = False
 
@@ -350,9 +346,6 @@ class RaceTab(GT7Tab):
         # self.race_time_table.lap_times_source.data = {"index": [], "car": [], "time": [], "number": [], "title": []}
         # self.race_time_table.lap_times_source.selected.indices = []
 
-        # Clear information displays
-        self.update_header_line(None, None)
-
         # Reset reference lap selection
         self.reference_lap_selected = None
         self.reference_lap_select.value = "-1"  # Best Lap option
@@ -367,6 +360,22 @@ class RaceTab(GT7Tab):
         self.speed_peak_valley_datatable.update_speed_peak_valley_data(None, None)
 
         logger.info("Reset complete - all graphs and data cleared")
+
+        # Show temporary status message
+        def show_status():
+            self.header_line.text = """
+            <div style="color: #856404; text-align: center; padding: 10px; background-color: #fff3cd; border-radius: 5px;">
+                🗑️ Session laps cleared!
+            </div>
+            """
+
+            # Reset after 5 seconds
+            def reset_header():
+                self.header_line.text = "Last Lap: None<br>Reference Lap: None"
+
+            self.app.doc.add_timeout_callback(reset_header, 5000)
+
+        self.app.doc.add_next_tick_callback(show_status)
 
     def always_record_checkbox_handler(self, event, old, new):
         """Handle record replays checkbox change"""
@@ -783,6 +792,13 @@ class RaceTab(GT7Tab):
             self.update_reference_lap_select(updated_laps)
             self.update_lap_change()
 
+            # Display the number of laps in session
+            lap_count = len(self.app.gt7comm.session.laps)
+            self.header_line.text = (
+                f"Lap finished! Total laps in session: <b>{lap_count}</b><br>"
+                + self.header_line.text
+            )
+
         def update_fuel_map():
             """Update the fuel map fuel tab"""
             try:
@@ -790,9 +806,7 @@ class RaceTab(GT7Tab):
             except Exception as e:
                 logger.error(f"Error updating fuel map: {e}")
 
-        # Update the speed peak and valley diagram
         self.app.doc.add_next_tick_callback(update_ui)
-        # Update the fuel map in the fuel tab
         self.app.doc.add_next_tick_callback(update_fuel_map)
 
     def set_race_diagram_reference(self, race_diagram):

@@ -70,6 +70,7 @@ class Lap:
         # Always record was set when recording the lap, likely a replay
         self.is_replay = False
         self.is_manual = False
+        self.in_race = False
 
         self.lap_start_timestamp = datetime.now()
         self.lap_end_timestamp = -1
@@ -94,7 +95,11 @@ class Lap:
         """
         Convert a Lap object to a dictionary suitable for the DataTable.
         """
-        replay = "Y" if getattr(self, "is_replay", False) else "N"
+        replay = (
+            "N"
+            if getattr(self, "in_race", False)
+            else ("Y" if getattr(self, "is_replay", False) else "N")
+        )
 
         return {
             "number": getattr(self, "number", None),

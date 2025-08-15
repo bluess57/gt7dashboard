@@ -385,6 +385,7 @@ class GT7Communication(Thread):
         if data.brake > 0 and data.throttle > 0:
             self.current_lap.throttle_and_brake_ticks += 1
 
+        self.current_lap.in_race = data.in_race
         self.current_lap.lap_ticks += 1
 
         if (
@@ -481,7 +482,7 @@ class GT7Communication(Thread):
                 self.current_lap.lap_finish_time = self.last_data.last_lap
 
                 # Track recording meta data
-                self.current_lap.is_replay = self.always_record_data
+                self.current_lap.is_replay = not self.always_record_data
                 self.current_lap.is_manual = manual
 
                 self.current_lap.fuel_capacity = self.last_data.fuel_capacity
