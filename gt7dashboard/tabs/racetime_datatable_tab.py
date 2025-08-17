@@ -33,11 +33,12 @@ class RaceTimeDataTableTab(GT7Tab):
         self.app.gt7comm.session.set_on_add_lap_callback(self.lap_added)
 
     def lap_added(self, lap):
-        """
-        A lap was added to session so add to the data table
-        """
         logger.debug("RaceTimeDataTableTab: Add a lap to RaceTimeDataTable")
-        self.race_time_datatable.add_lap(lap, self.app.doc)
+
+        def update():
+            self.race_time_datatable.add_lap(lap, self.app.doc)
+
+        self.app.doc.add_next_tick_callback(update)
 
     def show_laps(self, laps):
         """
