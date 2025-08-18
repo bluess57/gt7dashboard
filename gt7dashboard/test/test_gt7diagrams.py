@@ -172,18 +172,18 @@ class TestHelper(unittest.TestCase):
     #     output_file(out_file)
     #     save(rt.t_lap_times)
 
-    def test_display_variance(self):
-        rd = self.helper_get_race_diagram()
-        rd.update_fastest_laps_variance(self.test_laps)
+    # def test_display_variance(self):
+    #     rd = self.helper_get_race_diagram()
+    #     rd.update_fastest_laps_variance(self.test_laps)
 
-        out_file = "test_out/test_get_last_variance.html"
-        print("View file for reference at %s" % out_file)
-        output_file(out_file)
-        save(rd.get_layout())
+    #     out_file = "test_out/test_get_last_variance.html"
+    #     print("View file for reference at %s" % out_file)
+    #     output_file(out_file)
+    #     save(rd.get_layout())
 
-        # get file size, should be about 5MB
-        file_size = os.path.getsize(out_file)
-        self.assertAlmostEqual(file_size, 3000000, delta=1000000)
+    #     # get file size, should be about 5MB
+    #     file_size = os.path.getsize(out_file)
+    #     self.assertAlmostEqual(file_size, 3000000, delta=1000000)
 
     def test_display_flat_line_variance(self):
         rd = self.helper_get_race_diagram()

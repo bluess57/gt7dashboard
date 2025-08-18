@@ -379,6 +379,8 @@ class TestLaps(unittest.TestCase):
         l3 = Lap()
         l3.data_speed = [50, 150, 200, 200]
         l3.data_time = [10, 100, 200, 300]
+        l3.is_replay = False
+        l3.in_race = True
 
         laps = [empty_lap, l3]
 
