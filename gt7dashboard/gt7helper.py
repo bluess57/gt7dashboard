@@ -310,6 +310,7 @@ def pd_data_frame_from_lap(laps: List[Lap], best_lap_time: int) -> pd.DataFrame:
                 "fullbrake": pct(lap, "full_brake_ticks"),
                 "nothrottle": pct(lap, "no_throttle_and_no_brake_ticks"),
                 "tyrespinning": pct(lap, "tyres_spinning_ticks"),
+                "tyreoverheated": pct(lap, "tyres_overheated_ticks"),
             }
         )
 
