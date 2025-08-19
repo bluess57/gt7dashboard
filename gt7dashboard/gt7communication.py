@@ -413,6 +413,10 @@ class GT7Communication(Thread):
             self.current_lap.tyres_spinning_ticks += 1
 
         self.current_lap.data_tyres.append(delta_fl + delta_fr + delta_rl + delta_rr)
+        self.current_lap.data_tyres_delta_fl.append(delta_fl)
+        self.current_lap.data_tyres_delta_fr.append(delta_fr)
+        self.current_lap.data_tyres_delta_rl.append(delta_rl)
+        self.current_lap.data_tyres_delta_rr.append(delta_rr)
 
         ## RPM and shifting
 

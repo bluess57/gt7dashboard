@@ -178,7 +178,7 @@ class RaceLinesTab(GT7Tab):
             xs="xs",
             ys="ys",
             line_width=3,
-            color="green",
+            color="color",
             legend_label=f"{lap.title} (Throttle)",
             source=throttle_source,
         )
@@ -265,13 +265,13 @@ class RaceLinesTab(GT7Tab):
 
         # Create segment data
         throttle_segments = self._create_segments_vectorized_optimized(
-            x_coords, z_coords, speed, throttle_mask, lap.title, "Throttle"
+            lap, x_coords, z_coords, speed, throttle_mask, lap.title, "Throttle"
         )
         braking_segments = self._create_segments_vectorized_optimized(
-            x_coords, z_coords, speed, braking_mask, lap.title, "Braking"
+            lap, x_coords, z_coords, speed, braking_mask, lap.title, "Braking"
         )
         coasting_segments = self._create_segments_vectorized_optimized(
-            x_coords, z_coords, speed, coasting_mask, lap.title, "Coasting"
+            lap, x_coords, z_coords, speed, coasting_mask, lap.title, "Coasting"
         )
 
         # Cache the results
@@ -567,6 +567,7 @@ class RaceLinesTab(GT7Tab):
 
     def _create_segments_vectorized_optimized(
         self,
+        lap: Lap,
         x_coords: np.ndarray,
         z_coords: np.ndarray,
         speed: np.ndarray,
@@ -606,6 +607,7 @@ class RaceLinesTab(GT7Tab):
                 "section": [],
                 "start_speed": [],
                 "end_speed": [],
+                "color": "white",  # Default color for empty segments
             }
 
         valid_starts = starts[valid_mask]
@@ -627,6 +629,23 @@ class RaceLinesTab(GT7Tab):
             xs.append(x_coords[start:end].tolist())
             ys.append(z_coords[start:end].tolist())
 
+        if section_name.lower() == "throttle":
+            # Check for tyre spin in each segment using lap data_tyres_delta_*
+            tyre_spin = [
+                any(np.array(lap.data_tyres_delta_fl[start:end]) > 1.1)
+                or any(np.array(lap.data_tyres_delta_fr[start:end]) > 1.1)
+                or any(np.array(lap.data_tyres_delta_rl[start:end]) > 1.1)
+                or any(np.array(lap.data_tyres_delta_rr[start:end]) > 1.1)
+                for start, end in zip(valid_starts, valid_ends)
+            ]
+            colors = ["orange" if spin else "green" for spin in tyre_spin]
+        elif section_name.lower() == "braking":
+            colors = ["red"] * num_segments
+        elif section_name.lower() == "coasting":
+            colors = ["cyan"] * num_segments
+        else:
+            colors = ["white"] * num_segments  # fallback/default
+
         return {
             "xs": xs,
             "ys": ys,
@@ -634,6 +653,7 @@ class RaceLinesTab(GT7Tab):
             "section": [section_name] * num_segments,
             "start_speed": start_speeds.tolist(),
             "end_speed": end_speeds.tolist(),
+            "color": colors,
         }
 
     def cleanup_resources(self):

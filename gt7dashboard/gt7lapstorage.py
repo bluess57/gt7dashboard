@@ -38,10 +38,23 @@ def load_laps_from_json(json_file):
         for lap_data in data:
             lap = Lap()
             lap.__dict__.update(lap_data)
+
             for key, value in lap_data.items():
                 if key.endswith("_timestamp") and isinstance(value, str):
                     value = datetime.fromisoformat(value)
                     setattr(lap, key, value)
+
+            # initialise the new data_tyre_delta lists since these are new fields and won't be in old json files
+            data_length = lap.lap_ticks
+            if len(lap.data_tyres_delta_fl) != data_length:
+                lap.data_tyres_delta_fl = [0.0] * (data_length - 1)
+            if len(lap.data_tyres_delta_fr) != data_length:
+                lap.data_tyres_delta_fr = [0.0] * (data_length - 1)
+            if len(lap.data_tyres_delta_rl) != data_length:
+                lap.data_tyres_delta_rl = [0.0] * (data_length - 1)
+            if len(lap.data_tyres_delta_rr) != data_length:
+                lap.data_tyres_delta_rr = [0.0] * (data_length - 1)
+
             laps.append(lap)
 
         return laps

@@ -49,6 +49,11 @@ class Lap:
         self.data_time = []
         self.data_rpm = []
         self.data_gear = []
+
+        self.data_tyres_delta_fl = []
+        self.data_tyres_delta_fr = []
+        self.data_tyres_delta_rl = []
+        self.data_tyres_delta_rr = []
         self.data_tyres = []
         # Positions on x,y,z
         self.data_position_x = []
@@ -275,6 +280,10 @@ class Lap:
             "speed": self.data_speed,
             "time": self.data_time,
             "tyres": self.data_tyres,
+            "tyres_delta_fr": self.data_tyres_delta_fr,
+            "tyres_delta_fl": self.data_tyres_delta_fl,
+            "tyres_delta_rl": self.data_tyres_delta_rl,
+            "tyres_delta_rr": self.data_tyres_delta_rr,
             "rpm": self.data_rpm,
             "boost": self.data_boost,
             "yaw_rate": self.data_absolute_yaw_rate_per_second,
