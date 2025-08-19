@@ -120,6 +120,7 @@ class Lap:
             "fullbrake": self.pct("full_brake_ticks"),
             "nothrottle": self.pct("no_throttle_and_no_brake_ticks"),
             "tyrespinning": self.pct("tyres_spinning_ticks"),
+            "tyreoverheated": self.pct("tyres_overheated_ticks"),
         }
 
     def __str__(self):
